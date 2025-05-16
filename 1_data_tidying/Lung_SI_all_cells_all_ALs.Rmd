@@ -183,11 +183,59 @@ new.cluster.ids <- SO.lung@meta.data$AL3
 
 ```
 
+Quantification
+
+```{r}
+df_lung <- read_csv(here::here("data", "20230808_SO_33M_arcsinh_lung_0.04_imputed_quantification_all_ALs_counts.csv"), 
+    col_types = cols(...1 = col_skip()))
+
+# Tidying
+df_lung <- df_lung %>% 
+  rename(`Endothelial blood cells` = `EMCN CD31 Blood vessels`, 
+         `Stromal cells` = `Vessels`, 
+         `Lymphatics` = `LYVE1 CD90 Lymphatics`) %>%
+  select(-c(`ILC2s A`, `ILC2s B`))
+
+# AL1
+for (element in c(colnames(df_lung)[6:8])) {
+  number <- paste0("%_", element, "_perTotalCountFOV")
+  df_lung[number] <- round(df_lung[element]/df_lung["TotalCellCountFOV"]*100, 1)
+}
+round(rowSums(df_lung[20:22], na.rm = TRUE), 0)
+
+# AL2
+for (element in c(colnames(df_lung)[12:19])) {
+  number <- paste0("%_", element, "_perTotalImmuneFOV")
+  df_lung[number] <- round(df_lung[element]/df_lung["Immune cells"]*100, 1)
+}
+round(rowSums(df_lung[23:27], na.rm = TRUE), 0)
+
+# AL3
+for (element in c(colnames(df_lung)[17:19])) {
+  number <- paste0("%_", element, "_perTotalILCsFOV")
+  df_lung[number] <- round(df_lung[element]/df_lung["ILCs"]*100, 1)
+}
+round(rowSums(df_lung[31:33], na.rm = TRUE), 0)
+
+
+df_lung$`Tissue area` <- "Lung"
+df_lung$Organ <- "Lung"
+
+head(df_lung)
+unique(df_lung$`Tissue area`)
+df_lung[, c(1:4)] <- lapply(df_lung[, c(1:4)], as.character)
+
+nrow(df_lung)
+
+colnames(df_lung)
+```
+
 # Save data
 
 ## Session Information
 
 ```{r}
+write.csv(df_lung, paste0(output_dir, "/lung_proportions.csv"))
 saveRDS(SO.si, paste0(output_dir, "/si_all_cells_all_ALs.rds"))
 saveRDS(SO.lung, paste0(output_dir, "/lung_all_cells_all_ALs.rds"))
 save.image(paste0(output_dir, "/environment.RData"))

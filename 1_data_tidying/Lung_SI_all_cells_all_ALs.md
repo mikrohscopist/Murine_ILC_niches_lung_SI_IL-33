@@ -1,7 +1,7 @@
 ---
 title: "Lung and SI data"
 author: "Sandy Kroh"
-date: "May 15, 2025"
+date: "May 16, 2025"
 output:
   html_document:
     toc: yes
@@ -175,12 +175,111 @@ SO.lung@meta.data$AL3 <- factor(SO.lung@meta.data$AL3, levels = c(
 new.cluster.ids <- SO.lung@meta.data$AL3
 ```
 
+Quantification
+
+
+``` r
+df_lung <- read_csv(here::here("data", "20230808_SO_33M_arcsinh_lung_0.04_imputed_quantification_all_ALs_counts.csv"), 
+    col_types = cols(...1 = col_skip()))
+
+# Tidying
+df_lung <- df_lung %>% 
+  rename(`Endothelial blood cells` = `EMCN CD31 Blood vessels`, 
+         `Stromal cells` = `Vessels`, 
+         `Lymphatics` = `LYVE1 CD90 Lymphatics`) %>%
+  select(-c(`ILC2s A`, `ILC2s B`))
+
+# AL1
+for (element in c(colnames(df_lung)[6:8])) {
+  number <- paste0("%_", element, "_perTotalCountFOV")
+  df_lung[number] <- round(df_lung[element]/df_lung["TotalCellCountFOV"]*100, 1)
+}
+round(rowSums(df_lung[20:22], na.rm = TRUE), 0)
+```
+
+```
+##  [1] 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100
+```
+
+``` r
+# AL2
+for (element in c(colnames(df_lung)[12:19])) {
+  number <- paste0("%_", element, "_perTotalImmuneFOV")
+  df_lung[number] <- round(df_lung[element]/df_lung["Immune cells"]*100, 1)
+}
+round(rowSums(df_lung[23:27], na.rm = TRUE), 0)
+```
+
+```
+##  [1] 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100
+```
+
+``` r
+# AL3
+for (element in c(colnames(df_lung)[17:19])) {
+  number <- paste0("%_", element, "_perTotalILCsFOV")
+  df_lung[number] <- round(df_lung[element]/df_lung["ILCs"]*100, 1)
+}
+round(rowSums(df_lung[31:33], na.rm = TRUE), 0)
+```
+
+```
+##  [1] 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100
+```
+
+``` r
+df_lung$`Tissue area` <- "Lung"
+df_lung$Organ <- "Lung"
+
+head(df_lung)
+```
+
+```
+## # A tibble: 6 × 35
+##   Dataset    Experiment   FOV Treatment TotalCellCountFOV `Stromal cells` `Immune cells` Epithelia `Endothelial blood cells` `LYVE1 CD31 vessels` Lymphatics `Myeloid cells` `B cells & Plasma cells`  ILCs `T cytotox cells` `T helper cells` `NK cells/ILC1s` ILC2s ILC3s `%_Stromal cells_perTotalCountFOV` `%_Immune cells_perTotalCountFOV` `%_Epithelia_perTotalCountFOV` `%_Myeloid cells_perTotalImmuneFOV` `%_B cells & Plasma cells_perTotalImmuneFOV` `%_ILCs_perTotalImmuneFOV` `%_T cytotox cells_perTotalImmuneFOV` `%_T helper cells_perTotalImmuneFOV` `%_NK cells/ILC1s_perTotalImmuneFOV` `%_ILC2s_perTotalImmuneFOV` `%_ILC3s_perTotalImmuneFOV` `%_NK cells/ILC1s_perTotalILCsFOV` `%_ILC2s_perTotalILCsFOV` `%_ILC3s_perTotalILCsFOV` `Tissue area` Organ
+##   <chr>           <dbl> <dbl> <chr>                 <dbl>           <dbl>          <dbl>     <dbl>                     <dbl>                <dbl>      <dbl>           <dbl>                    <dbl> <dbl>             <dbl>            <dbl>            <dbl> <dbl> <dbl>                              <dbl>                             <dbl>                          <dbl>                               <dbl>                                        <dbl>                      <dbl>                                 <dbl>                                <dbl>                                <dbl>                       <dbl>                       <dbl>                              <dbl>                     <dbl>                     <dbl> <chr>         <chr>
+## 1 20210910_1   20210910     1 CTRL                   1107             816            244        47                       681                   81         54              46                      103    21                27               47               13     8     0                               73.7                              22                              4.2                                18.9                                         42.2                        8.6                                  11.1                                 19.3                                  5.3                         3.3                         0                                 61.9                      38.1                         0 Lung          Lung 
+## 2 20210914_1   20210914     1 CTRL                   1201             847            243       111                       730                   64         53              50                       94    26                19               54               15    11     0                               70.5                              20.2                            9.2                                20.6                                         38.7                       10.7                                   7.8                                 22.2                                  6.2                         4.5                         0                                 57.7                      42.3                         0 Lung          Lung 
+## 3 20210922_1   20210922     1 CTRL                    625             362            190        73                       290                   30         42              77                       53    25                 3               32                4    18     3                               57.9                              30.4                           11.7                                40.5                                         27.9                       13.2                                   1.6                                 16.8                                  2.1                         9.5                         1.6                               16                        72                          12 Lung          Lung 
+## 4 20210910_2   20210910     2 CTRL                   1149             732            216       201                       586                  104         42              55                       86    23                10               42                8    15     0                               63.7                              18.8                           17.5                                25.5                                         39.8                       10.6                                   4.6                                 19.4                                  3.7                         6.9                         0                                 34.8                      65.2                         0 Lung          Lung 
+## 5 20210914_2   20210914     2 CTRL                   1350             959            286       105                       848                   64         47              50                      132    23                25               56               12    11     0                               71                                21.2                            7.8                                17.5                                         46.2                        8                                     8.7                                 19.6                                  4.2                         3.8                         0                                 52.2                      47.8                         0 Lung          Lung 
+## 6 20210922_2   20210922     2 CTRL                    640             456            153        31                       358                   66         32              57                       37    21                 5               33                5    16     0                               71.2                              23.9                            4.8                                37.3                                         24.2                       13.7                                   3.3                                 21.6                                  3.3                        10.5                         0                                 23.8                      76.2                         0 Lung          Lung
+```
+
+``` r
+unique(df_lung$`Tissue area`)
+```
+
+```
+## [1] "Lung"
+```
+
+``` r
+df_lung[, c(1:4)] <- lapply(df_lung[, c(1:4)], as.character)
+
+nrow(df_lung)
+```
+
+```
+## [1] 36
+```
+
+``` r
+colnames(df_lung)
+```
+
+```
+##  [1] "Dataset"                                    "Experiment"                                 "FOV"                                        "Treatment"                                  "TotalCellCountFOV"                          "Stromal cells"                              "Immune cells"                               "Epithelia"                                  "Endothelial blood cells"                    "LYVE1 CD31 vessels"                         "Lymphatics"                                 "Myeloid cells"                              "B cells & Plasma cells"                     "ILCs"                                       "T cytotox cells"                            "T helper cells"                             "NK cells/ILC1s"                             "ILC2s"                                      "ILC3s"                                      "%_Stromal cells_perTotalCountFOV"           "%_Immune cells_perTotalCountFOV"            "%_Epithelia_perTotalCountFOV"               "%_Myeloid cells_perTotalImmuneFOV"          "%_B cells & Plasma cells_perTotalImmuneFOV" "%_ILCs_perTotalImmuneFOV"                   "%_T cytotox cells_perTotalImmuneFOV"       
+## [27] "%_T helper cells_perTotalImmuneFOV"         "%_NK cells/ILC1s_perTotalImmuneFOV"         "%_ILC2s_perTotalImmuneFOV"                  "%_ILC3s_perTotalImmuneFOV"                  "%_NK cells/ILC1s_perTotalILCsFOV"           "%_ILC2s_perTotalILCsFOV"                    "%_ILC3s_perTotalILCsFOV"                    "Tissue area"                                "Organ"
+```
+
 # Save data
 
 ## Session Information
 
 
 ``` r
+write.csv(df_lung, paste0(output_dir, "/lung_proportions.csv"))
 saveRDS(SO.si, paste0(output_dir, "/si_all_cells_all_ALs.rds"))
 saveRDS(SO.lung, paste0(output_dir, "/lung_all_cells_all_ALs.rds"))
 save.image(paste0(output_dir, "/environment.RData"))
@@ -208,7 +307,7 @@ sessionInfo()
 ## [1] readr_2.1.5        here_1.0.1         ggplot2_3.5.1      dplyr_1.1.4        Seurat_5.2.1       SeuratObject_5.0.2 sp_2.2-0          
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] deldir_2.0-4           pbapply_1.7-2          gridExtra_2.3          rlang_1.1.5            magrittr_2.0.3         RcppAnnoy_0.0.22       spatstat.geom_3.3-6    matrixStats_1.5.0      ggridges_0.5.6         compiler_4.4.2         png_0.1-8              vctrs_0.6.5            reshape2_1.4.4         stringr_1.5.1          crayon_1.5.3           pkgconfig_2.0.3        fastmap_1.2.0          promises_1.3.2         rmarkdown_2.29         tzdb_0.4.0             bit_4.6.0              purrr_1.0.4            xfun_0.51              cachem_1.1.0           jsonlite_1.9.1         goftest_1.2-3          later_1.4.1            spatstat.utils_3.1-3   irlba_2.3.5.1          parallel_4.4.2         cluster_2.1.6          R6_2.6.1               ica_1.0-3              bslib_0.9.0            stringi_1.8.4          RColorBrewer_1.1-3     spatstat.data_3.1-6    reticulate_1.42.0      parallelly_1.43.0      spatstat.univar_3.1-2  lmtest_0.9-40          jquerylib_0.1.4        scattermore_1.2        Rcpp_1.0.14            knitr_1.50             tensor_1.5             future.apply_1.11.3    zoo_1.8-13             sctransform_0.4.1      httpuv_1.6.15          Matrix_1.7-1          
-##  [52] splines_4.4.2          igraph_2.1.4           tidyselect_1.2.1       abind_1.4-8            rstudioapi_0.17.1      yaml_2.3.10            spatstat.random_3.3-3  codetools_0.2-20       miniUI_0.1.2           spatstat.explore_3.4-2 listenv_0.9.1          lattice_0.22-6         tibble_3.2.1           plyr_1.8.9             withr_3.0.2            shiny_1.10.0           ROCR_1.0-11            evaluate_1.0.3         Rtsne_0.17             future_1.40.0          fastDummies_1.7.5      survival_3.7-0         polyclip_1.10-7        fitdistrplus_1.2-2     pillar_1.10.2          KernSmooth_2.23-24     plotly_4.10.4          generics_0.1.3         vroom_1.6.5            rprojroot_2.0.4        RcppHNSW_0.6.0         hms_1.1.3              munsell_0.5.1          scales_1.3.0           globals_0.17.0         xtable_1.8-4           glue_1.8.0             lazyeval_0.2.2         tools_4.4.2            data.table_1.17.0      RSpectra_0.16-2        RANN_2.6.2             dotCall64_1.2          cowplot_1.1.3          grid_4.4.2             tidyr_1.3.1            colorspace_2.1-1       nlme_3.1-166           patchwork_1.3.0        cli_3.6.3              spatstat.sparse_3.1-0 
-## [103] spam_2.11-1            viridisLite_0.4.2      uwot_0.2.3             gtable_0.3.6           sass_0.4.10            digest_0.6.37          progressr_0.15.1       ggrepel_0.9.6          htmlwidgets_1.6.4      farver_2.1.2           htmltools_0.5.8.1      lifecycle_1.0.4        httr_1.4.7             mime_0.13              bit64_4.6.0-1          MASS_7.3-61
+##   [1] deldir_2.0-4           pbapply_1.7-2          gridExtra_2.3          rlang_1.1.5            magrittr_2.0.3         RcppAnnoy_0.0.22       spatstat.geom_3.3-6    matrixStats_1.5.0      ggridges_0.5.6         compiler_4.4.2         png_0.1-8              vctrs_0.6.5            reshape2_1.4.4         stringr_1.5.1          crayon_1.5.3           pkgconfig_2.0.3        fastmap_1.2.0          utf8_1.2.4             promises_1.3.2         rmarkdown_2.29         tzdb_0.4.0             bit_4.6.0              purrr_1.0.4            xfun_0.51              cachem_1.1.0           jsonlite_1.9.1         goftest_1.2-3          later_1.4.1            spatstat.utils_3.1-3   irlba_2.3.5.1          parallel_4.4.2         cluster_2.1.6          R6_2.6.1               ica_1.0-3              bslib_0.9.0            stringi_1.8.4          RColorBrewer_1.1-3     spatstat.data_3.1-6    reticulate_1.42.0      parallelly_1.43.0      spatstat.univar_3.1-2  lmtest_0.9-40          jquerylib_0.1.4        scattermore_1.2        Rcpp_1.0.14            knitr_1.50             tensor_1.5             future.apply_1.11.3    zoo_1.8-13             sctransform_0.4.1      httpuv_1.6.15         
+##  [52] Matrix_1.7-1           splines_4.4.2          igraph_2.1.4           tidyselect_1.2.1       abind_1.4-8            rstudioapi_0.17.1      yaml_2.3.10            spatstat.random_3.3-3  codetools_0.2-20       miniUI_0.1.2           spatstat.explore_3.4-2 listenv_0.9.1          lattice_0.22-6         tibble_3.2.1           plyr_1.8.9             withr_3.0.2            shiny_1.10.0           ROCR_1.0-11            evaluate_1.0.3         Rtsne_0.17             future_1.40.0          fastDummies_1.7.5      survival_3.7-0         polyclip_1.10-7        fitdistrplus_1.2-2     pillar_1.10.2          KernSmooth_2.23-24     plotly_4.10.4          generics_0.1.3         vroom_1.6.5            rprojroot_2.0.4        RcppHNSW_0.6.0         hms_1.1.3              munsell_0.5.1          scales_1.3.0           globals_0.17.0         xtable_1.8-4           glue_1.8.0             lazyeval_0.2.2         tools_4.4.2            data.table_1.17.0      RSpectra_0.16-2        RANN_2.6.2             dotCall64_1.2          cowplot_1.1.3          grid_4.4.2             tidyr_1.3.1            colorspace_2.1-1       nlme_3.1-166           patchwork_1.3.0        cli_3.6.3             
+## [103] spatstat.sparse_3.1-0  spam_2.11-1            viridisLite_0.4.2      uwot_0.2.3             gtable_0.3.6           sass_0.4.10            digest_0.6.37          progressr_0.15.1       ggrepel_0.9.6          htmlwidgets_1.6.4      farver_2.1.2           htmltools_0.5.8.1      lifecycle_1.0.4        httr_1.4.7             mime_0.13              bit64_4.6.0-1          MASS_7.3-61
 ```
