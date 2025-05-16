@@ -198,21 +198,21 @@ df_lung <- df_lung %>%
 
 # AL1
 for (element in c(colnames(df_lung)[6:8])) {
-  number <- paste0("%_", element, "_perTotalCountFOV")
+  number <- paste0("Prop_", element, "_perTotalCountFOV")
   df_lung[number] <- round(df_lung[element]/df_lung["TotalCellCountFOV"]*100, 1)
 }
 round(rowSums(df_lung[20:22], na.rm = TRUE), 0)
 
 # AL2
 for (element in c(colnames(df_lung)[12:19])) {
-  number <- paste0("%_", element, "_perTotalImmuneFOV")
+  number <- paste0("Prop_", element, "_perTotalImmuneFOV")
   df_lung[number] <- round(df_lung[element]/df_lung["Immune cells"]*100, 1)
 }
 round(rowSums(df_lung[23:27], na.rm = TRUE), 0)
 
 # AL3
 for (element in c(colnames(df_lung)[17:19])) {
-  number <- paste0("%_", element, "_perTotalILCsFOV")
+  number <- paste0("Prop_", element, "_perTotalILCsFOV")
   df_lung[number] <- round(df_lung[element]/df_lung["ILCs"]*100, 1)
 }
 round(rowSums(df_lung[31:33], na.rm = TRUE), 0)
