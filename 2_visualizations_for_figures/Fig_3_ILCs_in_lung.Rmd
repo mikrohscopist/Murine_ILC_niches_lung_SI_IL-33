@@ -1,0 +1,446 @@
+---
+title: "Figure 3: Immune cells and ILCs in lung"
+author: "Sandy Kroh"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    number_sections: yes
+    fig_caption: yes
+    keep_md: yes
+  pdf_document:
+    toc: yes
+params:
+  Sample: Default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+# knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
+                      fig.align='center', dpi = 600, 
+                      message = FALSE, warning = FALSE)
+options(width = 1200)
+```
+
+## Libraries
+
+```{r}
+library(Seurat)
+library(SeuratObject)
+library(dplyr)
+library(ggplot2)
+# library(stringr)
+# library(glue)
+# library(here)
+library(readr)
+# library(lubridate)
+# library(data.table)
+# library(clustree)
+# library(magrittr)
+library(ggpubr)
+# library(ggrepel)
+# library(readxl)
+# library(openxlsx)
+```
+
+## Parameters
+
+```{r}
+set.seed(123)
+
+input_dir <- here::here("1_data_tidying", "Lung_SI_all_cells_all_ALs_files")
+
+output_dir <- here::here("2_visualizations_for_figures", "Fig_3_ILCs_in_lung_files")
+dir.create(output_dir)
+
+
+
+
+main_markers <- c(
+  "EpCAM", "EMCN", "LYVE1", "PDPN", "PDGFRa", "CD8a", "CD4",
+  "CD45", "CD3", "IRF4", "Kappa", "CD11c", "CD127", "GATA3eGFP", "RORgt"
+)
+
+
+immune_markers <- c(
+ "CD3", "CD4", "CD8a", "Kappa", "IRF4", "CD11c",
+  "CD127", "CD90", "EOMES", "GATA3eGFP", "RORgt", "Ki67",  "KLRG1", "NKp46", "CD117", "Areg", "CCR6", "CD44", "MHCII", "Sca1"
+)
+
+ilc_markers <- c(
+  "CD3", "CD4", "CD8a",
+  "CD127", "CD90", "EOMES", "GATA3eGFP", "RORgt", "KLRG1", "NKp46", "CD117", "CCR6", "MHCII", "Ki67", "Areg", "IRF4", "Sca1", "CD44"
+)
+
+
+cols_nat <- c("magenta", "cyan", "blue", "purple", "green", 
+                       "red", "yellow", "olivedrab1", "slateblue1", 
+                       "darkcyan", "gold","indianred1", "seagreen", "deeppink", 
+                       "orange", "brown", "violet",
+                       "deeppink4", "pink", 
+                       "grey", "black", "lightgreen", 
+                       "#FF0066",  
+                       "lightblue", "#FFCC99", "#CC00FF", 
+                       "blueviolet",  "goldenrod4", 
+                       "navy", "olivedrab", "lightcyan", "seagreen2", "darkviolet", "lightpink", "slateblue4", "olivedrab2")
+
+colfunc <- colorRampPalette(c("darkcyan", "green", "yellow", "magenta", "purple"))
+
+```
+
+# Load data
+
+```{r, fig.width=9, fig.height=6}
+
+SO.lung <- readRDS(paste0(input_dir, "/lung_all_cells_all_ALs.rds"))
+dim(SO.lung)
+
+SO.lung$AL1 <- gsub("Vessels", "Stromal cells", SO.lung$AL1)
+```
+
+# Visualization
+
+## Dotplot AL2
+
+```{r, fig.width=9, fig.height=3}
+
+SO.lung$AL2 <- factor(SO.lung$AL2, levels = c(
+  "B cells & Plasma cells",
+  "Myeloid cells", 
+  "T cytotox. cells", 
+  "T helper cells", 
+  "ILCs"
+))
+
+
+dot_plot <- Seurat::DotPlot(subset(SO.lung, subset = AL1 == "Immune cells"), 
+                group.by = "AL2",
+                  features = c(
+                    "CD90", 
+                    "CD127", 
+                    "GATA3eGFP", 
+                    "KLRG1", 
+                    "RORgt", 
+                    "CD4", 
+                    "CD3", 
+                    "CD8a", 
+                    "CD68",
+                    "CD11c",
+                    "MHCII",
+                    "B220", 
+                    "Kappa", 
+                    "CD117"
+                  ), 
+                cols ="RdBu", assay = "MELC")+   
+    RotatedAxis()+
+    # coord_flip()+
+    theme(axis.text.x=element_text(size=12, angle = 45),
+          axis.text.y=element_text(size=14), 
+          plot.margin = margin(2, 0, 0.4, 0.5, "cm"), 
+          axis.title.y = element_blank(), 
+          plot.title = element_blank())+ 
+  scale_color_gradient2(midpoint = 0, low = "gold", 
+                            high = "blue", space = "Lab" )
+
+dot_plot
+```
+
+## Ridge plots of ILC subytpes
+
+```{r, fig.height=7, fig.width=9}
+ridge_plot <- RidgePlot(subset(SO.lung, subset = AL3 == c("NK cells/ILC1s", "ILC2s", "ILC3s")), 
+          features = c("CD127", "CD90","GATA3eGFP",  "RORgt", "EOMES", "TBET"),
+          group.by = "AL3", ncol = 2, same.y.lims = TRUE, assay = "MELC", layer = "counts",
+          cols = alpha(c(
+            "navy",
+            "seagreen2",
+            "darkmagenta"
+          ), 0.5))+
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+
+ridge_plot
+```
+
+## IF overlays
+
+### ILC1s/NK cells
+
+```{r, fig.width=4.5, fig.height=3}
+
+# load overview overlay image
+img <- png::readPNG(
+    "D:/Sandy/Promotion/Dissertation/Figures/20210902_1_li_d3/NKILC1/TBET-c_EOMES-m_CD3-y_ov_ROIs.png"
+  )
+
+plot_ov <- ggplot() + background_image(img)+
+  theme( panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+    theme(legend.position = "bottom", 
+          plot.margin=margin(0.18,0,0.13,0,"cm"),
+          text = element_blank(),
+           axis.ticks = element_blank(),
+         panel.grid =  element_blank(),
+          legend.ticks = element_blank(),
+         legend.title=element_blank(),
+         legend.key = element_blank(),
+        legend.text = element_text(size=14), 
+         panel.background = element_rect(fill = 'black', 
+                                         color = 'black', size = 1))+    
+annotate("text", x=c(200, 800, 1400, 950), y=c(2000, 2000, 2000, 1800), label= c("TBET", "EOMES", "CD3", "Identified NK cells/ILC1s"), ymin = 0, ymax = 2048,
+           xmin = 0, xmax = 2048, 
+           col=c("cyan", "magenta", "yellow", "white"), size=6, parse=FALSE)  +    
+annotate("text", x=c(450, 1300), y=c(960, 240), label= c("ROI 1", "ROI 2"), ymin = 0, ymax = 2048,
+           xmin = 0, xmax = 2048, 
+           col=c("white", "white"), size=4, parse=FALSE) 
+
+
+# load overview overlay image
+img <- png::readPNG(
+    "D:/Sandy/Promotion/Dissertation/Figures/20210902_1_li_d3/NKILC1/TBET-c_EOMES-m_CD3-y_ov_ROIs-2.png"
+  )
+
+plot_1 <- ggplot() + background_image(img)  +
+    theme(legend.position = "bottom", 
+          plot.margin=margin(0.18,0.1,0.13,0,"cm"),
+          text = element_blank(),
+           axis.ticks = element_blank(),
+         panel.grid =  element_blank(),
+          legend.ticks = element_blank(),
+         legend.title=element_blank(),
+         legend.key = element_blank(),
+        legend.text = element_text(size=14), 
+         panel.background = element_rect(fill = 'white', 
+                                         color = 'white', size = 1)) + 
+  annotate("text", x=2, y=1, 
+           label= c("ROI 1"), ymin = 0, ymax = 10,
+           xmin = 0, xmax = 10, 
+           col=c("white"), size=4, parse=FALSE) 
+
+
+# load overview overlay image
+img <- png::readPNG(
+    "D:/Sandy/Promotion/Dissertation/Figures/20210902_1_li_d3/NKILC1/TBET-c_EOMES-m_CD3-y_ov_ROIs-1.png"
+  )
+
+plot_2 <- ggplot() + background_image(img)  +
+    theme(legend.position = "bottom", 
+          plot.margin=margin(0.18,0.1,0.13,0,"cm"),
+          text = element_blank(),
+           axis.ticks = element_blank(),
+         panel.grid =  element_blank(),
+          legend.ticks = element_blank(),
+         legend.title=element_blank(),
+         legend.key = element_blank(),
+        legend.text = element_text(size=14), 
+         panel.background = element_rect(fill = 'white', 
+                                         color = 'white', size = 1)) + 
+  annotate("text", x=2, y=1, 
+           label= c("ROI 2"), ymin = 0, ymax = 10,
+           xmin = 0, xmax = 10, 
+           col=c("white"), size=4, parse=FALSE) 
+
+
+zoomed <- ggarrange(plot_1, plot_2, nrow = 2, ncol = 1)
+
+ilc1 <- ggarrange(plot_ov, zoomed, nrow = 1, ncol = 2, 
+          heights = 5, 
+          widths = c(4, 2))+
+    theme(plot.margin=margin(0.5,0,0,0,"cm"))
+
+ilc1
+```
+
+### ILC2s
+
+```{r, fig.width=4.5, fig.height=3}
+
+# load overview overlay image
+img <- png::readPNG(
+    "D:/Sandy/Promotion/Dissertation/Figures/20210902_1_li_d3/ILC2s/GATA3eGFP-c_CD45-m_CD3-y_ov_ROI.png"
+  )
+
+plot_ov <- ggplot() + background_image(img)+
+  theme( panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+    theme(legend.position = "bottom", 
+          plot.margin=margin(0.18,0,0.13,0,"cm"),
+          text = element_blank(),
+           axis.ticks = element_blank(),
+         panel.grid =  element_blank(),
+          legend.ticks = element_blank(),
+         legend.title=element_blank(),
+         legend.key = element_blank(),
+        legend.text = element_text(size=14), 
+         panel.background = element_rect(fill = 'black', 
+                                         color = 'black', size = 1))+    
+annotate("text", x=c(500, 1330, 1800, 600), y=c(2000, 2000, 2000, 1800), label= c("GATA3eGFP", "CD45", "CD3", "Identified ILC2s"), ymin = 0, ymax = 2048,
+           xmin = 0, xmax = 2048, 
+           col=c("cyan", "magenta", "yellow", "white"), size=6, parse=FALSE) +    
+annotate("text", x=c(540, 850), y=c(1250, 950), label= c("ROI 1", "ROI 2"), ymin = 0, ymax = 2048,
+           xmin = 0, xmax = 2048, 
+           col=c("white", "white"), size=4, parse=FALSE)  
+
+
+# load overview overlay image
+img <- png::readPNG(
+    "D:/Sandy/Promotion/Dissertation/Figures/20210902_1_li_d3/ILC2s/GATA3eGFP-c_CD45-m_CD3-y_ov_ROI-2.png"
+  )
+
+plot_1 <- ggplot() + background_image(img) +
+    theme(legend.position = "bottom", 
+          plot.margin=margin(0.18,0.1,0.13,0,"cm"),
+          text = element_blank(),
+           axis.ticks = element_blank(),
+         panel.grid =  element_blank(),
+          legend.ticks = element_blank(),
+         legend.title=element_blank(),
+         legend.key = element_blank(),
+        legend.text = element_text(size=14), 
+         panel.background = element_rect(fill = 'white', 
+                                         color = 'white', size = 1)) + 
+  annotate("text", x=2, y=9, 
+           label= c("ROI 1"), ymin = 0, ymax = 10,
+           xmin = 0, xmax = 10, 
+           col=c("white"), size=4, parse=FALSE) 
+
+
+# load overview overlay image
+img <- png::readPNG(
+    "D:/Sandy/Promotion/Dissertation/Figures/20210902_1_li_d3/ILC2s/GATA3eGFP-c_CD45-m_CD3-y_ov_ROI-1.png"
+  )
+
+plot_2 <- ggplot() + background_image(img)  +
+    theme(legend.position = "bottom", 
+          plot.margin=margin(0.18,0.1,0.13,0,"cm"),
+          text = element_blank(),
+           axis.ticks = element_blank(),
+         panel.grid =  element_blank(),
+          legend.ticks = element_blank(),
+         legend.title=element_blank(),
+         legend.key = element_blank(),
+        legend.text = element_text(size=14), 
+         panel.background = element_rect(fill = 'white', 
+                                         color = 'white', size = 1)) + 
+  annotate("text", x=2, y=9, 
+           label= c("ROI 2"), ymin = 0, ymax = 10,
+           xmin = 0, xmax = 10, 
+           col=c("white"), size=4, parse=FALSE) 
+
+
+zoomed <- ggarrange(plot_1, plot_2, nrow = 2, ncol = 1)
+
+ilc2 <- ggarrange(plot_ov, zoomed, nrow = 1, ncol = 2, 
+          heights = 5, 
+          widths = c(4, 2))+
+    theme(plot.margin=margin(0.5,0,0,0,"cm"))
+
+ilc2
+```
+
+### ILC3s
+
+```{r, fig.width=4.5, fig.height=3}
+
+# load overview overlay image
+img <- png::readPNG(
+    "D:/Sandy/Promotion/Dissertation/Figures/20210902_2_lu_d3/ILC3s/RORgt-c_CD90-m_CD3-y_ov_ROIs.png"
+  )
+
+plot_ov <- ggplot() + background_image(img)+
+  theme( panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+    theme(legend.position = "bottom", 
+          plot.margin=margin(0.18,0,0.13,0,"cm"),
+          text = element_blank(),
+           axis.ticks = element_blank(),
+         panel.grid =  element_blank(),
+          legend.ticks = element_blank(),
+         legend.title=element_blank(),
+         legend.key = element_blank(),
+        legend.text = element_text(size=14), 
+         panel.background = element_rect(fill = 'black', 
+                                         color = 'black', size = 1))+    
+annotate("text", x=c(240, 900, 1450, 600), y=c(2000, 2000, 2000, 1800), label= c("RORgt", "CD90.2", "CD3", "Identified ILC3s"), ymin = 0, ymax = 2048,
+           xmin = 0, xmax = 2048, 
+           col=c("cyan", "magenta", "yellow", "white"), size=6, parse=FALSE) +    
+annotate("text", x=c(550, 400), y=c(1250, 80), label= c("ROI 1", "ROI 2"), ymin = 0, ymax = 2048,
+           xmin = 0, xmax = 2048, 
+           col=c("white", "white"), size=4, parse=FALSE) 
+
+
+# load overview overlay image
+img <- png::readPNG(
+    "D:/Sandy/Promotion/Dissertation/Figures/20210902_2_lu_d3/ILC3s/RORgt-c_CD90-m_CD3-y_ov_ROIs-1.png"
+  )
+
+plot_1 <- ggplot() + background_image(img)  +
+    theme(legend.position = "bottom", 
+          plot.margin=margin(0.18,0.1,0.13,0,"cm"),
+          text = element_blank(),
+           axis.ticks = element_blank(),
+         panel.grid =  element_blank(),
+          legend.ticks = element_blank(),
+         legend.title=element_blank(),
+         legend.key = element_blank(),
+        legend.text = element_text(size=14), 
+         panel.background = element_rect(fill = 'white', 
+                                         color = 'white', size = 1)) + 
+  annotate("text", x=2, y=1, 
+           label= c("ROI 1"), ymin = 0, ymax = 10,
+           xmin = 0, xmax = 10, 
+           col=c("white"), size=4, parse=FALSE) 
+
+
+# load overview overlay image
+img <- png::readPNG(
+    "D:/Sandy/Promotion/Dissertation/Figures/20210902_2_lu_d3/ILC3s/RORgt-c_CD90-m_CD3-y_ov_ROIs-2.png"
+  )
+
+plot_2 <- ggplot() + background_image(img)  +
+    theme(legend.position = "bottom", 
+          plot.margin=margin(0.18,0.1,0.13,0,"cm"),
+          text = element_blank(),
+           axis.ticks = element_blank(),
+         panel.grid =  element_blank(),
+          legend.ticks = element_blank(),
+         legend.title=element_blank(),
+         legend.key = element_blank(),
+        legend.text = element_text(size=14), 
+         panel.background = element_rect(fill = 'white', 
+                                         color = 'white', size = 1)) + 
+  annotate("text", x=2, y=1, 
+           label= c("ROI 2"), ymin = 0, ymax = 10,
+           xmin = 0, xmax = 10, 
+           col=c("white"), size=4, parse=FALSE) 
+
+
+zoomed <- ggarrange(plot_1, plot_2, nrow = 2, ncol = 1)
+
+ilc3 <- ggarrange(plot_ov, zoomed, nrow = 1, ncol = 2, 
+          heights = 5, 
+          widths = c(4, 2))+
+    theme(plot.margin=margin(0.5,0,0,0,"cm"))
+
+ilc3
+
+```
+
+```{r, fig.width=9, fig.height=6.5}
+if_plots <- ggarrange(ilc1, ilc2, ilc3, ncol = 2, nrow = 2, labels = c( "C", "D", "E"))
+
+if_plots
+```
+
+## Combine plots for figure
+
+```{r, fig.width=9, fig.height=16.5}
+ggarrange(dot_plot, ridge_plot, if_plots, 
+          ncol = 1, nrow = 3, heights = c(3, 7, 6.5), labels = c("A", "B", ""))+
+  theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
+```
+
+## Session Information
+
+```{r}
+save.image(paste0(output_dir, "/environment.RData"))
+sessionInfo()
+```

@@ -1,0 +1,25 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.csv
+*.html
+*.xlsx
+
+data/*
+*.RData
+*.rds
+*.RDataTmp
+
+
+# Optionally allow only PNGs inside _files folders
+!*_files/*.png
+
+# Optionally allow only file in data folder
+#!*data/*CX3CR1_GFP_samples.xlsx
+
+# Ignore all files in the subfolder 1_metadata
+data/1_metadata/*
+
+# Except for this specific file in the subfolder
+!data/1_metadata/analysis_sample_overview_MELC.xlsx

@@ -1,0 +1,195 @@
+---
+title: "Lung and SI data"
+author: "Sandy Kroh"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    number_sections: yes
+    fig_caption: yes
+    keep_md: yes
+  pdf_document:
+    toc: yes
+params:
+  Sample: Default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+# knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
+                      fig.align='center', dpi = 600, 
+                      message = FALSE, warning = FALSE)
+options(width = 1200)
+```
+
+## Libraries
+
+```{r}
+library(Seurat)
+library(SeuratObject)
+library(dplyr)
+library(ggplot2)
+library(here)
+# library(stringr)
+# library(glue)
+# library(here)
+library(readr)
+# library(lubridate)
+# library(data.table)
+# library(clustree)
+# library(magrittr)
+# library(ggpubr)
+# library(ggrepel)
+# library(readxl)
+# library(openxlsx)
+```
+
+## Parameters
+
+```{r}
+set.seed(123)
+
+input_dir <- here::here("data")
+
+output_dir <- here::here("1_data_tidying", "Lung_SI_all_cells_all_ALs_files")
+dir.create(output_dir)
+
+
+
+
+main_markers <- c(
+  "EpCAM", "EMCN", "LYVE1", "PDPN", "PDGFRa", "CD8a", "CD4",
+  "CD45", "CD3", "IRF4", "Kappa", "CD11c", "CD127", "GATA3eGFP", "RORgt"
+)
+
+immune_markers <- c(
+ "CD3", "CD4", "CD8a", "Kappa", "IRF4", "CD11c",
+  "CD127", "CD90", "EOMES", "GATA3eGFP", "RORgt", "Ki67",  "KLRG1", "NKp46", "CD117", "Areg", "CCR6", "CD44", "MHCII", "Sca1"
+)
+
+ilc_markers <- c(
+  "CD3", "CD4", "CD8a",
+  "CD127", "CD90", "EOMES", "GATA3eGFP", "RORgt", "KLRG1", "NKp46", "CD117", "CCR6", "MHCII", "Ki67", "Areg", "IRF4", "Sca1", "CD44"
+)
+
+
+cols_nat <- c("magenta", "cyan", "blue", "purple", "green", 
+                       "red", "yellow", "olivedrab1", "slateblue1", 
+                       "darkcyan", "gold","indianred1", "seagreen", "deeppink", 
+                       "orange", "brown", "violet",
+                       "deeppink4", "pink", 
+                       "grey", "black", "lightgreen", 
+                       "#FF0066",  
+                       "lightblue", "#FFCC99", "#CC00FF", 
+                       "blueviolet",  "goldenrod4", 
+                       "navy", "olivedrab", "lightcyan", "seagreen2", "darkviolet", "lightpink", "slateblue4", "olivedrab2")
+
+colfunc <- colorRampPalette(c("darkcyan", "green", "yellow", "magenta", "purple"))
+
+```
+
+# Load data
+
+## SI
+
+```{r, fig.width=9, fig.height=6}
+
+SO.si <- readRDS(paste0(input_dir, "/SO_arcsinh_si_imputed__allALs_allCells.rds"))
+
+SO.si@meta.data$Tissue.area <- gsub("Crypts", "Villi", SO.si@meta.data$Tissue.area)
+SO.si <- subset(SO.si, subset = AL2 != "Unresolved")
+# SO.villi <- subset(SO.si, subset = Tissue.area == "Villi")
+
+```
+
+Combine Mesenchymal cells I with Fibroblasts and rename mesenchymal cells II
+
+```{r}
+SO.si$AL2 <- gsub("Epithelia", "Epithelia I" , SO.si$AL2)
+SO.si$AL3 <- gsub("Epithelia", "Epithelia I" , SO.si$AL3)
+
+SO.si$AL2 <- gsub("Mesenchymal stromal cells II", "Epithelia II" , SO.si$AL2)
+SO.si$AL3 <- gsub("Mesenchymal stromal cells II", "Epithelia II" , SO.si$AL3)
+
+SO.si$AL2 <- gsub("Mesenchymal stromal cells I", "Fibroblasts" , SO.si$AL2)
+SO.si$AL3 <- gsub("Mesenchymal stromal cells I", "Fibroblasts" , SO.si$AL3)
+
+```
+
+## Lung
+
+```{r, fig.width=9, fig.height=6}
+
+df <- read_csv(paste0(input_dir, "/20230808_SO_33M_arcsinh_lung_0.04_imputed_quantification_all_cells.csv"), 
+    col_types = cols(...1 = col_skip()))
+
+colnames(df) <- gsub("annotation_lvl", "AL", colnames(df))
+df$AL3 <- gsub("EMCN CD31 ", "", df$AL3)
+df$AL3 <- gsub("LYVE1 CD90 ", "", df$AL3)
+
+CellIDs <- rownames(df)
+# 2 TRANSPOSE DF -----
+markers <- colnames(df)[12:43]
+df_markers <- df %>%
+  select(markers)
+df_markers <- sapply(df_markers, as.numeric)
+df_t <- t(df_markers)
+colnames(df_t) <- CellIDs 
+df_meta <- df %>%
+  select(-markers) 
+rownames(df_meta) <- CellIDs 
+df_meta$Experiment <- as.factor(df_meta$Experiment)
+df_meta$Dataset <- as.factor(df_meta$Dataset)
+df_meta$CellID <- as.numeric(df_meta$CellID)
+df_meta$Location_Center_X <- as.numeric(df_meta$Location_Center_X)
+df_meta$Location_Center_Y <- as.numeric(df_meta$Location_Center_Y)
+df_meta$UMAP_1 <- as.numeric(df_meta$UMAP_1)
+df_meta$UMAP_2 <- as.numeric(df_meta$UMAP_2)
+df_meta$AL1 <- as.factor(df_meta$AL1)
+df_meta$AL2 <- as.factor(df_meta$AL2)
+df_meta$AL3 <- as.factor(df_meta$AL3)
+df_meta$AL4 <- as.factor(df_meta$AL4)
+
+df_meta$max_features <- NULL
+
+SO.lung <- CreateSeuratObject(
+  counts = df_t,
+  assay = "MELC",
+  names.field = 0,
+  names.delim = "_",
+  meta.data = df_meta,
+  project = "SeuratProject"
+)
+
+
+SO.lung@meta.data$AL3 <- factor(SO.lung@meta.data$AL3, levels = c(
+  "NK cells/ILC1s", 
+  "ILC2s", 
+  "ILC3s", 
+  "T helper cells", 
+  "T cytotox cells", 
+  "B cells & Plasma cells", 
+  "Myeloid cells", 
+  "Blood vessels", 
+  "Lymphatics", 
+  "LYVE1 CD31 vessels", 
+  "Epithelia"
+))
+
+new.cluster.ids <- SO.lung@meta.data$AL3
+
+
+```
+
+# Save data
+
+## Session Information
+
+```{r}
+saveRDS(SO.si, paste0(output_dir, "/si_all_cells_all_ALs.rds"))
+saveRDS(SO.lung, paste0(output_dir, "/lung_all_cells_all_ALs.rds"))
+save.image(paste0(output_dir, "/environment.RData"))
+sessionInfo()
+```
