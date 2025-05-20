@@ -1,7 +1,7 @@
 ---
 title: "Figure 2: major immune and non-immune cell types lung"
 author: "Sandy Kroh"
-date: "May 16, 2025"
+date: "May 20, 2025"
 output:
   html_document:
     toc: yes
@@ -124,7 +124,8 @@ dot_plot <- Seurat::DotPlot(SO.lung,
                     "PDPN",
                     "Sca1",
                     "PDGFRa",
-                    "EpCAM"
+                    "EpCAM", 
+                    "CD138"
                   ), 
                 cols ="RdBu", assay = "MELC")+   
     RotatedAxis()+
