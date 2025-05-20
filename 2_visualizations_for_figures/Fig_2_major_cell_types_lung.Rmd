@@ -123,7 +123,8 @@ dot_plot <- Seurat::DotPlot(SO.lung,
                     "PDPN",
                     "Sca1",
                     "PDGFRa",
-                    "EpCAM"
+                    "EpCAM", 
+                    "CD138"
                   ), 
                 cols ="RdBu", assay = "MELC")+   
     RotatedAxis()+
