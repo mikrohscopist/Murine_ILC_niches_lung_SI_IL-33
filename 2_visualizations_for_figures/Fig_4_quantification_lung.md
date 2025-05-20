@@ -1634,6 +1634,348 @@ plot_freq_ilc3
 
 <img src="Fig_4_quantification_lung_files/figure-html/unnamed-chunk-15-1.png" width="100%" style="display: block; margin: auto;" />
 
+## Freq of immune cells, stromal cells and epithelia within total cells
+
+
+``` r
+# IMMUNE CELLS ---------------------------------------------------------------
+df <- df_lung %>%
+  select(Treatment, Dataset, `Prop_Immune cells_perTotalCountFOV`) %>%
+  mutate(Treatment = factor(Treatment, level =c(
+    "CTRL", "1", "2", "3"
+  )), 
+  `Immune cells` = `Prop_Immune cells_perTotalCountFOV`)
+
+# Testing for normal distribution
+shapiro.test(df$`Immune cells`)
+```
+
+```
+## 
+## 	Shapiro-Wilk normality test
+## 
+## data:  df$`Immune cells`
+## W = 0.92858, p-value = 0.02267
+```
+
+``` r
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`Immune cells` ~ Treatment)
+res.kruskal
+```
+
+```
+## # A tibble: 1 × 6
+##   .y.              n statistic    df        p method        
+## * <chr>        <int>     <dbl> <int>    <dbl> <chr>         
+## 1 Immune cells    36      21.8     3 0.000071 Kruskal-Wallis
+```
+
+``` r
+df %>% kruskal_effsize(`Immune cells` ~ Treatment)
+```
+
+```
+## # A tibble: 1 × 5
+##   .y.              n effsize method  magnitude
+## * <chr>        <int>   <dbl> <chr>   <ord>    
+## 1 Immune cells    36   0.588 eta2[H] large
+```
+
+``` r
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`Immune cells` ~ Treatment, p.adjust.method = "bonferroni") 
+pwc
+```
+
+```
+## # A tibble: 6 × 9
+##   .y.          group1 group2    n1    n2 statistic         p     p.adj p.adj.signif
+## * <chr>        <chr>  <chr>  <int> <int>     <dbl>     <dbl>     <dbl> <chr>       
+## 1 Immune cells CTRL   1          9     9     0.839 0.401     1         ns          
+## 2 Immune cells CTRL   2          9     9     1.44  0.149     0.893     ns          
+## 3 Immune cells CTRL   3          9     9     4.39  0.0000115 0.0000690 ****        
+## 4 Immune cells 1      2          9     9     0.604 0.546     1         ns          
+## 5 Immune cells 1      3          9     9     3.55  0.000389  0.00233   **          
+## 6 Immune cells 2      3          9     9     2.94  0.00325   0.0195    *
+```
+
+``` r
+# add N to plot
+tab <- data.frame(xtabs(~ Treatment, data = df))
+head(tab)
+```
+
+```
+##   Treatment Freq
+## 1      CTRL    9
+## 2         1    9
+## 3         2    9
+## 4         3    9
+```
+
+``` r
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "Treatment")
+
+plot_immune <- ggplot(df, aes(x = Treatment, y = `Immune cells`, fill = "Treatment"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
+  scale_color_manual(values = cols_treat)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(#angle = 45, 
+                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
+         axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.5, y.position = 40) +
+  xlab(NULL)+
+  ylab("Frequency/total cells per FOV [#]")+
+  ggtitle("Immune cells")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,100))+
+  NoLegend()
+
+
+# Stromal cells ---------------------------------------------------------------
+df <- df_lung %>%
+  select(Treatment, Dataset, `Prop_Stromal cells_perTotalCountFOV`) %>%
+  mutate(Treatment = factor(Treatment, level =c(
+    "CTRL", "1", "2", "3"
+  )), 
+  `cells_of_interest` = `Prop_Stromal cells_perTotalCountFOV`)
+
+# Testing for normal distribution
+shapiro.test(df$`cells_of_interest`)
+```
+
+```
+## 
+## 	Shapiro-Wilk normality test
+## 
+## data:  df$cells_of_interest
+## W = 0.97166, p-value = 0.4725
+```
+
+``` r
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`cells_of_interest` ~ Treatment)
+res.kruskal
+```
+
+```
+## # A tibble: 1 × 6
+##   .y.                   n statistic    df        p method        
+## * <chr>             <int>     <dbl> <int>    <dbl> <chr>         
+## 1 cells_of_interest    36      18.3     3 0.000374 Kruskal-Wallis
+```
+
+``` r
+df %>% kruskal_effsize(`cells_of_interest` ~ Treatment)
+```
+
+```
+## # A tibble: 1 × 5
+##   .y.                   n effsize method  magnitude
+## * <chr>             <int>   <dbl> <chr>   <ord>    
+## 1 cells_of_interest    36   0.479 eta2[H] large
+```
+
+``` r
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`cells_of_interest` ~ Treatment, p.adjust.method = "bonferroni") 
+pwc
+```
+
+```
+## # A tibble: 6 × 9
+##   .y.               group1 group2    n1    n2 statistic         p    p.adj p.adj.signif
+## * <chr>             <chr>  <chr>  <int> <int>     <dbl>     <dbl>    <dbl> <chr>       
+## 1 cells_of_interest CTRL   1          9     9    -2.37  0.0177    0.106    ns          
+## 2 cells_of_interest CTRL   2          9     9    -2.26  0.0238    0.143    ns          
+## 3 cells_of_interest CTRL   3          9     9    -4.27  0.0000192 0.000115 ***         
+## 4 cells_of_interest 1      2          9     9     0.112 0.911     1        ns          
+## 5 cells_of_interest 1      3          9     9    -1.90  0.0572    0.343    ns          
+## 6 cells_of_interest 2      3          9     9    -2.01  0.0440    0.264    ns
+```
+
+``` r
+# add N to plot
+tab <- data.frame(xtabs(~ Treatment, data = df))
+head(tab)
+```
+
+```
+##   Treatment Freq
+## 1      CTRL    9
+## 2         1    9
+## 3         2    9
+## 4         3    9
+```
+
+``` r
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "Treatment")
+
+plot_stroma <- ggplot(df, aes(x = Treatment, y = `cells_of_interest`, fill = "Treatment"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
+  scale_color_manual(values = cols_treat)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(#angle = 45, 
+                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
+         axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.2, y.position = 80) +
+  xlab(NULL)+
+  ylab("Frequency/total cells per FOV [#]")+
+  ggtitle("Stromal cells")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,100))+
+  NoLegend()
+
+
+# Epithelia ---------------------------------------------------------------
+df <- df_lung %>%
+  select(Treatment, Dataset, `Prop_Epithelia_perTotalCountFOV`) %>%
+  mutate(Treatment = factor(Treatment, level =c(
+    "CTRL", "1", "2", "3"
+  )), 
+  `cells_of_interest` = `Prop_Epithelia_perTotalCountFOV`)
+
+# Testing for normal distribution
+shapiro.test(df$`cells_of_interest`)
+```
+
+```
+## 
+## 	Shapiro-Wilk normality test
+## 
+## data:  df$cells_of_interest
+## W = 0.91559, p-value = 0.009365
+```
+
+``` r
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`cells_of_interest` ~ Treatment)
+res.kruskal
+```
+
+```
+## # A tibble: 1 × 6
+##   .y.                   n statistic    df      p method        
+## * <chr>             <int>     <dbl> <int>  <dbl> <chr>         
+## 1 cells_of_interest    36      9.28     3 0.0257 Kruskal-Wallis
+```
+
+``` r
+df %>% kruskal_effsize(`cells_of_interest` ~ Treatment)
+```
+
+```
+## # A tibble: 1 × 5
+##   .y.                   n effsize method  magnitude
+## * <chr>             <int>   <dbl> <chr>   <ord>    
+## 1 cells_of_interest    36   0.196 eta2[H] large
+```
+
+``` r
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`cells_of_interest` ~ Treatment, p.adjust.method = "bonferroni") 
+pwc
+```
+
+```
+## # A tibble: 6 × 9
+##   .y.               group1 group2    n1    n2 statistic       p  p.adj p.adj.signif
+## * <chr>             <chr>  <chr>  <int> <int>     <dbl>   <dbl>  <dbl> <chr>       
+## 1 cells_of_interest CTRL   1          9     9     2.66  0.00774 0.0465 *           
+## 2 cells_of_interest CTRL   2          9     9     2.50  0.0126  0.0755 ns          
+## 3 cells_of_interest CTRL   3          9     9     2.23  0.0260  0.156  ns          
+## 4 cells_of_interest 1      2          9     9    -0.168 0.867   1      ns          
+## 5 cells_of_interest 1      3          9     9    -0.436 0.663   1      ns          
+## 6 cells_of_interest 2      3          9     9    -0.269 0.788   1      ns
+```
+
+``` r
+# add N to plot
+tab <- data.frame(xtabs(~ Treatment, data = df))
+head(tab)
+```
+
+```
+##   Treatment Freq
+## 1      CTRL    9
+## 2         1    9
+## 3         2    9
+## 4         3    9
+```
+
+``` r
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "Treatment")
+
+plot_epithelia <- ggplot(df, aes(x = Treatment, y = `cells_of_interest`, fill = "Treatment"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
+  scale_color_manual(values = cols_treat)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(#angle = 45, 
+                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
+         axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.15, y.position = 40) +
+  xlab(NULL)+
+  ylab("Frequency/total cells per FOV [#]")+
+  ggtitle("Epithelia")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,100))+
+  NoLegend()
+
+
+ggarrange(plot_immune, plot_stroma, plot_epithelia, 
+          ncol = 3, nrow = 1, 
+          labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I"))+
+  theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
+```
+
+<img src="Fig_4_quantification_lung_files/figure-html/unnamed-chunk-16-1.png" width="100%" style="display: block; margin: auto;" />
+
 ## Combine plots for figure
 
 
@@ -1646,7 +1988,7 @@ ggarrange(plot_prop, plot_freq_immune, plot_freq,
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
 ```
 
-<img src="Fig_4_quantification_lung_files/figure-html/unnamed-chunk-16-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_quantification_lung_files/figure-html/unnamed-chunk-17-1.png" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1656,7 +1998,7 @@ ggarrange(plot_freq_ilc1, plot_freq_ilc2, plot_freq_ilc3,
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
 ```
 
-<img src="Fig_4_quantification_lung_files/figure-html/unnamed-chunk-17-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_quantification_lung_files/figure-html/unnamed-chunk-18-1.png" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 
