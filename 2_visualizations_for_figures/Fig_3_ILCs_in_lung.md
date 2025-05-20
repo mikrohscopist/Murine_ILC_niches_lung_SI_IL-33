@@ -1,7 +1,7 @@
 ---
 title: "Figure 3: Immune cells and ILCs in lung"
 author: "Sandy Kroh"
-date: "May 16, 2025"
+date: "May 20, 2025"
 output:
   html_document:
     toc: yes
@@ -155,7 +155,7 @@ dot_plot
 
 ``` r
 ridge_plot <- RidgePlot(subset(SO.lung, subset = AL3 == c("NK cells/ILC1s", "ILC2s", "ILC3s")), 
-          features = c("CD127", "CD90","GATA3eGFP",  "RORgt", "EOMES", "TBET"),
+          features = c("CD127", "CD90","GATA3eGFP", "KLRG1", "EOMES", "TBET",  "RORgt"),
           group.by = "AL3", ncol = 2, same.y.lims = TRUE, assay = "MELC", layer = "counts",
           cols = alpha(c(
             "navy",
@@ -168,6 +168,20 @@ ridge_plot
 ```
 
 <img src="Fig_3_ILCs_in_lung_files/figure-html/unnamed-chunk-5-1.png" width="100%" style="display: block; margin: auto;" />
+
+``` r
+RidgePlot(subset(SO.lung, subset = AL3 == c("NK cells/ILC1s", "ILC2s", "ILC3s")), 
+          features = c("CD127", "CD90","GATA3eGFP",  "KLRG1", "EOMES", "TBET", "NKp46", "RORgt"),
+          group.by = "AL3", ncol = 3, same.y.lims = TRUE, assay = "MELC", layer = "counts", y.max = 10, log = TRUE, 
+          cols = alpha(c(
+            "navy",
+            "seagreen2",
+            "darkmagenta"
+          ), 0.5))+
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+```
+
+<img src="Fig_3_ILCs_in_lung_files/figure-html/unnamed-chunk-5-2.png" width="100%" style="display: block; margin: auto;" />
 
 ## IF overlays
 
@@ -437,7 +451,7 @@ ilc3
 
 
 ``` r
-if_plots <- ggarrange(ilc1, ilc2, ilc3, ncol = 2, nrow = 2, labels = c( "C", "D", "E"))
+if_plots <- ggarrange(ilc2, ilc1, ilc3, ncol = 2, nrow = 2, labels = c( "C", "D", "E"))
 
 if_plots
 ```
