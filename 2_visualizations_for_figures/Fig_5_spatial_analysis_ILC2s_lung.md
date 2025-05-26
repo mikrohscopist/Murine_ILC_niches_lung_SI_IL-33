@@ -1,7 +1,7 @@
 ---
 title: "Figure 5: ILC2s localize"
 author: "Sandy Kroh"
-date: "`r format(Sys.Date(), '%B %d, %Y')`"
+date: "May 26, 2025"
 output:
   html_document:
     toc: yes
@@ -16,17 +16,12 @@ editor_options:
   chunk_output_type: inline
 ---
 
-```{r setup, include=FALSE}
-# knitr::opts_knit$set(root.dir = "..")
-knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
-                      fig.align='center', dpi = 600, 
-                      message = FALSE, warning = FALSE)
-options(width = 1200)
-```
+
 
 ## Libraries
 
-```{r}
+
+``` r
 library(SeuratObject)
 library(dplyr)
 library(rstatix)
@@ -56,7 +51,8 @@ library(stringr)
 
 ## Parameters
 
-```{r}
+
+``` r
 set.seed(123)
 
 input_dir <- here::here("1_data_tidying", "Lung_SI_all_cells_all_ALs_files")
@@ -100,13 +96,12 @@ colfunc <- colorRampPalette(c("darkcyan", "green", "yellow", "magenta", "purple"
 cols_ilcs_lung <- c("darkcyan", "seagreen2", "deeppink4")
 
 cols_treat <- c("darkcyan", "gold", "deeppink", "slateblue")
-
 ```
 
 # Load data
 
-```{r, fig.width=9, fig.height=6}
 
+``` r
 # from import_Giotto.Rmd
 gio_list <- readRDS(here::here("data", "Giotto_data_lung.rds"))
 
@@ -120,7 +115,13 @@ metadatax <- metadatax %>%
   filter(Sample != "20210906_3_lu_d3")
 
 unique(metadatax$CellType)
+```
 
+```
+##  [1] "Epithelia"               "EMCN CD31 Blood vessels" "LYVE1 CD31 vessels"      "LYVE1 CD90 Lymphatics"   "Myeloid cells"           "B cells & Plasma cells"  "NK cells/ILC1s"          "ILC3s"                   "T cytotox cells"         "T helper cells"          "ILC2s"
+```
+
+``` r
 vr_list_names <- unique(metadatax$Sample)
 
 
@@ -135,17 +136,67 @@ for(samp in vr_list_names){
     number_of_simulations = 1000)
   cell_proximities_list[[samp]] <- cell_proximities_list[[samp]]$enrichm_res
 }
+```
 
+```
+## [1] "20210910_1_lu_ctrl"
+## [1] "20210914_1_lu_ctrl"
+## [1] "20210922_1_lu_ctrl"
+## [1] "20210910_2_lu_ctrl"
+## [1] "20210914_2_lu_ctrl"
+## [1] "20210922_2_lu_ctrl"
+## [1] "20210910_3_lu_ctrl"
+## [1] "20210914_3_lu_ctrl"
+## [1] "20210922_3_lu_ctrl"
+## [1] "20220311_1"
+## [1] "20220316_1"
+## [1] "20220321_1"
+## [1] "20220311_2"
+## [1] "20220316_2"
+## [1] "20220321_2"
+## [1] "20220311_3"
+## [1] "20220316_3"
+## [1] "20220321_3"
+## [1] "20220325_1"
+## [1] "20220421_1"
+## [1] "20220502_1"
+## [1] "20220325_2"
+## [1] "20220421_2"
+## [1] "20220502_2"
+## [1] "20220325_3"
+## [1] "20220421_3"
+## [1] "20220502_3"
+## [1] "20210902_1_lu_d3"
+## [1] "20210906_1_lu_d3"
+## [1] "20210928_1_lu_d3"
+## [1] "20210902_2_lu_d3"
+## [1] "20210906_2_lu_d3"
+## [1] "20210928_2_lu_d3"
+## [1] "20210902_3_lu_d3"
+## [1] "20210928_3_lu_d3"
+```
+
+``` r
 vr_merged <- merge(vr_list[[1]], vr_list[-1])
 vrImageNames(vr_merged)
-unique(vr_merged$CellType)
+```
 
+```
+## [1] "image_1"
+```
+
+``` r
+unique(vr_merged$CellType)
+```
+
+```
+##  [1] "Epithelia"               "EMCN CD31 Blood vessels" "LYVE1 CD31 vessels"      "LYVE1 CD90 Lymphatics"   "Myeloid cells"           "B cells & Plasma cells"  "NK cells/ILC1s"          "T cytotox cells"         "T helper cells"          "ILC2s"                   "ILC3s"
 ```
 
 Calculate co-enrichment scores and plot them:
 
-```{r, fig.height=4, fig.width=9}
 
+``` r
 # FOVs for representative overview images
 fovs <- vr_list_names
 
@@ -196,7 +247,6 @@ for(unic in uni_celltypes){
       }
     }
     interaction_celltypes$p.adj <- ifelse(interaction_celltypes$enrichm > 0, interaction_celltypes$p.adj_higher, interaction_celltypes$p.adj_lower)
-
 
     
     sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("*"), ""))
@@ -280,7 +330,6 @@ g_test <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = c
 
 g_master_list[[unic]] <- g_test+
     theme(plot.margin = margin(0, 0.5, 0, 0.5, "cm"))
-
 ```
 
 # Visualization
@@ -289,7 +338,8 @@ g_master_list[[unic]] <- g_test+
 
 ### IF overlays
 
-```{r, fig.width=4.5, fig.height=5.4}
+
+``` r
 img <- png::readPNG(
     "D:/Repositories/2025_Kroh_et_al/Murine_ILC_niches_lung_SI_IL-33/data/images/Fig_5_ILC2_niche/20210906_1_ILC2s-w_CD90-c_CD31-m_LYVE1-y.png"
   )
@@ -348,17 +398,19 @@ plot_if_1 <- ggarrange(plot_if_1,
 plot_if_1
 ```
 
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-5-1.png" width="100%" style="display: block; margin: auto;" />
+
 Plot ILC2s on overlay of endothelial markers
 
-```{r}
+
+``` r
 set_ptsize <- 2
 cell_shape <- 18
 set_alpha <- 1
-
 ```
 
-```{r, fig.width=4.5, fig.height=4.5}
 
+``` r
 # define markers for the Overlay
 
 # CYAN
@@ -432,8 +484,11 @@ plot_if_ctrl <- plot +
   colour = "white")
 
 plot_if_ctrl
+```
 
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-7-1.png" width="100%" style="display: block; margin: auto;" />
 
+``` r
 # IL-33 D3 ------------------------------------------------------------
 plot <- vrSpatialPlot(vr_merged, assay = paste0("Assay", 35), #2
                         group.by = "CellType", 
@@ -468,10 +523,12 @@ plot_if_d3 <- plot +
 plot_if_d3
 ```
 
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-7-2.png" width="100%" style="display: block; margin: auto;" />
+
 ### Coenrichment plot
 
-```{r}
 
+``` r
 # fine tune the co-enrichment plot
 # ILC2s around ILC2s -----------------------------------------
 interactions <- c("ILC2s--LYVE1 CD90 Lymphatics")
@@ -521,9 +578,12 @@ plot_coenrichment <- ggplot(interaction_celltypes, aes(x = condition, y = enrich
 plot_coenrichment
 ```
 
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-8-1.png" width="100%" style="display: block; margin: auto;" />
+
 ### Minimum distance plot
 
-```{r, fig.width=4, fig.height=6}
+
+``` r
 set.seed(8)
 radius <- 10
 unit <- "\u03BC"
@@ -556,7 +616,44 @@ ColorsCellType <-  list(`NK cells/ILC1s` = "darkcyan",
                         `EMCN CD31 Blood vessels` = "red", 
                         `Epithelia` = "green")
 ColorsCellType 
+```
 
+```
+## $`NK cells/ILC1s`
+## [1] "darkcyan"
+## 
+## $ILC2s
+## [1] "seagreen2"
+## 
+## $ILC3s
+## [1] "darkmagenta"
+## 
+## $`T helper cells`
+## [1] "deeppink"
+## 
+## $`T cytotox cells`
+## [1] "slateblue"
+## 
+## $`Myeloid cells`
+## [1] "gold"
+## 
+## $`B cells & Plasma cells`
+## [1] "indianred1"
+## 
+## $`LYVE1 CD31 vessels`
+## [1] "darkgreen"
+## 
+## $`LYVE1 CD90 Lymphatics`
+## [1] "yellow"
+## 
+## $`EMCN CD31 Blood vessels`
+## [1] "red"
+## 
+## $Epithelia
+## [1] "green"
+```
+
+``` r
 cols_treat <- c("darkcyan", "gold", "deeppink", "slateblue")
 
 celltypes <- c(
@@ -595,13 +692,38 @@ colnames(df_cin) <- gsub("Reference cell", "Reference", colnames(df_cin))
 # colnames(df_cin) <- gsub("NK cells & ILC1s", "NK cells/ILC1s", colnames(df_cin))
 # df_cin$Reference <- gsub("NK cells & ILC1s", "NK cells/ILC1s", df_cin$Reference)
 head(df_cin)
+```
 
+```
+## # A tibble: 6 × 17
+##   Dataset          Epithelia `EMCN CD31 Blood vessels` `LYVE1 CD31 vessels` `LYVE1 CD90 Lymphatics` `Myeloid cells` `B cells & Plasma cells` `NK cells & ILC1s` ILC3s `T cytotox cells` `T helper cells` ILC2s Reference               Experiment FOV   Treatment ExpID     
+##   <chr>                <dbl>                     <dbl>                <dbl>                   <dbl>           <dbl>                    <dbl>              <dbl> <dbl>             <dbl>            <dbl> <dbl> <chr>                   <chr>      <chr> <chr>     <chr>     
+## 1 D3_FOV1_20210902        80                         5                    4                       1               6                        2                  0     0                 0                1     1 Epithelia               20210902   1     3         20210902_1
+## 2 D3_FOV1_20210902         3                        62                    6                       1               6                       14                  1     0                 1                4     1 EMCN CD31 Blood vessels 20210902   1     3         20210902_1
+## 3 D3_FOV1_20210902         7                        22                   47                       2               9                        7                  1     0                 1                2     1 LYVE1 CD31 vessels      20210902   1     3         20210902_1
+## 4 D3_FOV1_20210902        10                        18                    9                      31              18                        8                  0     0                 1                1     3 LYVE1 CD90 Lymphatics   20210902   1     3         20210902_1
+## 5 D3_FOV1_20210902         9                        18                    9                       4              45                        6                  1     0                 1                3     5 Myeloid cells           20210902   1     3         20210902_1
+## 6 D3_FOV1_20210902         2                        36                    6                       2               4                       40                  2     0                 3                5     1 B cells & Plasma cells  20210902   1     3         20210902_1
+```
+
+``` r
 # get the meta data of the treatment from the df_cin
 df_treat <- cbind(df_cin["ExpID"], df_cin["Treatment"])
 df_treat <- df_treat[!duplicated(df_treat), ]
 head(df_treat)
+```
 
+```
+##         ExpID Treatment
+## 1  20210902_1         3
+## 12 20210902_2         3
+## 23 20210902_3         3
+## 34 20210906_1         3
+## 45 20210906_2         3
+## 56 20210906_3         3
+```
 
+``` r
 input_dir <- "C:/Users/NieHau/Desktop/Sandy/R/R_analysis_output/Niche_analysis_SPIAT_lung/Output_SPIAT/cell_distances_minimal_all/"
 
 list_files <- list.files(path=input_dir, 
@@ -619,6 +741,21 @@ for (element in list_files) {
 
 
 head(df_dist)
+```
+
+```
+## # A tibble: 6 × 7
+##   RefCell     RefType   NearestCell NearestType             Distance Pair                              Name                                    
+##   <chr>       <chr>     <chr>       <chr>                      <dbl> <chr>                             <chr>                                   
+## 1 Cell_175084 Epithelia Cell_175108 EMCN CD31 Blood vessels     4.52 Epithelia/EMCN CD31 Blood vessels SPIAT_20210902_1_min_distances_pairs.csv
+## 2 Cell_175115 Epithelia Cell_175126 EMCN CD31 Blood vessels     4.53 Epithelia/EMCN CD31 Blood vessels SPIAT_20210902_1_min_distances_pairs.csv
+## 3 Cell_175154 Epithelia Cell_175123 EMCN CD31 Blood vessels     4.52 Epithelia/EMCN CD31 Blood vessels SPIAT_20210902_1_min_distances_pairs.csv
+## 4 Cell_175252 Epithelia Cell_175201 EMCN CD31 Blood vessels     6.98 Epithelia/EMCN CD31 Blood vessels SPIAT_20210902_1_min_distances_pairs.csv
+## 5 Cell_175423 Epithelia Cell_175453 EMCN CD31 Blood vessels     5.29 Epithelia/EMCN CD31 Blood vessels SPIAT_20210902_1_min_distances_pairs.csv
+## 6 Cell_175570 Epithelia Cell_175592 EMCN CD31 Blood vessels     7.93 Epithelia/EMCN CD31 Blood vessels SPIAT_20210902_1_min_distances_pairs.csv
+```
+
+``` r
 df_dist$ExpID <- str_sub(df_dist$Name,7,16)
 df_dist$Experiment <- str_sub(df_dist$Name,7,14)
 df_dist$FOV <- str_sub(df_dist$Name,16,16)  
@@ -643,9 +780,19 @@ df_dist$NearestType <- factor(df_dist$NearestType, levels = celltypes)
 df_dist_all <- df_dist
 
 head(df_dist)
+```
 
+```
+##        ExpID     RefCell   RefType NearestCell             NearestType Distance                                 Pair                                     Name Experiment FOV Treatment
+## 1 20210902_1 Cell_175084 Epithelia Cell_175108 EMCN CD31 Blood vessels 4.515044 Epithelia -- EMCN CD31 Blood vessels SPIAT_20210902_1_min_distances_pairs.csv   20210902   1         3
+## 2 20210902_1 Cell_175115 Epithelia Cell_175126 EMCN CD31 Blood vessels 4.526726 Epithelia -- EMCN CD31 Blood vessels SPIAT_20210902_1_min_distances_pairs.csv   20210902   1         3
+## 3 20210902_1 Cell_175154 Epithelia Cell_175123 EMCN CD31 Blood vessels 4.515044 Epithelia -- EMCN CD31 Blood vessels SPIAT_20210902_1_min_distances_pairs.csv   20210902   1         3
+## 4 20210902_1 Cell_175252 Epithelia Cell_175201 EMCN CD31 Blood vessels 6.978046 Epithelia -- EMCN CD31 Blood vessels SPIAT_20210902_1_min_distances_pairs.csv   20210902   1         3
+## 5 20210902_1 Cell_175423 Epithelia Cell_175453 EMCN CD31 Blood vessels 5.290617 Epithelia -- EMCN CD31 Blood vessels SPIAT_20210902_1_min_distances_pairs.csv   20210902   1         3
+## 6 20210902_1 Cell_175570 Epithelia Cell_175592 EMCN CD31 Blood vessels 7.934261 Epithelia -- EMCN CD31 Blood vessels SPIAT_20210902_1_min_distances_pairs.csv   20210902   1         3
+```
 
-
+``` r
 # filter condition and reference cell types to compare ILC subtypes and 
 # T cells
 df_dist_ref <- df_dist_all %>%
@@ -657,12 +804,25 @@ df_dist_ref <- df_dist_all %>%
          )
 
 unique(df_dist_ref$Treatment)
+```
+
+```
+## [1] "3"    "CTRL" "1"    "2"
+```
+
+``` r
 df_dist_ref$Treatment <- factor(df_dist_ref$Treatment, levels = c(
   "CTRL", "1", "2", "3"
 ))
 unique(df_dist_ref$RefType)
+```
 
+```
+## [1] Myeloid cells          B cells & Plasma cells NK cells/ILC1s         ILC3s                  T cytotox cells        T helper cells         ILC2s                 
+## Levels: NK cells/ILC1s ILC2s ILC3s T helper cells T cytotox cells Myeloid cells B cells & Plasma cells LYVE1 CD31 vessels LYVE1 CD90 Lymphatics EMCN CD31 Blood vessels Epithelia
+```
 
+``` r
 # LYMPHATICS ------------------------------------------------------------
 celltype_of_interest <- "LYVE1 CD90 Lymphatics"
 ypos <- 100
@@ -736,17 +896,22 @@ for (condition in c("CTRL", "1", "2", "3")) {
 }
 
 ggarrange(plotlist = my_plot_list[c(1:4)], nrow = 1, ncol = 4)
+```
 
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-9-1.png" width="100%" style="display: block; margin: auto;" />
+
+``` r
 dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 2, ncol = 1, labels = c("C", "D"))
 
 dist_lymph
-
 ```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-9-2.png" width="100%" style="display: block; margin: auto;" />
 
 ### CIN plot
 
-```{r, fig.height=3, fig.width=9}
 
+``` r
 library(stringr)
 
 input_dir <- "C:/Users/NieHau/Desktop/Sandy/R/R_analysis_output/Niche_analysis_SPIAT_all_organs_CIN/Output/"
@@ -757,8 +922,13 @@ list_files_rad <- list.files(path="C:/Users/NieHau/Desktop/Sandy/R/R_analysis_ou
                          full.names=FALSE)
 
 list_files_rad
+```
 
+```
+## [1] "10_micm" "15_micm" "20_micm" "25_micm"
+```
 
+``` r
 df_cin_lung = data.frame()
 
 tissuearea <- "Lung"
@@ -792,7 +962,25 @@ for (defined_radius in list_files_rad) {
   df_cin$Radius <- defined_radius
   df_radius <- rbind(df_radius, df_cin)
 }
+```
 
+```
+## [1] "10_micm"
+```
+
+```
+## [1] "15_micm"
+```
+
+```
+## [1] "20_micm"
+```
+
+```
+## [1] "25_micm"
+```
+
+``` r
 # collect data from current tissue area to datafram df_all_cin
 df_cin_lung <- df_radius
 df_cin_lung$Radius <- gsub("_micm", " \u03BCm", df_cin_lung$Radius)
@@ -808,7 +996,29 @@ colnames(df_cin_lung) <- gsub("NK cells & ILC1s", "NK cells/ILC1s",
 df_cin_lung$Reference <- gsub("NK cells & ILC1s", "NK cells/ILC1s",
                               df_cin_lung$Reference)
 head(df_cin_lung)
+```
+
+```
+## # A tibble: 6 × 21
+##   Dataset          Epithelia `EMCN CD31 Blood vessels` `LYVE1 CD31 vessels` `LYVE1 CD90 Lymphatics` `Myeloid cells` `B cells & Plasma cells` `NK cells/ILC1s` ILC3s `T cytotox cells` `T helper cells` ILC2s Reference               Organ Tissue.area Filename                                               Radius Experiment FOV   Treatment ExpID     
+##   <chr>                <dbl>                     <dbl>                <dbl>                   <dbl>           <dbl>                    <dbl>            <dbl> <dbl>             <dbl>            <dbl> <dbl> <chr>                   <chr> <chr>       <chr>                                                  <chr>  <chr>      <chr> <chr>     <chr>     
+## 1 D3_FOV1_20210902        88                         4                    3                       1               3                        1                0     0                 0                0     0 Epithelia               Lung  Lung        Lung/10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
+## 2 D3_FOV1_20210902         2                        70                    6                       1               5                       11                1     0                 1                3     1 EMCN CD31 Blood vessels Lung  Lung        Lung/10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
+## 3 D3_FOV1_20210902         5                        18                   59                       2               7                        6                1     0                 1                2     1 LYVE1 CD31 vessels      Lung  Lung        Lung/10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
+## 4 D3_FOV1_20210902         5                        14                    8                      47              15                        8                0     0                 0                0     2 LYVE1 CD90 Lymphatics   Lung  Lung        Lung/10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
+## 5 D3_FOV1_20210902         5                        14                    6                       3              59                        4                1     0                 0                2     5 Myeloid cells           Lung  Lung        Lung/10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
+## 6 D3_FOV1_20210902         1                        27                    5                       1               3                       54                1     0                 2                4     1 B cells & Plasma cells  Lung  Lung        Lung/10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
+```
+
+``` r
 colnames(df_cin_lung)
+```
+
+```
+##  [1] "Dataset"                 "Epithelia"               "EMCN CD31 Blood vessels" "LYVE1 CD31 vessels"      "LYVE1 CD90 Lymphatics"   "Myeloid cells"           "B cells & Plasma cells"  "NK cells/ILC1s"          "ILC3s"                   "T cytotox cells"         "T helper cells"          "ILC2s"                   "Reference"               "Organ"                   "Tissue.area"             "Filename"                "Radius"                  "Experiment"              "FOV"                     "Treatment"               "ExpID"
+```
+
+``` r
 df_cin_lung$Treatment <- gsub("D", "", df_cin_lung$Treatment)
 
 radius <- unique(df_cin_lung$Radius)[2]
@@ -820,9 +1030,21 @@ df_sub_lung <- df_cin_lung %>%
   select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
 
 head(df_sub_lung)
+```
 
+```
+## # A tibble: 6 × 6
+##   Reference Radius Treatment Dataset          `LYVE1 CD90 Lymphatics` Tissue.area
+##   <chr>     <chr>  <chr>     <chr>                              <dbl> <chr>      
+## 1 ILC2s     15 μm  3         D3_FOV1_20210902                       4 Lung       
+## 2 ILC2s     15 μm  3         D3_FOV2_20210902                       6 Lung       
+## 3 ILC2s     15 μm  3         D3_FOV3_20210902                       5 Lung       
+## 4 ILC2s     15 μm  3         D3_FOV1_20210906                       2 Lung       
+## 5 ILC2s     15 μm  3         D3_FOV2_20210906                       7 Lung       
+## 6 ILC2s     15 μm  3         D3_FOV3_20210906                       6 Lung
+```
 
-
+``` r
 plot_data <- df_sub_lung
 
 # Create lav´bels that depict mean value 
@@ -856,10 +1078,12 @@ plot_cin <- ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fi
 plot_cin
 ```
 
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-10-1.png" width="100%" style="display: block; margin: auto;" />
+
 For comparison, check the CIN of :
 
-```{r, fig.height=3, fig.width=9}
 
+``` r
 # B cells ------------------------------------------------------------
 celltype_of_interest <- "B cells & Plasma cells"
 
@@ -869,9 +1093,21 @@ df_sub_lung <- df_cin_lung %>%
   select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
 
 head(df_sub_lung)
+```
 
+```
+## # A tibble: 6 × 6
+##   Reference              Radius Treatment Dataset          `LYVE1 CD90 Lymphatics` Tissue.area
+##   <chr>                  <chr>  <chr>     <chr>                              <dbl> <chr>      
+## 1 B cells & Plasma cells 15 μm  3         D3_FOV1_20210902                       2 Lung       
+## 2 B cells & Plasma cells 15 μm  3         D3_FOV2_20210902                       2 Lung       
+## 3 B cells & Plasma cells 15 μm  3         D3_FOV3_20210902                       2 Lung       
+## 4 B cells & Plasma cells 15 μm  3         D3_FOV1_20210906                       2 Lung       
+## 5 B cells & Plasma cells 15 μm  3         D3_FOV2_20210906                       1 Lung       
+## 6 B cells & Plasma cells 15 μm  3         D3_FOV3_20210906                       2 Lung
+```
 
-
+``` r
 plot_data <- df_sub_lung
 
 # Create lav´bels that depict mean value 
@@ -902,7 +1138,11 @@ ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatm
   ylab("Frequency in 15 µm radius [%]")+
   # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
   geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
+```
 
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-11-1.png" width="100%" style="display: block; margin: auto;" />
+
+``` r
 # T cells ---------------------------------------------------------------
 celltype_of_interest <- "T helper cells"
 
@@ -912,9 +1152,21 @@ df_sub_lung <- df_cin_lung %>%
   select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
 
 head(df_sub_lung)
+```
 
+```
+## # A tibble: 6 × 6
+##   Reference      Radius Treatment Dataset          `LYVE1 CD90 Lymphatics` Tissue.area
+##   <chr>          <chr>  <chr>     <chr>                              <dbl> <chr>      
+## 1 T helper cells 15 μm  3         D3_FOV1_20210902                       1 Lung       
+## 2 T helper cells 15 μm  3         D3_FOV2_20210902                       2 Lung       
+## 3 T helper cells 15 μm  3         D3_FOV3_20210902                       2 Lung       
+## 4 T helper cells 15 μm  3         D3_FOV1_20210906                       1 Lung       
+## 5 T helper cells 15 μm  3         D3_FOV2_20210906                       1 Lung       
+## 6 T helper cells 15 μm  3         D3_FOV3_20210906                       2 Lung
+```
 
-
+``` r
 plot_data <- df_sub_lung
 
 # Create lav´bels that depict mean value 
@@ -945,7 +1197,11 @@ ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatm
   ylab("Frequency in 15 µm radius [%]")+
   # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
   geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
+```
 
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-11-2.png" width="100%" style="display: block; margin: auto;" />
+
+``` r
 # T cells ---------------------------------------------------------------
 celltype_of_interest <- "Myeloid cells"
 
@@ -955,9 +1211,21 @@ df_sub_lung <- df_cin_lung %>%
   select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
 
 head(df_sub_lung)
+```
 
+```
+## # A tibble: 6 × 6
+##   Reference     Radius Treatment Dataset          `LYVE1 CD90 Lymphatics` Tissue.area
+##   <chr>         <chr>  <chr>     <chr>                              <dbl> <chr>      
+## 1 Myeloid cells 15 μm  3         D3_FOV1_20210902                       4 Lung       
+## 2 Myeloid cells 15 μm  3         D3_FOV2_20210902                       4 Lung       
+## 3 Myeloid cells 15 μm  3         D3_FOV3_20210902                       3 Lung       
+## 4 Myeloid cells 15 μm  3         D3_FOV1_20210906                       4 Lung       
+## 5 Myeloid cells 15 μm  3         D3_FOV2_20210906                       5 Lung       
+## 6 Myeloid cells 15 μm  3         D3_FOV3_20210906                       4 Lung
+```
 
-
+``` r
 plot_data <- df_sub_lung
 
 # Create lav´bels that depict mean value 
@@ -988,7 +1256,11 @@ ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatm
   ylab("Frequency in 15 µm radius [%]")+
   # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
   geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
+```
 
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-11-3.png" width="100%" style="display: block; margin: auto;" />
+
+``` r
 # T cells ---------------------------------------------------------------
 celltype_of_interest <- "T cytotox cells"
 
@@ -998,9 +1270,21 @@ df_sub_lung <- df_cin_lung %>%
   select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
 
 head(df_sub_lung)
+```
 
+```
+## # A tibble: 6 × 6
+##   Reference       Radius Treatment Dataset          `LYVE1 CD90 Lymphatics` Tissue.area
+##   <chr>           <chr>  <chr>     <chr>                              <dbl> <chr>      
+## 1 T cytotox cells 15 μm  3         D3_FOV1_20210902                       1 Lung       
+## 2 T cytotox cells 15 μm  3         D3_FOV2_20210902                       3 Lung       
+## 3 T cytotox cells 15 μm  3         D3_FOV3_20210902                       2 Lung       
+## 4 T cytotox cells 15 μm  3         D3_FOV1_20210906                       1 Lung       
+## 5 T cytotox cells 15 μm  3         D3_FOV2_20210906                       2 Lung       
+## 6 T cytotox cells 15 μm  3         D3_FOV3_20210906                       3 Lung
+```
 
-
+``` r
 plot_data <- df_sub_lung
 
 # Create lav´bels that depict mean value 
@@ -1031,8 +1315,11 @@ ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatm
   ylab("Frequency in 15 µm radius [%]")+
   # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
   geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
+```
 
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-11-4.png" width="100%" style="display: block; margin: auto;" />
 
+``` r
 # Epithelia ---------------------------------------------------------------
 celltype_of_interest <- "Epithelia"
 
@@ -1042,9 +1329,21 @@ df_sub_lung <- df_cin_lung %>%
   select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
 
 head(df_sub_lung)
+```
 
+```
+## # A tibble: 6 × 6
+##   Reference Radius Treatment Dataset          `LYVE1 CD90 Lymphatics` Tissue.area
+##   <chr>     <chr>  <chr>     <chr>                              <dbl> <chr>      
+## 1 Epithelia 15 μm  3         D3_FOV1_20210902                       1 Lung       
+## 2 Epithelia 15 μm  3         D3_FOV2_20210902                       1 Lung       
+## 3 Epithelia 15 μm  3         D3_FOV3_20210902                       2 Lung       
+## 4 Epithelia 15 μm  3         D3_FOV1_20210906                       2 Lung       
+## 5 Epithelia 15 μm  3         D3_FOV2_20210906                       3 Lung       
+## 6 Epithelia 15 μm  3         D3_FOV3_20210906                       2 Lung
+```
 
-
+``` r
 plot_data <- df_sub_lung
 
 # Create lav´bels that depict mean value 
@@ -1075,8 +1374,11 @@ ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatm
   ylab("Frequency in 15 µm radius [%]")+
   # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
   geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
+```
 
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-11-5.png" width="100%" style="display: block; margin: auto;" />
 
+``` r
 # EMCN CD31 Blood vessels ---------------------------------------------------------------
 celltype_of_interest <- "EMCN CD31 Blood vessels"
 
@@ -1086,9 +1388,21 @@ df_sub_lung <- df_cin_lung %>%
   select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
 
 head(df_sub_lung)
+```
 
+```
+## # A tibble: 6 × 6
+##   Reference               Radius Treatment Dataset          `LYVE1 CD90 Lymphatics` Tissue.area
+##   <chr>                   <chr>  <chr>     <chr>                              <dbl> <chr>      
+## 1 EMCN CD31 Blood vessels 15 μm  3         D3_FOV1_20210902                       1 Lung       
+## 2 EMCN CD31 Blood vessels 15 μm  3         D3_FOV2_20210902                       2 Lung       
+## 3 EMCN CD31 Blood vessels 15 μm  3         D3_FOV3_20210902                       1 Lung       
+## 4 EMCN CD31 Blood vessels 15 μm  3         D3_FOV1_20210906                       1 Lung       
+## 5 EMCN CD31 Blood vessels 15 μm  3         D3_FOV2_20210906                       2 Lung       
+## 6 EMCN CD31 Blood vessels 15 μm  3         D3_FOV3_20210906                       2 Lung
+```
 
-
+``` r
 plot_data <- df_sub_lung
 
 # Create lav´bels that depict mean value 
@@ -1119,12 +1433,14 @@ ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatm
   ylab("Frequency in 15 µm radius [%]")+
   # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
   geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
-
 ```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-11-6.png" width="100%" style="display: block; margin: auto;" />
 
 ## Combine plots for figure
 
-```{r, fig.width=9, fig.height=9.5}
+
+``` r
 coenrichment <- ggarrange(plot_coenrichment, "NONE", plot_if_d3,  
           ncol = 1, nrow = 3, heights = c(1.5, 0.2, 2),
           labels = c("A", "", "B", "C", "D", "E", "F", "G", "H", "I"))+
@@ -1142,9 +1458,40 @@ ggarrange(coenrichment, spiat,
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
 ```
 
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-12-1.png" width="100%" style="display: block; margin: auto;" />
+
 ## Session Information
 
-```{r}
+
+``` r
 save.image(paste0(output_dir, "/environment.RData"))
 sessionInfo()
+```
+
+```
+## R version 4.4.2 (2024-10-31 ucrt)
+## Platform: x86_64-w64-mingw32/x64
+## Running under: Windows 10 x64 (build 19045)
+## 
+## Matrix products: default
+## 
+## 
+## locale:
+## [1] LC_COLLATE=English_Germany.utf8  LC_CTYPE=English_Germany.utf8    LC_MONETARY=English_Germany.utf8 LC_NUMERIC=C                     LC_TIME=English_Germany.utf8    
+## 
+## time zone: Europe/Berlin
+## tzcode source: internal
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+##  [1] stringr_1.5.1      ggbeeswarm_0.7.2   readr_2.1.5        ggpubr_0.6.0       ggplot2_3.5.1      VoltRon_0.2.0      Seurat_5.2.1       Giotto_4.2.1       GiottoClass_0.4.7  rlang_1.1.5        rstatix_0.7.2      dplyr_1.1.4        SeuratObject_5.0.2 sp_2.2-0          
+## 
+## loaded via a namespace (and not attached):
+##   [1] RcppAnnoy_0.0.22            splines_4.4.2               later_1.4.1                 bitops_1.0-9                tibble_3.2.1                polyclip_1.10-7             fastDummies_1.7.5           lifecycle_1.0.4             rprojroot_2.0.4             vroom_1.6.5                 globals_0.17.0              lattice_0.22-6              MASS_7.3-61                 backports_1.5.0             magrittr_2.0.3              plotly_4.10.4               sass_0.4.10                 rmarkdown_2.29              jquerylib_0.1.4             yaml_2.3.10                 httpuv_1.6.15               sctransform_0.4.1           spam_2.11-1                 spatstat.sparse_3.1-0       reticulate_1.42.0           pbapply_1.7-2               cowplot_1.1.3               RColorBrewer_1.1-3          abind_1.4-8                 zlibbioc_1.52.0             Rtsne_0.17                  GenomicRanges_1.58.0        purrr_1.0.4                 BiocGenerics_0.52.0         RCurl_1.98-1.17             rgl_1.3.18                  GenomeInfoDbData_1.2.13     IRanges_2.40.1              S4Vectors_0.44.0            ggrepel_0.9.6               irlba_2.3.5.1               spatstat.utils_3.1-3       
+##  [43] listenv_0.9.1               terra_1.8-42                goftest_1.2-3               RSpectra_0.16-2             spatstat.random_3.3-3       fitdistrplus_1.2-2          parallelly_1.43.0           Rvcg_0.25                   colorRamp2_0.1.0            codetools_0.2-20            DelayedArray_0.32.0         tidyselect_1.2.1            UCSC.utils_1.2.0            farver_2.1.2                spatstat.explore_3.4-2      matrixStats_1.5.0           stats4_4.4.2                base64enc_0.1-3             jsonlite_1.9.1              progressr_0.15.1            Formula_1.2-5               ggridges_0.5.6              survival_3.7-0              tools_4.4.2                 ica_1.0-3                   Rcpp_1.0.14                 glue_1.8.0                  gridExtra_2.3               SparseArray_1.6.2           here_1.0.1                  xfun_0.51                   MatrixGenerics_1.18.1       GenomeInfoDb_1.42.3         EBImage_4.48.0              withr_3.0.2                 fastmap_1.2.0               shinyjs_2.1.0               caTools_1.18.3              digest_0.6.37               R6_2.6.1                    mime_0.13                   colorspace_2.1-1           
+##  [85] scattermore_1.2             tensor_1.5                  gtools_3.9.5                spatstat.data_3.1-6         jpeg_0.1-11                 utf8_1.2.4                  tidyr_1.3.1                 generics_0.1.3              data.table_1.17.0           httr_1.4.7                  htmlwidgets_1.6.4           S4Arrays_1.6.0              scatterplot3d_0.3-44        uwot_0.2.3                  pkgconfig_2.0.3             gtable_0.3.6                lmtest_0.9-40               GiottoVisuals_0.2.12        SingleCellExperiment_1.28.1 XVector_0.46.0              ids_1.0.1                   htmltools_0.5.8.1           carData_3.0-5               dotCall64_1.2               fftwtools_0.9-11            scales_1.3.0                Biobase_2.66.0              GiottoUtils_0.2.4           png_0.1-8                   SpatialExperiment_1.16.0    spatstat.univar_3.1-2       knitr_1.50                  rstudioapi_0.17.1           tzdb_0.4.0                  reshape2_1.4.4              rjson_0.2.23                uuid_1.2-1                  nlme_3.1-166                checkmate_2.3.2             cachem_1.1.0                zoo_1.8-13                  Polychrome_1.5.4           
+## [127] KernSmooth_2.23-24          vipor_0.4.7                 parallel_4.4.2              miniUI_0.1.2                pillar_1.10.2               grid_4.4.2                  vctrs_0.6.5                 colorsGen_1.0.0             RANN_2.6.2                  gplots_3.2.0                promises_1.3.2              car_3.1-3                   xtable_1.8-4                cluster_2.1.6               beeswarm_0.4.0              evaluate_1.0.3              magick_2.8.6                cli_3.6.3                   locfit_1.5-9.12             compiler_4.4.2              crayon_1.5.3                future.apply_1.11.3         ggsignif_0.6.4              labeling_0.4.3              plyr_1.8.9                  stringi_1.8.4               deldir_2.0-4                viridisLite_0.4.2           munsell_0.5.1               lazyeval_0.2.2              tiff_0.1-12                 spatstat.geom_3.3-6         Matrix_1.7-1                RcppHNSW_0.6.0              hms_1.1.3                   patchwork_1.3.0             bit64_4.6.0-1               future_1.40.0               shiny_1.10.0                SummarizedExperiment_1.36.0 ROCR_1.0-11                 igraph_2.1.4               
+## [169] broom_1.0.8                 bslib_0.9.0                 RCDT_1.3.0                  bit_4.6.0
 ```
