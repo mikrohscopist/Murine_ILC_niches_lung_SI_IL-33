@@ -223,7 +223,7 @@ for(unic in uni_celltypes){
             strip.text.x = element_text(size = 1, color = "white"),
             panel.grid.major.y = element_line())+
       NoLegend()+  
-      ggtitle(gsub("LYVE1 CD90 ", "", interactions)) +
+      ggtitle(gsub("LYVE1 CD90 |EMCN CD31 |NK cells/ILC1s--|--NK cells/ILC1s", "", interactions)) +
       ylab("Enrichment")
     
     
@@ -274,7 +274,7 @@ g_test <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = c
         strip.text.x = element_text(size = 1, color = "white"),
         panel.grid.major.y = element_line())+
   NoLegend()+  
-  ggtitle(interactions) +
+      ggtitle(gsub("LYVE1 CD90 |EMCN CD31 |NK cells/ILC1s--|--NK cells/ILC1s", "", interactions)) +
   ylab("Enrichment")
 
 
@@ -285,73 +285,21 @@ g_master_list[[unic]] <- g_test+
 
 # Visualization
 
-## ILC2s localize close to vessels
+Co-enrichment analysis of NK cells/ILC1s
+
+```{r, fig.width=9, fig.height=6}
+enrichment_scores_all <- ggarrange(plotlist = g_master_list[c(1:9)], ncol = 4, nrow = 2, 
+          labels = c("D"))
+
+enrichment_scores_all
+```
+
+## NK cells/ILC1s localize close to vessels
 
 ### IF overlays
 
-```{r, fig.width=4.5, fig.height=5.4}
-img <- png::readPNG(
-    "D:/Repositories/2025_Kroh_et_al/Murine_ILC_niches_lung_SI_IL-33/data/images/Fig_5_ILC2_niche/20210906_1_ILC2s-w_CD90-c_CD31-m_LYVE1-y.png"
-  )
-
-
-my_colors <- c("cyan", "magenta", "yellow")
-
-g <- grid::rasterGrob(img, interpolate=TRUE)
-
-
-
-df_fov <- metadatax %>%
-  mutate(AL1 = recode(
-    AL1,
-    "Immune cells" = "CD90.2",
-    "Stromal cells" = "CD31",
-    "Epithelia" = "LYVE1"
-  ))
-
-plot_if_1 <- ggplot()+ 
-  geom_point(data = df_fov, 
-                       aes(x= Loc_X, y= Loc_Y, color = AL1), 
-                       size = 1)+
-  annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf)+
-  theme(legend.title=element_blank())+ # exclude legend title
-  scale_colour_discrete(name  ="MELC IF stainings",
-                          breaks=c("CD45", "CD31",
-                                   "EpCAM"),
-                          labels=c("CD45", "CD31",
-                                   "EpCAM")) +
-  scale_color_manual(values = my_colors)+ 
-    theme(legend.position = "bottom", 
-          plot.margin=margin(1,0,0,0,"cm"),
-          text = element_blank(),
-           axis.ticks = element_blank(),
-         panel.grid =  element_blank(),
-          legend.ticks = element_blank(),
-         legend.title=element_blank(),
-         legend.key = element_blank(),
-        legend.text = element_text(size=14), 
-         panel.background = element_rect(fill = 'black', 
-                                         color = 'black', size = 1))+    
-  ggplot2::theme(legend.position = "bottom")+
-  ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=3),
-                  fill=guide_legend(ncol = 1,byrow=TRUE))
-
-
-plot_if_1 <- ggarrange(plot_if_1, 
-            nrow = 1, ncol = 1, 
-          #widths = c(4.5, 4.5), 
-          align = "v",
-          font.label=list(size=12),hjust=-0.5
-          )+    
-  ggplot2::theme(legend.position = "left")
-  
-plot_if_1
-```
-
-Plot ILC2s on overlay of endothelial markers
-
 ```{r}
-set_ptsize <- 2
+set_ptsize <- 3
 cell_shape <- 18
 set_alpha <- 1
 
@@ -362,44 +310,44 @@ set_alpha <- 1
 # define markers for the Overlay
 
 # CYAN
-marker1 <- "CD90"
+marker1 <- "EMCN"
 # MAGENTA
-marker2 <- "FN"
+marker2 <- "CD31"
 # YELLOW
-marker3 <- "LYVE1"
+marker3 <- "CD90"
 # GREEN
 marker4 <- "EpCAM"
 # RED
-marker5 <- "CD31"
+marker5 <- "CD90"
 
 # define cell type of interested that should be plotted on the overlay
-celltype_of_interest <- "ILC2s"
+celltype_of_interest <- "NK cells/ILC1s"
 
 ColorsCellTypeSingle <-  list(
   #`NK cells/ILC1s/ILC3s` = "cyan", 
-  `ILC2s` = "white",
+  `NK cells/ILC1s` = "orange",
   #`ILC3s` = "magenta", 
   `EMCN CD31 Blood vessels` = "green")
 
 
-name_channel_key <- paste0(marker1, "-c_", marker2, "-m_", marker3, "-y_" 
-                           # marker4, "-g_", 
+name_channel_key <- paste0(marker1, "-c_", marker2, "-m_", marker3, "-y_", 
+                           marker4, "-g_"
                            # marker5, "-r" 
                            )
 vr_merged <- combineChannels(vr_merged,
-                             channels = c(marker1, marker2, marker3 
-                                          # marker4, 
+                             channels = c(marker1, marker2, marker3, 
+                                          marker4
                                           # marker5
                                           ),
-                             colors = c("cyan", "magenta", "yellow" 
-                                        # "green",
+                             colors = c("cyan", "magenta", "yellow" ,
+                                        "green"
                                         # "red"
                                         ),
                              channel_key = name_channel_key)
 
 
 
-cell_type_of_interest <- "ILC2s"
+celltype_of_interest <- "NK cells/ILC1s"
 
 # CTRL ------------------------------------------------------------
 plot <- vrSpatialPlot(vr_merged, assay = paste0("Assay", 2), 
@@ -413,19 +361,20 @@ plot <- vrSpatialPlot(vr_merged, assay = paste0("Assay", 2),
   scale_fill_manual(values = ColorsCellTypeSingle)+
   theme_void()+ NoLegend()+ ggtitle(NULL)+
   ggtitle("CTRL")+
-  theme(plot.title = element_text(hjust = 0.5, size = 14))
+  theme(plot.title = element_text(hjust = 0.5, size = 14), 
+        text = element_text(size = 12))
 
 
 
 plot_if_ctrl <- plot +
-  annotate("text", x=70, y=970, label= marker1,
-           col="cyan", size=3.5, parse=TRUE) +
-  annotate("text", x=180, y=970, label= marker2,
-           col="magenta", size=3.5, parse=TRUE) +
-  annotate("text", x=305, y=970, label= marker3,
-           col="yellow", size=3.5, parse=TRUE)+
-  # annotate("text", x=305, y=920, label= marker4,
-  #          col="green", size=3.5, parse=TRUE)+
+  annotate("text", x=100, y=950, label= marker1,
+           col="cyan", size=5, parse=TRUE) +
+  annotate("text", x=90, y=880, label= marker2,
+           col="magenta", size=5, parse=TRUE) +
+  annotate("text", x=90, y=810, label= marker3,
+           col="yellow", size=5, parse=TRUE)+
+  annotate("text", x=110, y=740, label= marker4,
+           col="green", size=5, parse=TRUE)+
   # annotate("text", x=70, y=920, label= marker5,
   #          col="red", size=3.5, parse=TRUE)+
   annotate("segment", x = 680, xend = 985, y = 45, yend = 45, size = 1.6, 
@@ -452,14 +401,14 @@ plot <- vrSpatialPlot(vr_merged, assay = paste0("Assay", 35), #2
 
 
 plot_if_d3 <- plot +
-  annotate("text", x=70, y=970, label= marker1,
+  annotate("text", x=100, y=950, label= marker1,
            col="cyan", size=5, parse=TRUE) +
-  annotate("text", x=180, y=970, label= marker2,
+  annotate("text", x=90, y=880, label= marker2,
            col="magenta", size=5, parse=TRUE) +
-  annotate("text", x=305, y=970, label= marker3,
+  annotate("text", x=90, y=810, label= marker3,
            col="yellow", size=5, parse=TRUE)+
-  # annotate("text", x=305, y=920, label= marker4,
-  #          col="green", size=3.5, parse=TRUE)+
+  annotate("text", x=110, y=740, label= marker4,
+           col="green", size=5, parse=TRUE)+
   # annotate("text", x=70, y=920, label= marker5,
   #          col="red", size=3.5, parse=TRUE)+
   annotate("segment", x = 680, xend = 985, y = 45, yend = 45, size = 1.6, 
@@ -468,15 +417,22 @@ plot_if_d3 <- plot +
 plot_if_d3
 ```
 
+combine both plots:
+
+```{r}
+plot_if <- ggarrange(plot_if_ctrl, plot_if_d3, ncol = 2, labels = c("D", ""))
+plot_if
+```
+
 ### Coenrichment plot
 
 ```{r}
 
 # fine tune the co-enrichment plot
 # ILC2s around ILC2s -----------------------------------------
-interactions <- c("ILC2s--LYVE1 CD90 Lymphatics")
-unic <- "LYVE1 CD90 Lymphatics"
-background_image <- backgroundlist[["LYVE1 CD90 Lymphatics"]]
+interactions <- c("EMCN CD31 Blood vessels--NK cells/ILC1s")
+unic <- "EMCN CD31 Blood vessels"
+background_image <- backgroundlist[["EMCN CD31 Blood vessels"]]
 interaction_celltypes <- NULL
 for(samp in vr_list_names){
     cur_cell_proximities <- cell_proximities_list[[samp]]
@@ -497,11 +453,11 @@ plot_coenrichment <- ggplot(interaction_celltypes, aes(x = condition, y = enrich
   geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single")) +
   facet_grid(.~condition, scales = "free_x") +
   geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), angle = 90, hjust = -0.02, size = 4) +
-  ylim(-2,2.1)+
+  ylim(-0.5,1.6)+
   NoLegend()+
   theme_classic2()+
   scale_fill_manual(values = cols_fov, name = "") +
-  ggtitle(gsub("LYVE1 CD90 ", "", interactions)) +
+  ggtitle(gsub("EMCN CD31 ", "", interactions)) +
   theme(axis.text.x = element_text(#angle = 50,
                                    vjust = 1, size = 12, hjust = 0.5, face = "bold"
                                    ),
@@ -523,7 +479,7 @@ plot_coenrichment
 
 ### Minimum distance plot
 
-```{r, fig.width=4, fig.height=6}
+```{r, fig.width=6, fig.height=4}
 set.seed(8)
 radius <- 10
 unit <- "\u03BC"
@@ -664,13 +620,13 @@ unique(df_dist_ref$RefType)
 
 
 # LYMPHATICS ------------------------------------------------------------
-celltype_of_interest <- "LYVE1 CD90 Lymphatics"
+celltype_of_interest <- "EMCN CD31 Blood vessels"
 ypos <- 100
 
 
 my_plot_list <- list()
 
-celltype_of_interest <- "LYVE1 CD90 Lymphatics"
+celltype_of_interest <- "EMCN CD31 Blood vessels"
 
 for (condition in c("CTRL", "1", "2", "3")) {
   
@@ -686,7 +642,7 @@ for (condition in c("CTRL", "1", "2", "3")) {
   stat.test <- stat.test %>% add_xy_position(x = "RefType")
   
   stat.test <- stat.test %>%
-    filter(group1 == "ILC2s"|group2 == "ILC2s"
+    filter(group1 == "NK cells/ILC1s"|group2 == "NK cells/ILC1s"
            )
   
   # Create lav´bels that depict mean value 
@@ -700,12 +656,12 @@ for (condition in c("CTRL", "1", "2", "3")) {
             y = Distance, 
             fill = "RefType")) +
     geom_boxplot(fill="white", outliers = FALSE)+
-    geom_beeswarm(aes(color = RefType), alpha = 0.5, size = 0.1, cex = 0.2)+
+    geom_beeswarm(aes(color = RefType), alpha = 0.5, size = 0.1, cex = 0.1)+
     stat_pvalue_manual(stat.test,
                        size = 6,
-                       hide.ns = TRUE, y.position = 250, step.increase = 0.1
+                       hide.ns = TRUE, y.position = 200, step.increase = 0.1
                        )+
-    scale_y_continuous(expand = c(0, 0), limits = c(0,400))+
+    scale_y_continuous(expand = c(0, 0), limits = c(0,320))+
     rotate_x_text(angle = 45)+
   ggtitle(gsub("3", "IL-33 day 3", condition))+
   scale_color_manual(values = ColorsCellType)+
@@ -718,14 +674,14 @@ for (condition in c("CTRL", "1", "2", "3")) {
         axis.title.x = element_blank(),
         axis.title.y = element_text(size = 12),
         plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
+        plot.margin = margin(0.5, 0, 0.5, 1, "cm"),
         legend.title = element_text(size =14),
         legend.text = element_text(size =12))+
     NoLegend()+
     xlab("Cell types")+
     ylab("Minimal distance [µm]")+
     geom_text(aes(y = 150, #lab_pos, 
-                  label = lab_text, vjust = -0.5), angle = 50,
+                  label = lab_text, vjust = -0.5, hjst = 1), angle = 90,
               data = Labs,size=3)
   plot
   
@@ -735,9 +691,9 @@ for (condition in c("CTRL", "1", "2", "3")) {
 
 }
 
-ggarrange(plotlist = my_plot_list[c(1:4)], nrow = 1, ncol = 4)
+ggarrange(plotlist = my_plot_list[c(1:4)], nrow = 1, ncol = 2)
 
-dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 2, ncol = 1, labels = c("C", "D"))
+dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 1, ncol = 2, labels = c("B", "C"))
 
 dist_lymph
 
@@ -812,12 +768,12 @@ colnames(df_cin_lung)
 df_cin_lung$Treatment <- gsub("D", "", df_cin_lung$Treatment)
 
 radius <- unique(df_cin_lung$Radius)[2]
-celltype_of_interest <- "ILC2s"
+celltype_of_interest <- "NK cells/ILC1s"
 
 df_sub_lung <- df_cin_lung %>%
   filter(Reference == celltype_of_interest) %>%
   filter(Radius == radius) %>%
-  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
+  select(Reference, Radius, Treatment, Dataset, `EMCN CD31 Blood vessels`, Tissue.area)
 
 head(df_sub_lung)
 
@@ -828,12 +784,12 @@ plot_data <- df_sub_lung
 # Create lav´bels that depict mean value 
 Labs = plot_data %>% 
   group_by(Treatment) %>%
-  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
+  summarise(lab_text = paste0(round(median(`EMCN CD31 Blood vessels`), 0), " %"), lab_pos = quantile(`EMCN CD31 Blood vessels`)[3]+2
               )
 
 plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
 # create plot
-plot_cin <- ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
+plot_cin <- ggplot(plot_data, aes(x = Treatment, y = `EMCN CD31 Blood vessels`, fill = "Treatment"))+
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
@@ -848,7 +804,7 @@ plot_cin <- ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fi
         legend.title = element_text(size =14),
         legend.text = element_text(size =12))+
   NoLegend()+
-  ggtitle("Lymphatics")+
+  ggtitle("Blood vessels")+
   xlab("Treatment")+
   ylab("Frequency in\n15 µm radius [%]")+
   # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
@@ -866,7 +822,7 @@ celltype_of_interest <- "B cells & Plasma cells"
 df_sub_lung <- df_cin_lung %>%
   filter(Reference == celltype_of_interest) %>%
   filter(Radius == radius) %>%
-  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
+  select(Reference, Radius, Treatment, Dataset, `EMCN CD31 Blood vessels`, Tissue.area)
 
 head(df_sub_lung)
 
@@ -877,12 +833,12 @@ plot_data <- df_sub_lung
 # Create lav´bels that depict mean value 
 Labs = plot_data %>% 
   group_by(Treatment) %>%
-  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
+  summarise(lab_text = paste0(round(median(`EMCN CD31 Blood vessels`), 0), " %"), lab_pos = quantile(`EMCN CD31 Blood vessels`)[3]+2
               )
 
 plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
 # create plot
-ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
+ggplot(plot_data, aes(x = Treatment, y = `EMCN CD31 Blood vessels`, fill = "Treatment"))+
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
@@ -897,7 +853,7 @@ ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatm
         legend.title = element_text(size =14),
         legend.text = element_text(size =12))+
   NoLegend()+
-  ggtitle("B cells & Plasma cells - LYVE1 CD90 Lymphatics")+
+  ggtitle("B cells & Plasma cells - EMCN CD31 Blood vessels")+
   xlab("Treatment")+
   ylab("Frequency in 15 µm radius [%]")+
   # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
@@ -909,7 +865,7 @@ celltype_of_interest <- "T helper cells"
 df_sub_lung <- df_cin_lung %>%
   filter(Reference == celltype_of_interest) %>%
   filter(Radius == radius) %>%
-  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
+  select(Reference, Radius, Treatment, Dataset, `EMCN CD31 Blood vessels`, Tissue.area)
 
 head(df_sub_lung)
 
@@ -920,12 +876,12 @@ plot_data <- df_sub_lung
 # Create lav´bels that depict mean value 
 Labs = plot_data %>% 
   group_by(Treatment) %>%
-  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
+  summarise(lab_text = paste0(round(median(`EMCN CD31 Blood vessels`), 0), " %"), lab_pos = quantile(`EMCN CD31 Blood vessels`)[3]+2
               )
 
 plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
 # create plot
-ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
+ggplot(plot_data, aes(x = Treatment, y = `EMCN CD31 Blood vessels`, fill = "Treatment"))+
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
@@ -940,7 +896,7 @@ ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatm
         legend.title = element_text(size =14),
         legend.text = element_text(size =12))+
   NoLegend()+
-  ggtitle("T helper cells - LYVE1 CD90 Lymphatics")+
+  ggtitle("T helper cells - EMCN CD31 Blood vessels")+
   xlab("Treatment")+
   ylab("Frequency in 15 µm radius [%]")+
   # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
@@ -952,7 +908,7 @@ celltype_of_interest <- "Myeloid cells"
 df_sub_lung <- df_cin_lung %>%
   filter(Reference == celltype_of_interest) %>%
   filter(Radius == radius) %>%
-  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
+  select(Reference, Radius, Treatment, Dataset, `EMCN CD31 Blood vessels`, Tissue.area)
 
 head(df_sub_lung)
 
@@ -963,12 +919,12 @@ plot_data <- df_sub_lung
 # Create lav´bels that depict mean value 
 Labs = plot_data %>% 
   group_by(Treatment) %>%
-  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
+  summarise(lab_text = paste0(round(median(`EMCN CD31 Blood vessels`), 0), " %"), lab_pos = quantile(`EMCN CD31 Blood vessels`)[3]+2
               )
 
 plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
 # create plot
-ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
+ggplot(plot_data, aes(x = Treatment, y = `EMCN CD31 Blood vessels`, fill = "Treatment"))+
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
@@ -983,7 +939,7 @@ ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatm
         legend.title = element_text(size =14),
         legend.text = element_text(size =12))+
   NoLegend()+
-  ggtitle("Myeloid cells - LYVE1 CD90 Lymphatics")+
+  ggtitle("Myeloid cells - EMCN CD31 Blood vessels")+
   xlab("Treatment")+
   ylab("Frequency in 15 µm radius [%]")+
   # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
@@ -995,7 +951,7 @@ celltype_of_interest <- "T cytotox cells"
 df_sub_lung <- df_cin_lung %>%
   filter(Reference == celltype_of_interest) %>%
   filter(Radius == radius) %>%
-  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
+  select(Reference, Radius, Treatment, Dataset, `EMCN CD31 Blood vessels`, Tissue.area)
 
 head(df_sub_lung)
 
@@ -1006,12 +962,12 @@ plot_data <- df_sub_lung
 # Create lav´bels that depict mean value 
 Labs = plot_data %>% 
   group_by(Treatment) %>%
-  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
+  summarise(lab_text = paste0(round(median(`EMCN CD31 Blood vessels`), 0), " %"), lab_pos = quantile(`EMCN CD31 Blood vessels`)[3]+2
               )
 
 plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
 # create plot
-ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
+ggplot(plot_data, aes(x = Treatment, y = `EMCN CD31 Blood vessels`, fill = "Treatment"))+
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
@@ -1026,7 +982,7 @@ ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatm
         legend.title = element_text(size =14),
         legend.text = element_text(size =12))+
   NoLegend()+
-  ggtitle("T cytotox cells - LYVE1 CD90 Lymphatics")+
+  ggtitle("T cytotox cells - EMCN CD31 Blood vessels")+
   xlab("Treatment")+
   ylab("Frequency in 15 µm radius [%]")+
   # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
@@ -1039,7 +995,7 @@ celltype_of_interest <- "Epithelia"
 df_sub_lung <- df_cin_lung %>%
   filter(Reference == celltype_of_interest) %>%
   filter(Radius == radius) %>%
-  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
+  select(Reference, Radius, Treatment, Dataset, `EMCN CD31 Blood vessels`, Tissue.area)
 
 head(df_sub_lung)
 
@@ -1050,12 +1006,12 @@ plot_data <- df_sub_lung
 # Create lav´bels that depict mean value 
 Labs = plot_data %>% 
   group_by(Treatment) %>%
-  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
+  summarise(lab_text = paste0(round(median(`EMCN CD31 Blood vessels`), 0), " %"), lab_pos = quantile(`EMCN CD31 Blood vessels`)[3]+2
               )
 
 plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
 # create plot
-ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
+ggplot(plot_data, aes(x = Treatment, y = `EMCN CD31 Blood vessels`, fill = "Treatment"))+
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
@@ -1070,7 +1026,7 @@ ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatm
         legend.title = element_text(size =14),
         legend.text = element_text(size =12))+
   NoLegend()+
-  ggtitle("Epithelia - LYVE1 CD90 Lymphatics")+
+  ggtitle("Epithelia - EMCN CD31 Blood vessels")+
   xlab("Treatment")+
   ylab("Frequency in 15 µm radius [%]")+
   # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
@@ -1083,7 +1039,7 @@ celltype_of_interest <- "EMCN CD31 Blood vessels"
 df_sub_lung <- df_cin_lung %>%
   filter(Reference == celltype_of_interest) %>%
   filter(Radius == radius) %>%
-  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
+  select(Reference, Radius, Treatment, Dataset, `EMCN CD31 Blood vessels`, Tissue.area)
 
 head(df_sub_lung)
 
@@ -1094,12 +1050,12 @@ plot_data <- df_sub_lung
 # Create lav´bels that depict mean value 
 Labs = plot_data %>% 
   group_by(Treatment) %>%
-  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
+  summarise(lab_text = paste0(round(median(`EMCN CD31 Blood vessels`), 0), " %"), lab_pos = quantile(`EMCN CD31 Blood vessels`)[3]+2
               )
 
 plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
 # create plot
-ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
+ggplot(plot_data, aes(x = Treatment, y = `EMCN CD31 Blood vessels`, fill = "Treatment"))+
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
@@ -1114,7 +1070,7 @@ ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatm
         legend.title = element_text(size =14),
         legend.text = element_text(size =12))+
   NoLegend()+
-  ggtitle("EMCN CD31 Blood vessels - LYVE1 CD90 Lymphatics")+
+  ggtitle("EMCN CD31 Blood vessels - EMCN CD31 Blood vessels")+
   xlab("Treatment")+
   ylab("Frequency in 15 µm radius [%]")+
   # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
@@ -1124,602 +1080,13 @@ ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatm
 
 Combine plots:
 
-```{r, fig.width=9, fig.height=9.5}
-coenrichment <- ggarrange(plot_coenrichment, "NONE", plot_if_d3,  
-          ncol = 1, nrow = 3, heights = c(1.5, 0.2, 2),
-          labels = c("A", "", "B", "C", "D", "E", "F", "G", "H", "I"))+
-  theme(plot.margin = margin(0, 1, 0, 0, "cm"))
-
-spiat <- ggarrange(dist_lymph, plot_cin,
-          ncol = 1, nrow = 2, heights = c(3, 1),
-          labels = c("", "E", "F", "G", "H", "I"))+
-  theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
-
-ggarrange(coenrichment, spiat, 
-          ncol = 2, nrow = 1, widths = c(5.5, 3.5)
-          # labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I")
-          )+
-  theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
-```
-
-## ILC2s on overlay of immune cells
-
-```{r, fig.width=4.5, fig.height=4.5}
-
-# define markers for the Overlay
-
-# CYAN
-marker1 <- "CD45"
-# MAGENTA
-marker2 <- "CD68"
-# YELLOW
-marker3 <- "CD11c"
-# GREEN
-marker4 <- "EpCAM"
-# RED
-marker5 <- "CD31"
-
-# define cell type of interested that should be plotted on the overlay
-celltype_of_interest <- "ILC2s"
-
-ColorsCellTypeSingle <-  list(
-  #`NK cells/ILC1s/ILC3s` = "cyan", 
-  `ILC2s` = "white",
-  #`ILC3s` = "magenta", 
-  `EMCN CD31 Blood vessels` = "green")
-
-
-name_channel_key <- paste0(marker1, "-c_", marker2, "-m_", marker3, "-y_" 
-                           # marker4, "-g_", 
-                           # marker5, "-r" 
-                           )
-vr_merged <- combineChannels(vr_merged,
-                             channels = c(marker1, marker2, marker3 
-                                          # marker4, 
-                                          # marker5
-                                          ),
-                             colors = c("cyan", "magenta", "yellow" 
-                                        # "green",
-                                        # "red"
-                                        ),
-                             channel_key = name_channel_key)
-
-
-
-cell_type_of_interest <- "ILC2s"
-
-# CTRL ------------------------------------------------------------
-plot <- vrSpatialPlot(vr_merged, assay = paste0("Assay", 2), 
-                        group.by = "CellType", 
-                        group.ids = celltype_of_interest,
-                        alpha = set_alpha, 
-                        background = c("image_1", name_channel_key), 
-                        pt.size = set_ptsize, cell.shape = cell_shape)+
-  guides(color = guide_legend(override.aes = list(size = 5)))+
-  scale_color_manual(values = ColorsCellTypeSingle)+
-  scale_fill_manual(values = ColorsCellTypeSingle)+
-  theme_void()+ NoLegend()+ ggtitle(NULL)+
-  ggtitle("CTRL")+
-  theme(plot.title = element_text(hjust = 0.5, size = 14))
-
-
-
-plot_if_ctrl_immune <- plot +
-  annotate("text", x=70, y=970, label= marker1,
-           col="cyan", size=3.5, parse=TRUE) +
-  annotate("text", x=180, y=970, label= marker2,
-           col="magenta", size=3.5, parse=TRUE) +
-  annotate("text", x=305, y=970, label= marker3,
-           col="yellow", size=3.5, parse=TRUE)+
-  # annotate("text", x=305, y=920, label= marker4,
-  #          col="green", size=3.5, parse=TRUE)+
-  # annotate("text", x=70, y=920, label= marker5,
-  #          col="red", size=3.5, parse=TRUE)+
-  annotate("segment", x = 680, xend = 985, y = 45, yend = 45, size = 1.6, 
-  colour = "white")
-
-plot_if_ctrl_immune
-
-
-# IL-33 D3 ------------------------------------------------------------
-plot <- vrSpatialPlot(vr_merged, assay = paste0("Assay", 35), #2
-                        group.by = "CellType", 
-                        group.ids = celltype_of_interest,
-                        alpha = set_alpha, 
-                        background = c("image_1", name_channel_key), 
-                        pt.size = set_ptsize, cell.shape = cell_shape)+
-  guides(color = guide_legend(override.aes = list(size = 5)))+
-  scale_color_manual(values = ColorsCellTypeSingle)+
-  scale_fill_manual(values = ColorsCellTypeSingle)+
-  theme_void()+ NoLegend()+ ggtitle(NULL)+
-  ggtitle("IL-33 day 3")+
-  theme(plot.title = element_text(hjust = 0.5, size = 14))
-
-
-
-plot_if_d3_immune <- plot +
-  annotate("text", x=70, y=970, label= marker1,
-           col="cyan", size=3.5, parse=TRUE) +
-  annotate("text", x=180, y=970, label= marker2,
-           col="magenta", size=3.5, parse=TRUE) +
-  annotate("text", x=305, y=970, label= marker3,
-           col="yellow", size=3.5, parse=TRUE)+
-  # annotate("text", x=305, y=920, label= marker4,
-  #          col="green", size=3.5, parse=TRUE)+
-  # annotate("text", x=70, y=920, label= marker5,
-  #          col="red", size=3.5, parse=TRUE)+
-  annotate("segment", x = 680, xend = 985, y = 45, yend = 45, size = 1.6, 
-  colour = "white")
-
-plot_if_d3_immune
-```
-
-## ILC2s plotted on ILC marker overlay
-
-```{r, fig.width=4.5, fig.height=4.5}
-
-# define markers for the Overlay
-
-# CYAN
-marker1 <- "KLRG1"
-# MAGENTA
-marker2 <- "CD3"
-# YELLOW
-marker3 <- "CD127"
-# GREEN
-marker4 <- "EpCAM"
-# RED
-marker5 <- "CD31"
-
-# define cell type of interested that should be plotted on the overlay
-celltype_of_interest <- "ILC2s"
-
-ColorsCellTypeSingle <-  list(
-  #`NK cells/ILC1s/ILC3s` = "cyan", 
-  `ILC2s` = "white",
-  #`ILC3s` = "magenta", 
-  `EMCN CD31 Blood vessels` = "green")
-
-
-name_channel_key <- paste0(marker1, "-c_", marker2, "-m_", marker3, "-y_" 
-                           # marker4, "-g_", 
-                           # marker5, "-r" 
-                           )
-vr_merged <- combineChannels(vr_merged,
-                             channels = c(marker1, marker2, marker3 
-                                          # marker4, 
-                                          # marker5
-                                          ),
-                             colors = c("cyan", "magenta", "yellow" 
-                                        # "green",
-                                        # "red"
-                                        ),
-                             channel_key = name_channel_key)
-
-
-
-cell_type_of_interest <- "ILC2s"
-
-# CTRL ------------------------------------------------------------
-plot <- vrSpatialPlot(vr_merged, assay = paste0("Assay", 2), 
-                        group.by = "CellType", 
-                        group.ids = celltype_of_interest,
-                        alpha = set_alpha, 
-                        background = c("image_1", name_channel_key), 
-                        pt.size = set_ptsize, cell.shape = cell_shape)+
-  guides(color = guide_legend(override.aes = list(size = 5)))+
-  scale_color_manual(values = ColorsCellTypeSingle)+
-  scale_fill_manual(values = ColorsCellTypeSingle)+
-  theme_void()+ NoLegend()+ ggtitle(NULL)+
-  ggtitle("CTRL")+
-  theme(plot.title = element_text(hjust = 0.5, size = 14))
-
-
-
-plot_if_ctrl_ilc <- plot +
-  annotate("text", x=70, y=970, label= marker1,
-           col="cyan", size=3.5, parse=TRUE) +
-  annotate("text", x=180, y=970, label= marker2,
-           col="magenta", size=3.5, parse=TRUE) +
-  annotate("text", x=305, y=970, label= marker3,
-           col="yellow", size=3.5, parse=TRUE)+
-  # annotate("text", x=305, y=920, label= marker4,
-  #          col="green", size=3.5, parse=TRUE)+
-  # annotate("text", x=70, y=920, label= marker5,
-  #          col="red", size=3.5, parse=TRUE)+
-  annotate("segment", x = 680, xend = 985, y = 45, yend = 45, size = 1.6, 
-  colour = "white")
-
-plot_if_ctrl_ilc
-
-
-# IL-33 D3 ------------------------------------------------------------
-plot <- vrSpatialPlot(vr_merged, assay = paste0("Assay", 35), #2
-                        group.by = "CellType", 
-                        group.ids = celltype_of_interest,
-                        alpha = set_alpha, 
-                        background = c("image_1", name_channel_key), 
-                        pt.size = set_ptsize, cell.shape = cell_shape)+
-  guides(color = guide_legend(override.aes = list(size = 5)))+
-  scale_color_manual(values = ColorsCellTypeSingle)+
-  scale_fill_manual(values = ColorsCellTypeSingle)+
-  theme_void()+ NoLegend()+ ggtitle(NULL)+
-  ggtitle("IL-33 day 3")+
-  theme(plot.title = element_text(hjust = 0.5, size = 14))
-
-
-
-plot_if_d3_ilc <- plot +
-  annotate("text", x=70, y=970, label= marker1,
-           col="cyan", size=3.5, parse=TRUE) +
-  annotate("text", x=180, y=970, label= marker2,
-           col="magenta", size=3.5, parse=TRUE) +
-  annotate("text", x=305, y=970, label= marker3,
-           col="yellow", size=3.5, parse=TRUE)+
-  # annotate("text", x=305, y=920, label= marker4,
-  #          col="green", size=3.5, parse=TRUE)+
-  # annotate("text", x=70, y=920, label= marker5,
-  #          col="red", size=3.5, parse=TRUE)+
-  annotate("segment", x = 680, xend = 985, y = 45, yend = 45, size = 1.6, 
-  colour = "white")
-
-plot_if_d3_ilc
-```
-
-## Coenrichment of ILC2s
-
-```{r, fig.height=4, fig.width=9}
-
-# FOVs for representative overview images
-fovs <- vr_list_names
-
-set_alpha <- 0.35
-set_ptsize <- 2
-set_nrows <- 1
-set_ncols <- 3
-cell_shape <- 20
-
-
-cols_con <- c("darkcyan", "gold", "deeppink", 
-                "slateblue")
-
-cols_fov <- c("darkcyan", "gold", "deeppink", 
-                "slateblue")
-
-ColorsCellType <-  list(
-  #`NK cells/ILC1s/ILC3s` = "cyan", 
-  `ILC2s` = "magenta",
-  #`ILC3s` = "magenta", 
-  `EMCN CD31 Blood vessels` = "green")
-
-uni_celltypes <- unique(vr_merged$CellType)
-backgroundlist <- list("EpCAM","CD31","LYVE1","LYVE1","CD11c","B220","EOMES", "CD8a", "CD4", "GATA3eGFP", "RORgt")
-names(backgroundlist) <- uni_celltypes
-uni_celltypes <- uni_celltypes[!uni_celltypes %in% "ILC2s"]
-
-g_master_list <- list()
-for(unic in uni_celltypes){
-  
-    ### selected cell groups ####
-  selected_celltypes <- c("ILC2s", unic)
-  # interactions <- c("EMCN CD31 Blood vessels--ILC2s")
-  interactions <- unique(cell_proximities_list[[vr_list_names[30]]]$unified_int)
-  interactions <- interactions[grepl("ILC2s", interactions) & grepl(unic, interactions)]
-  background_image <- backgroundlist[[unic]]
-  if(length(interactions) > 0){
-     ### get interaction results ####
-    interaction_celltypes <- NULL
-    for(samp in vr_list_names){
-      cur_cell_proximities <- cell_proximities_list[[samp]]
-      cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,]
-      sample <- unique(metadatax$FullInfo[metadatax$Sample==samp])
-      if(nrow(cur_cell_proximities) > 0 & sample != "20210906_FOV3_D3"){
-        interaction_celltypes <- rbind(interaction_celltypes,
-                                       data.frame(cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,], 
-                                                  experiment = strsplit(sample, split = "_")[[1]][1], fov = strsplit(sample, split = "_")[[1]][2], condition = strsplit(sample, split = "_")[[1]][3]))
-      }
-    }
-    interaction_celltypes$p.adj <- ifelse(interaction_celltypes$enrichm > 0, interaction_celltypes$p.adj_higher, interaction_celltypes$p.adj_lower)
-
-
-    
-    sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("*"), ""))
-
-    g_test <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = condition)) +
-      geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single")) +
-      facet_grid(.~condition, scales = "free_x") +
-      geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), angle = 90, hjust = -0.02, size = 4) +
-      ylim(-2,3.5)+
-      NoLegend()+
-      theme_classic2()+
-      scale_fill_manual(values = cols_fov, name = "") +
-      theme(axis.text.x = element_text(#angle = 50,
-                                       vjust = 1, size = 12, hjust = 0.5, face = "bold"
-                                       ),
-            axis.text.y = element_text(hjust = 0.5, size = 12),
-            axis.title.x = element_blank(),
-            axis.title.y = element_text(size = 12),
-            plot.title = element_text(size =14, hjust = 0.5),
-            plot.margin = margin(0, 0.5, 0.5, 0.5, "cm"),
-            legend.position = "none",
-            strip.background=element_blank(),
-            strip.background.x= element_blank(),
-            strip.text.x = element_text(size = 1, color = "white"),
-            panel.grid.major.y = element_line())+
-      NoLegend()+  
-      ggtitle(gsub("LYVE1 CD90 ", "", interactions)) +
-      ylab("Enrichment")
-    
-    
-    g_master_list[[unic]] <- g_test+
-        theme(plot.margin = margin(0, 0.5, 0, 0.5, "cm"))
-  }
-}
-
-# ILC2s around ILC2s -----------------------------------------
-interactions <- c("ILC2s--ILC2s")
-unic <- "ILC2s"
-background_image <- backgroundlist[["ILC2s"]]
-interaction_celltypes <- NULL
-for(samp in vr_list_names){
-    cur_cell_proximities <- cell_proximities_list[[samp]]
-    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,]
-    sample <- unique(metadatax$FullInfo[metadatax$Sample==samp])
-    if(nrow(cur_cell_proximities) > 0 & sample != "20210906_FOV3_D3"){
-      interaction_celltypes <- rbind(interaction_celltypes,
-                                     data.frame(cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,], 
-                                                experiment = strsplit(sample, split = "_")[[1]][1], fov = strsplit(sample, split = "_")[[1]][2], condition = strsplit(sample, split = "_")[[1]][3]))
-    }
-  }
-interaction_celltypes$p.adj <- ifelse(interaction_celltypes$enrichm > 0, interaction_celltypes$p.adj_higher, interaction_celltypes$p.adj_lower)
-  # plot test results
-  # sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("p=",round(interaction_celltypes$p.adj,3)), ""))
-  sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("*"), ""))
-    # print(sig_label)
-g_test <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = condition)) +
-  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single")) +
-  facet_grid(.~condition, scales = "free_x") +
-  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), angle = 90, hjust = -0.02, size = 4) +
-  ylim(-2,3.5)+
-  NoLegend()+
-  theme_classic2()+
-  scale_fill_manual(values = cols_fov, name = "") +
-  theme(axis.text.x = element_text(#angle = 50,
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"
-                                   ),
-        axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_blank(),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(0, 0.5, 0.5, 0.5, "cm"),
-        legend.position = "none",
-        strip.background=element_blank(),
-        strip.background.x= element_blank(),
-        strip.text.x = element_text(size = 1, color = "white"),
-        panel.grid.major.y = element_line())+
-  NoLegend()+  
-  ggtitle(interactions) +
-  ylab("Enrichment")
-
-
-g_master_list[[unic]] <- g_test+
-    theme(plot.margin = margin(0, 0.5, 0, 0.5, "cm"))
-
-
-ggarrange(plotlist = g_master_list[c(4, 5, 11)],  nrow = 1, ncol = 3)+
-theme(plot.margin = margin(0.5, 0, 0.5, 0, "cm"))
-
-```
-
-## Proportion around immune cells
-
-```{r, fig.width=9, fig.height=4}
-
-
-# Myeloid cells ------------------------------------------------------------
-# filter condition and reference cell types to compare ILC subtypes and 
-# T cells
-df_dist_ref <- df_dist_all %>%
-  # filter(Treatment == condition) %>%
-  filter(RefType == "ILC2s"
-         |
-           RefType == "NK cells/ILC1s"| RefType == "ILC3s"|
-           RefType == "T helper cells"| RefType == "T cytotox cells"| RefType == "B cells & Plasma cells"
-         )
-
-unique(df_dist_ref$Treatment)
-df_dist_ref$Treatment <- factor(df_dist_ref$Treatment, levels = c(
-  "CTRL", "1", "2", "3"
-))
-unique(df_dist_ref$RefType)
-
-celltype_of_interest <- "Myeloid cells"
-ypos <- 100
-
-
-my_plot_list <- list()
-
-for (condition in c("CTRL", "1", "2", "3")) {
-  
-  plot_data <- df_dist_ref %>%
-    filter(Treatment == condition) %>%
-    filter(NearestType == celltype_of_interest)
-  
-  # Test for statistical significance of ILC2s to the other cell types
-  stat.test <- plot_data %>%
-    dunn_test(Distance ~ RefType) %>%
-    adjust_pvalue(method = "bonferroni") %>%
-    add_significance()
-  stat.test <- stat.test %>% add_xy_position(x = "RefType")
-  
-  stat.test <- stat.test %>%
-    filter(group1 == "ILC2s"|group2 == "ILC2s"
-           )
-  # correct wrong x coordinate 
-  stat.test[5, "xmax"] <- 6
-  
-  # Create lav´bels that depict mean value 
-  Labs = plot_data %>% 
-    group_by(RefType) %>%
-    summarise(lab_text = paste0(round(median(Distance), 0), " µm"), lab_pos = quantile(Distance)[3]
-                )
-  
-  # create plot
-  plot <- ggboxplot(plot_data, x="RefType" , 
-            y = "Distance", 
-            fill = "RefType",
-            palette = ColorsCellType,
-            outlier.shape = NA, 
-            width = 0.7,
-            # facet.by = "NearestType",
-            font.label = list(size = 16, color = "black"),
-            short.panel.labs = FALSE) +
-    geom_boxplot(alpha = 0.3, lwd=1, width = 0.7, outlier.shape = NA)+
-    stat_pvalue_manual(stat.test,
-                       size = 6,
-                       hide.ns = TRUE, y.position = 250, step.increase = 0.1
-                       )+
-    theme_classic2()+
-    ggtitle(gsub("3", "D3", condition))+
-    xlab("Cell types")+
-    ylab("Minimal distance [µm]")+
-    scale_y_continuous(expand = c(0, 0), limits = c(0,400))+
-    rotate_x_text(angle = 45)+
-    theme(text = element_text(size = 12), 
-          legend.position = "none",
-          plot.title = element_text(hjust = 0.5), 
-          plot.subtitle = element_text(hjust = 0.5, size = 14), 
-          plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"), 
-          axis.text.x = element_text(size = 12))+
-    geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
-  plot
-  
-  assigned_name <- gsub(" ", "", paste0(celltype_of_interest, "_", condition))
-  assign(assigned_name, plot )
-  my_plot_list[[assigned_name]] <- plot
-
-}
-
-
-
-dist_myloid <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 1, ncol = 2)
-dist_myloid
-
-# ILC2s ------------------------------------------------------------
-# filter condition and reference cell types to compare ILC subtypes and 
-# T cells
-df_dist_ref <- df_dist_all %>%
-  # filter(Treatment == condition) %>%
-  filter(RefType == "Myeloid cells" |RefType == "ILC2s"|
-           RefType == "NK cells/ILC1s"| RefType == "ILC3s"|
-           RefType == "T helper cells"| RefType == "T cytotox cells"| RefType == "B cells & Plasma cells"
-         )
-
-unique(df_dist_ref$Treatment)
-df_dist_ref$Treatment <- factor(df_dist_ref$Treatment, levels = c(
-  "CTRL", "1", "2", "3"
-))
-unique(df_dist_ref$RefType)
-
-celltype_of_interest <- "ILC2s"
-ypos <- 100
-
-
-my_plot_list <- list()
-
-for (condition in c("CTRL", "1", "2", "3")) {
-  
-  plot_data <- df_dist_ref %>%
-    filter(Treatment == condition) %>%
-    filter(NearestType == celltype_of_interest)
-  
-  # Test for statistical significance of ILC2s to the other cell types
-  stat.test <- plot_data %>%
-    dunn_test(Distance ~ RefType) %>%
-    adjust_pvalue(method = "bonferroni") %>%
-    add_significance()
-  stat.test <- stat.test %>% add_xy_position(x = "RefType")
-  
-  stat.test <- stat.test %>%
-    filter(group1 == "ILC2s"|group2 == "ILC2s"
-           )
-  # # correct wrong x coordinate 
-  # stat.test[5, "xmax"] <- 6
-  
-  # Create lav´bels that depict mean value 
-  Labs = plot_data %>% 
-    group_by(RefType) %>%
-    summarise(lab_text = paste0(round(median(Distance), 0), " µm"), lab_pos = quantile(Distance)[3]
-                )
-  
-  # create plot
-  plot <- ggboxplot(plot_data, x="RefType" , 
-            y = "Distance", 
-            fill = "RefType",
-            palette = ColorsCellType,
-            outlier.shape = NA, 
-            width = 0.7,
-            # facet.by = "NearestType",
-            font.label = list(size = 16, color = "black"),
-            short.panel.labs = FALSE) +
-    geom_boxplot(alpha = 0.3, lwd=1, width = 0.7, outlier.shape = NA)+
-    stat_pvalue_manual(stat.test,
-                       size = 6,
-                       hide.ns = TRUE, y.position = 250, step.increase = 0.1
-                       )+
-    theme_classic2()+
-    ggtitle(gsub("3", "D3", condition))+
-    xlab("Cell types")+
-    ylab("Minimal distance [µm]")+
-    scale_y_continuous(expand = c(0, 0), limits = c(0,500))+
-    rotate_x_text(angle = 45)+
-    theme(text = element_text(size = 12), 
-          legend.position = "none",
-          plot.title = element_text(hjust = 0.5), 
-          plot.subtitle = element_text(hjust = 0.5, size = 14), 
-          plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"), 
-          axis.text.x = element_text(size = 12))+
-    geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
-  plot
-  
-  assigned_name <- gsub(" ", "", paste0(celltype_of_interest, "_", condition))
-  assign(assigned_name, plot )
-  my_plot_list[[assigned_name]] <- plot
-
-}
-
-
-
-dist_ilc2s <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 1, ncol = 2)
-dist_ilc2s
-```
-
-```{r}
-
-```
-
-## CIN of immune cells in lung
-
-```{r}
-
-```
-
-## Combine plots for figure
-
-```{r, fig.width=9, fig.height=9.5}
-ggarrange(plot_prop, plot_freq_immune, plot_freq, 
-          plot_count_all, plot_count_immune, plot_count_ilc, 
-          plot_count_ilc1, plot_count_ilc2, plot_count_ilc3, 
-          ncol = 3, nrow = 3, heights = c(3.5, 3, 3), 
-          labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I"))+
-  theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
-```
-
-```{r, fig.width=9, fig.height=3}
-ggarrange(plot_freq_ilc1, plot_freq_ilc2, plot_freq_ilc3, 
-          ncol = 3, nrow = 1, 
-          labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I"))+
-  theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
+```{r, fig.width=9, fig.height=9}
+plot1 <- ggarrange(plot_coenrichment, dist_lymph,  
+          ncol = 2, nrow = 1, widths = c(1, 2, 2),
+          labels = c("A"))
+
+ggarrange(plot1, plot_if,  
+          ncol = 1, nrow = 2, height = c(1, 2))
 ```
 
 ## Session Information
