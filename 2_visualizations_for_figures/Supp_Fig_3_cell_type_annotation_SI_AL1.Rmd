@@ -351,6 +351,8 @@ plot_ann_1_ilf <- ggarrange(plot_ann_1_ilf,
 plot_ann_1_ilf
 ```
 
+### ILF - IF overlay
+
 ```{r, fig.width=3, fig.height=3.1}
 img <- png::readPNG(
     "D:/Sandy/Promotion/Dissertation/Figures/20210810_1_si_ctrl_CD45-c_CD31-m_EpCAM-y.png"

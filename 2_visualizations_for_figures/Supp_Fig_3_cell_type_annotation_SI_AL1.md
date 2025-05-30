@@ -367,6 +367,8 @@ plot_ann_1_ilf
 
 <img src="Supp_Fig_3_cell_type_annotation_SI_AL1_files/figure-html/unnamed-chunk-8-1.png" width="100%" style="display: block; margin: auto;" />
 
+### ILF - IF overlay
+
 
 ``` r
 img <- png::readPNG(
