@@ -1,0 +1,277 @@
+---
+title: "Figure 7: immune and non-immune cell types SI"
+author: "Sandy Kroh"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    number_sections: yes
+    fig_caption: yes
+    keep_md: yes
+  pdf_document:
+    toc: yes
+params:
+  Sample: Default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+# knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
+                      fig.align='center', dpi = 600, 
+                      message = FALSE, warning = FALSE)
+options(width = 1200)
+```
+
+## Libraries
+
+```{r}
+library(Seurat)
+library(SeuratObject)
+library(dplyr)
+library(ggplot2)
+# library(stringr)
+# library(glue)
+# library(here)
+library(readr)
+# library(lubridate)
+# library(data.table)
+# library(clustree)
+# library(magrittr)
+library(ggpubr)
+# library(ggrepel)
+# library(readxl)
+# library(openxlsx)
+```
+
+## Parameters
+
+```{r}
+set.seed(123)
+
+input_dir <- here::here("1_data_tidying", "Lung_SI_all_cells_all_ALs_files")
+
+output_dir <- here::here("2_visualizations_for_figures", "Fig_7_cell_type_annotation_SI_files")
+dir.create(output_dir)
+
+
+
+
+main_markers <- c(
+  "EpCAM", "EMCN", "LYVE1", "PDPN", "PDGFRa", "CD8a", "CD4",
+  "CD45", "CD3", "IRF4", "Kappa", "CD11c", "CD127", "GATA3eGFP", "RORgt"
+)
+
+immune_markers <- c(
+ "CD3", "CD4", "CD8a", "Kappa", "IRF4", "CD11c",
+  "CD127", "CD90", "EOMES", "GATA3eGFP", "RORgt", "Ki67",  "KLRG1", "NKp46", "CD117", "Areg", "CCR6", "CD44", "MHCII", "Sca1"
+)
+
+ilc_markers <- c(
+  "CD3", "CD4", "CD8a",
+  "CD127", "CD90", "EOMES", "GATA3eGFP", "RORgt", "KLRG1", "NKp46", "CD117", "CCR6", "MHCII", "Ki67", "Areg", "IRF4", "Sca1", "CD44"
+)
+
+
+cols_nat <- c("magenta", "cyan", "blue", "purple", "green", 
+                       "red", "yellow", "olivedrab1", "slateblue1", 
+                       "darkcyan", "gold","indianred1", "seagreen", "deeppink", 
+                       "orange", "brown", "violet",
+                       "deeppink4", "pink", 
+                       "grey", "black", "lightgreen", 
+                       "#FF0066",  
+                       "lightblue", "#FFCC99", "#CC00FF", 
+                       "blueviolet",  "goldenrod4", 
+                       "navy", "olivedrab", "lightcyan", "seagreen2", "darkviolet", "lightpink", "slateblue4", "olivedrab2")
+
+colfunc <- colorRampPalette(c("darkcyan", "green", "yellow", "magenta", "purple"))
+
+```
+
+# Load data
+
+```{r, fig.width=9, fig.height=6}
+
+SO.si <- readRDS(paste0(input_dir, "/si_all_cells_all_ALs.rds"))
+dim(SO.si)
+
+SO.si$AL1 <- gsub("Epithelia & stroma", "Epithelia", SO.si$AL1)
+colnames(SO.si@meta.data)
+```
+
+# Visualization
+
+## AL2 immune & non-immune cells
+
+### Dot plot
+
+```{r, fig.width=7, fig.height=3}
+
+SO.si$AL3 <- factor(SO.si$AL3, levels = c("ILC2s",
+                                          "NK cells/ILC1s/ILC3s",
+                                          "CD8+ CD3- IEL",
+                                          "T helper cells",
+                                          "T cytotox. cells",
+                                          "Myeloid cells",
+                                          "B cells",
+                                          "Plasma cells",
+                                          "Blood vessels",
+                                          "Fibroblasts",
+                                          "Lymphatics",
+                                          "Epithelia I",
+                                          "Epithelia II"))
+
+SO.si.sub <- subset(SO.si, subset = AL3 ==c(
+                                          "Myeloid cells",
+                                          "B cells",
+                                          "Plasma cells",
+                                          "Blood vessels",
+                                          "Fibroblasts",
+                                          "Lymphatics",
+                                          "Epithelia I",
+                                          "Epithelia II"))
+
+dot_plot_al2 <- Seurat::DotPlot(SO.si.sub, 
+                group.by = "AL3",
+                  features = c(
+                    "CD11c", 
+                    "MHCII", 
+                    "CD45", 
+                    "IRF4", 
+                    "EMCN",
+                    "CD117", 
+                    "CD44", 
+                    "Sca1",
+                    "CD90", 
+                    "CD31", 
+                    "LYVE1", 
+                    "PDPN",
+                    "CD127", 
+                    "EpCAM", 
+                    "Ki67"
+                  ), 
+                cols ="RdBu", assay = "MELC")+   
+    RotatedAxis()+
+    # coord_flip()+
+    theme(axis.text.x=element_text(size=12, angle = 45),
+          axis.text.y=element_text(size=12), 
+          plot.margin = margin(1, 0.5, 0.5, 0.5, "cm"), 
+          axis.title.x = element_blank(), 
+          axis.title.y = element_blank(), 
+          plot.title = element_blank(), 
+          legend.text = element_text(size=8), 
+          legend.title = element_text(size=8))+ 
+  scale_color_gradient2(midpoint = 0, low = "gold", 
+                            high = "blue", space = "Lab" )
+
+dot_plot_al2
+```
+
+## AL3 T cells and ILC subtypes
+
+### Gating strategy
+
+```{r, fig.width=2, fig.height=3}
+
+SO.si.sub <- subset(SO.si, subset = AL2 == c("ILCs",  
+                                             "CD8+ CD3- IEL",  
+                                             "T helper cells", 
+                                             "T cytotox. cells"))
+SO.si.sub$AL3 <- factor(SO.si.sub$AL3, levels = c("NK cells/ILC1s/ILC3s","ILC2s", "CD8+ CD3- IEL",    "T helper cells",   "T cytotox. cells"))
+
+
+colfunc <- colorRampPalette(c("darkcyan", "green", "yellow", "magenta", "purple"))
+
+
+fetched_data <- FetchData(SO.si.sub, 
+                        vars = c("Dataset",
+                                 "AL2",
+                                 "AL3",
+                                 "Location_Center_X", 
+                                 "Location_Center_Y", 
+                                 "UMAP_1", 
+                                 "UMAP_2",
+                                 "Treatment",
+                                 "CellID", 
+                                 "Experiment", 
+                                 rownames(SO.si.sub)))
+
+fetched_data <- as.data.frame(fetched_data)
+
+marker2 <- "CD3"
+marker1 <- "CD127"
+
+plot1 <- ggplot(fetched_data, aes(x = get(marker1), y = get(marker2))) +
+  geom_point(size = 0.5, color = "white") +
+  stat_density_2d(aes(fill = ..level..), geom = "polygon", color = FALSE) +
+  scale_fill_gradientn(colours = colfunc(400)) +
+  labs(y = paste0("MFI ", marker2), x = paste0("MFI ", marker1)) +
+  theme_bw() +
+  theme(
+    plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
+    plot.title = element_text(hjust = 0.5),
+    legend.title = element_text(size = 8),
+    panel.background = element_rect(fill = "white"),
+    plot.background = element_rect(fill = "white"),
+    strip.background = element_rect(fill = "white"),
+    legend.position = "bottom",
+    panel.grid = element_blank()  # Remove grey grid lines
+  )  +
+  ggtitle("ILCs & T cells")+
+  annotate("rect", xmin = -1, xmax = 7.5, ymin = 3, ymax = 9,
+  alpha = 0, color = "red"#, fill = "magenta"
+  )+
+  annotate("text", 
+           x = 2, 
+           y = 4, 
+           label = "CD3+ cells", 
+           color = "red")+
+  annotate("rect", xmin = -1, xmax = 7.5, ymin = -2, ymax = 2.9,
+  alpha = 0, color = "green"#, fill = "magenta"
+  )+
+  annotate("text", 
+           x = 2, 
+           y = 1.5, 
+           label = "CD3- cells", 
+           color = "green")
+plot1
+
+```
+
+### Ridge plot profiles of T cell and ILC subtypes
+
+```{r, fig.width=9, fig.height=9}
+
+plot_ridge <- RidgePlot(SO.si.sub, 
+          features = c("CD127", "CD90","CD3", "CD4",  "RORgt", "GATA3eGFP", "CD8a", "EOMES"), same.y.lims = TRUE,log = TRUE,
+          cols = alpha(c(
+            "darkmagenta", 
+            "seagreen2",
+            "navy", 
+            "gold",
+            "deeppink",
+            "slateblue"
+          ), 0.5), combine = FALSE)
+
+plot_ridge_ilctcells <- ggarrange(plotlist =  plot_ridge, common.legend = TRUE, legend = "none", ncol = 2, nrow = 4) +
+  theme(plot.margin = margin(1, 0.5, 0, 0.5, "cm"))
+
+plot_ridge_ilctcells
+```
+
+## Combine plots
+
+```{r, fig.width=9, fig.height=12}
+
+plot_combined <- ggarrange(dot_plot_al2, plot1, labels = c("A", "B"), ncol = 2, nrow = 1, widths = c(8, 3))
+
+ggarrange( plot_combined, plot_ridge_ilctcells, labels = c("", "C"), ncol = 1, nrow = 2, heights = c(3, 9))
+```
+
+## Session Information
+
+```{r}
+save.image(paste0(output_dir, "/environment.RData"))
+sessionInfo()
+```
