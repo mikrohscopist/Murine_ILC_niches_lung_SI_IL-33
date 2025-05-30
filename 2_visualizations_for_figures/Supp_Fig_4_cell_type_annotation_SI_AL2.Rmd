@@ -1,0 +1,364 @@
+---
+title: "Supplmentary Figure 4: immune and non-immune cell types SI"
+author: "Sandy Kroh"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    number_sections: yes
+    fig_caption: yes
+    keep_md: yes
+  pdf_document:
+    toc: yes
+params:
+  Sample: Default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+# knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
+                      fig.align='center', dpi = 600, 
+                      message = FALSE, warning = FALSE)
+options(width = 1200)
+```
+
+## Libraries
+
+```{r}
+library(Seurat)
+library(SeuratObject)
+library(dplyr)
+library(ggplot2)
+# library(stringr)
+# library(glue)
+# library(here)
+library(readr)
+# library(lubridate)
+# library(data.table)
+# library(clustree)
+# library(magrittr)
+library(ggpubr)
+# library(ggrepel)
+# library(readxl)
+# library(openxlsx)
+```
+
+## Parameters
+
+```{r}
+set.seed(123)
+
+input_dir <- here::here("1_data_tidying", "Lung_SI_all_cells_all_ALs_files")
+
+output_dir <- here::here("2_visualizations_for_figures", "Supp_Fig_4_cell_type_annotation_SI_AL2_files")
+dir.create(output_dir)
+
+
+
+
+main_markers <- c(
+  "EpCAM", "EMCN", "LYVE1", "PDPN", "PDGFRa", "CD8a", "CD4",
+  "CD45", "CD3", "IRF4", "Kappa", "CD11c", "CD127", "GATA3eGFP", "RORgt"
+)
+
+immune_markers <- c(
+ "CD3", "CD4", "CD8a", "Kappa", "IRF4", "CD11c",
+  "CD127", "CD90", "EOMES", "GATA3eGFP", "RORgt", "Ki67",  "KLRG1", "NKp46", "CD117", "Areg", "CCR6", "CD44", "MHCII", "Sca1"
+)
+
+ilc_markers <- c(
+  "CD3", "CD4", "CD8a",
+  "CD127", "CD90", "EOMES", "GATA3eGFP", "RORgt", "KLRG1", "NKp46", "CD117", "CCR6", "MHCII", "Ki67", "Areg", "IRF4", "Sca1", "CD44"
+)
+
+
+cols_nat <- c("magenta", "cyan", "blue", "purple", "green", 
+                       "red", "yellow", "olivedrab1", "slateblue1", 
+                       "darkcyan", "gold","indianred1", "seagreen", "deeppink", 
+                       "orange", "brown", "violet",
+                       "deeppink4", "pink", 
+                       "grey", "black", "lightgreen", 
+                       "#FF0066",  
+                       "lightblue", "#FFCC99", "#CC00FF", 
+                       "blueviolet",  "goldenrod4", 
+                       "navy", "olivedrab", "lightcyan", "seagreen2", "darkviolet", "lightpink", "slateblue4", "olivedrab2")
+
+colfunc <- colorRampPalette(c("darkcyan", "green", "yellow", "magenta", "purple"))
+
+```
+
+# Load data
+
+```{r, fig.width=9, fig.height=6}
+
+SO.si <- readRDS(paste0(input_dir, "/si_all_cells_all_ALs.rds"))
+dim(SO.si)
+
+SO.si$AL1 <- gsub("Epithelia & stroma", "Epithelia", SO.si$AL1)
+colnames(SO.si@meta.data)
+```
+
+# Visualization
+
+## Compare annotation and IF overlay immune cells
+
+```{r, fig.width=4.5, fig.height=4.8}
+
+SO.si.sub <- subset(SO.si, subset = AL1 == "Immune cells")
+SO.si.sub$AL2 <- gsub("ILCs|CD8\\+ CD3- IEL|T helper cells|T cytotox. cells", "ILCs/NK cells/T cells", SO.si.sub$AL2)
+SO.si.sub$AL2 <- factor(SO.si.sub$AL2, levels = c("ILCs/NK cells/T cells","Myeloid cells", "B cells",   "Plasma cells"))
+
+
+
+fetched_data <- FetchData(SO.si.sub, 
+                        vars = c("Dataset",
+                                 "AL2",
+                                 "AL3",
+                                 "Location_Center_X", 
+                                 "Location_Center_Y", 
+                                 "UMAP_1", 
+                                 "UMAP_2",
+                                 "Treatment",
+                                 "CellID", 
+                                 "Experiment", 
+                                 rownames(SO.si.sub)))
+
+fetched_data <- as.data.frame(fetched_data)
+df_fov <- fetched_data %>%
+          filter(Dataset == "CTRL_FOV1_20210810")
+
+
+plot_ann_2 <- ggplot()+ 
+  geom_point(data = df_fov, 
+                       aes(x= Location_Center_X, y= Location_Center_Y, 
+                           color = AL2), 
+                      size = 0.5)+
+    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=3), 
+                    fill=guide_legend(ncol = 1,byrow=TRUE))+
+    theme(legend.position = "bottom", 
+          plot.margin=margin(0.5,1,0,1,"cm"),
+          text = element_blank(),
+           axis.ticks = element_blank(),
+         panel.grid =  element_blank(),
+          legend.ticks = element_blank(),
+         legend.title=element_blank(),
+         legend.key = element_blank(),
+        legend.text = element_text(size=14), 
+         panel.background = element_rect(fill = 'black', 
+                                         color = 'black', size = 1))+    
+    scale_colour_discrete(name  ="Annotated cell types",
+                          breaks=c("Immune cells",
+                                                  "Vessels & stroma",
+                                                  "Epithelia"),
+                          labels=c("Immune cells",
+                                                  "Vessels & stroma",
+                                                  "Epithelia")) +
+    scale_color_manual(values = c("magenta", "yellow", "cyan", "blue"))+ 
+    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=2),
+                  fill=guide_legend(ncol = 2,byrow=TRUE))+
+  xlim(0, 2048)+
+  ylim(0, 2048)
+
+plot_ann_2
+
+```
+
+IF overlay
+
+```{r, fig.width=4.5, fig.height=4.8}
+img <- png::readPNG(
+    "D:/Sandy/Promotion/Dissertation/Figures/AL2/20210810_1_si_ctrl_B220-c_CD3-m_CD11c-y.png"
+  )
+
+
+my_colors <- c("cyan", "yellow", "magenta")
+
+g <- grid::rasterGrob(img, interpolate=TRUE)
+
+
+
+df_fov <- df_fov %>%
+  filter(!AL2 %in% c("Plasma cells" )) %>%
+  mutate(Labels = recode(
+    AL2, 
+    "Myeloid cells" = "CD11c",
+    "B cells" = "B220",
+    "ILCs/NK cells/T cells" = "CD3"
+  ))
+
+plot_if_1 <- ggplot()+ 
+  geom_point(data = df_fov, 
+                       aes(x= Location_Center_X, y= Location_Center_Y, color = Labels), 
+                       size = 1)+
+  annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf)+
+  theme(legend.title=element_blank())+ # exclude legend title
+  scale_colour_discrete(name  ="MELC IF stainings",
+                          breaks=c("CD45", "CD31", 
+                                   "EpCAM"),
+                          labels=c("CD45", "CD31", 
+                                   "EpCAM")) +
+  scale_color_manual(values = my_colors)+ 
+    theme(legend.position = "bottom", 
+          plot.margin=margin(0.5,1,0,1,"cm"),
+          text = element_blank(),
+           axis.ticks = element_blank(),
+         panel.grid =  element_blank(),
+          legend.ticks = element_blank(),
+         legend.title=element_blank(),
+         legend.key = element_blank(),
+        legend.text = element_text(size=14), 
+         panel.background = element_rect(fill = 'black', 
+                                         color = 'black', size = 1))+    
+  ggplot2::theme(legend.position = "bottom")+
+  ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=2),
+                  fill=guide_legend(ncol = 2,byrow=TRUE))
+
+plot_if_1
+```
+
+Combine both plots:
+
+```{r, fig.width=4.5, fig.height=9.6}
+
+plot_immune <- ggarrange(plot_ann_2, plot_if_1, ncol = 1, nrow = 2, heights = c(1, 1))
+plot_immune
+```
+
+## Compare annotation and IF overlay non-immune cells
+
+```{r, fig.width=4.5, fig.height=4.8}
+
+
+fetched_data <- FetchData(SO.si, 
+                        vars = c("Dataset",
+                                 "AL2",
+                                 "AL3",
+                                 "Location_Center_X", 
+                                 "Location_Center_Y", 
+                                 "UMAP_1", 
+                                 "UMAP_2",
+                                 "Treatment",
+                                 "CellID", 
+                                 "Experiment", 
+                                 rownames(SO.si.sub)))
+
+fetched_data <- as.data.frame(fetched_data)
+df_fov <- fetched_data %>%
+          filter(Dataset == "D3_FOV2_20210806") %>%
+  filter(AL3 == "Epithelia I"|AL3 == "Epithelia II"|AL3 == "Blood vessels"|AL3 == "Lymphatics"| AL3 == "Fibroblasts")
+
+
+plot_ann_2 <- ggplot()+ 
+  geom_point(data = df_fov, 
+                       aes(x= Location_Center_X, y= Location_Center_Y, 
+                           color = AL3), 
+                      size = 0.5)+
+    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=3), 
+                    fill=guide_legend(ncol = 1,byrow=TRUE))+
+    theme(legend.position = "bottom", 
+          plot.margin=margin(0.5,1,0,1,"cm"),
+          text = element_blank(),
+           axis.ticks = element_blank(),
+         panel.grid =  element_blank(),
+          legend.ticks = element_blank(),
+         legend.title=element_blank(),
+         legend.key = element_blank(),
+        legend.text = element_text(size=14), 
+         panel.background = element_rect(fill = 'black', 
+                                         color = 'black', size = 1))+    
+    scale_colour_discrete(name  ="Annotated cell types",
+                          breaks=c("Immune cells",
+                                                  "Vessels & stroma",
+                                                  "Epithelia"),
+                          labels=c("Immune cells",
+                                                  "Vessels & stroma",
+                                                  "Epithelia")) +
+    scale_color_manual(values = c("magenta", "red", "yellow", "green", "blue"))+ 
+    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=3),
+                  fill=guide_legend(ncol = 3,byrow=TRUE))+
+  xlim(0, 2048)+
+  ylim(0, 2048)
+
+plot_ann_2
+
+```
+
+```{r, fig.width=4.5, fig.height=4.8}
+img <- png::readPNG(
+    "D:/Sandy/Promotion/Dissertation/Figures/AL2/20210806_2_si_d3_CD31-r_EpCAM-g_PDPN-b_CD90-c_EMCN-m_LYVE1-y.png"
+  )
+
+
+my_colors <- c("blue", "cyan", "yellow", "magenta", "red", "green")
+
+g <- grid::rasterGrob(img, interpolate=TRUE)
+
+
+
+df_fov <- fetched_data %>%
+  filter(Dataset == "D3_FOV2_20210806") %>%
+  filter(AL3 == "Epithelia I"|AL3 == "Epithelia II"|AL3 == "Blood vessels"|AL3 == "Lymphatics"| AL3 == "Fibroblasts"| AL3 == "B cells") %>%
+  mutate(AL3 = recode(
+    AL3, 
+    "B cells" = "PDPN",
+    "Blood vessels" = "CD90",
+    "Lymphatics" = "EMCN",
+    "Fibroblasts" = "LYVE1",
+    "Epithelia I" = "CD31",
+    "Epithelia II" = "EpCAM"
+  ))
+
+plot_if_1 <- ggplot()+ 
+  geom_point(data = df_fov, 
+                       aes(x= Location_Center_X, y= Location_Center_Y, color = AL3), 
+                       size = 1)+
+  annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf)+
+  theme(legend.title=element_blank())+ # exclude legend title
+  scale_colour_discrete(name  ="MELC IF stainings",
+                          breaks=c("CD45", "CD31", 
+                                   "EpCAM"),
+                          labels=c("CD45", "CD31", 
+                                   "EpCAM")) +
+  scale_color_manual(values = my_colors)+ 
+    theme(legend.position = "bottom", 
+          plot.margin=margin(0.5,1,0,1,"cm"),
+          text = element_blank(),
+           axis.ticks = element_blank(),
+         panel.grid =  element_blank(),
+          legend.ticks = element_blank(),
+         legend.title=element_blank(),
+         legend.key = element_blank(),
+        legend.text = element_text(size=14), 
+         panel.background = element_rect(fill = 'black', 
+                                         color = 'black', size = 1))+    
+  ggplot2::theme(legend.position = "bottom")+
+  ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=3),
+                  fill=guide_legend(ncol = 3,byrow=TRUE))
+
+plot_if_1
+```
+
+Combine both plots:
+
+```{r, fig.width=4.5, fig.height=9.6}
+
+plot_non <- ggarrange(plot_ann_2, plot_if_1, ncol = 1, nrow = 2)
+
+plot_non
+```
+
+Combine subplots:
+
+```{r, fig.width=9, fig.height=9.6}
+ggarrange(plot_immune, plot_non, ncol = 2, labels = c("A", "B"))
+
+```
+
+## Session Information
+
+```{r}
+save.image(paste0(output_dir, "/environment.RData"))
+sessionInfo()
+```
