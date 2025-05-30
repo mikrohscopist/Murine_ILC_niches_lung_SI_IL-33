@@ -753,15 +753,15 @@ plot <- vrSpatialPlot(vr_merged, assay = paste0("Assay", 34),
 
 
 plot_if_ilc2s_ov <- plot +
-  annotate("text", x=100, y=950, label= marker1,
+  annotate("text", x=130, y=950, label= marker1,
            col="cyan", size=5, parse=TRUE) +
-  annotate("text", x=300, y=950, label= marker2,
+  annotate("text", x=350, y=950, label= marker2,
            col="magenta", size=5, parse=TRUE) +
-  annotate("text", x=600, y=950, label= marker3,
+  annotate("text", x=210, y=880, label= marker3,
            col="yellow", size=5, parse=TRUE)+
-  annotate("text", x=100, y=890, label= marker6,
+  annotate("text", x=100, y=810, label= marker6,
            col="blue", size=5, parse=TRUE)+
-  annotate("text", x=300, y=890, label= marker4,
+  annotate("text", x=300, y=810, label= marker4,
            col="green", size=5, parse=TRUE)+
   # annotate("text", x=70, y=920, label= marker5,
   #          col="red", size=3.5, parse=TRUE)+
