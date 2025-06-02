@@ -1,7 +1,7 @@
 ---
 title: "Supplmentary Figure 4: immune and non-immune cell types SI"
 author: "Sandy Kroh"
-date: "May 30, 2025"
+date: "June 02, 2025"
 output:
   html_document:
     toc: yes
@@ -256,8 +256,15 @@ fetched_data <- FetchData(SO.si,
 
 fetched_data <- as.data.frame(fetched_data)
 df_fov <- fetched_data %>%
-          filter(Dataset == "D3_FOV2_20210806") %>%
-  filter(AL3 == "Epithelia I"|AL3 == "Epithelia II"|AL3 == "Blood vessels"|AL3 == "Lymphatics"| AL3 == "Fibroblasts")
+          filter(Dataset == "CTRL_FOV2_20210706") %>%
+  filter(AL3 == "Epithelia I"|AL3 == "Epithelia II"|AL3 == "Blood vessels"|AL3 == "Lymphatics"| AL3 == "Fibroblasts") %>%
+  mutate(AL3 = factor(AL3, level = c(
+    "Blood vessels",
+    "Lymphatics",
+    "Fibroblasts",
+    "Epithelia I",
+    "Epithelia II"
+  )))
 
 
 plot_ann_2 <- ggplot()+ 
@@ -285,7 +292,7 @@ plot_ann_2 <- ggplot()+
                           labels=c("Immune cells",
                                                   "Vessels & stroma",
                                                   "Epithelia")) +
-    scale_color_manual(values = c("magenta", "red", "yellow", "green", "blue"))+ 
+    scale_color_manual(values = c("magenta", "yellow", "cyan", "green", "blue"))+ 
     ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=3),
                   fill=guide_legend(ncol = 3,byrow=TRUE))+
   xlim(0, 2048)+
@@ -299,28 +306,32 @@ plot_ann_2
 
 ``` r
 img <- png::readPNG(
-    "D:/Sandy/Promotion/Dissertation/Figures/AL2/20210806_2_si_d3_CD31-r_EpCAM-g_PDPN-b_CD90-c_EMCN-m_LYVE1-y.png"
+    "D:/Sandy/Promotion/Dissertation/Figures/AL2/20210706_2_si_d3_CD31-r_EpCAM-g_FN-b_CD90-c_EMCN-m_LYVE1-y.png"
   )
 
+#20210806_2_si_d3_CD31-r_EpCAM-g_PDPN-b_CD90-c_EMCN-m_LYVE1-y
 
-my_colors <- c("blue", "cyan", "yellow", "magenta", "red", "green")
+my_colors <- c("magenta", "yellow", "cyan", "green", "blue", "red", "white")
 
 g <- grid::rasterGrob(img, interpolate=TRUE)
 
 
 
 df_fov <- fetched_data %>%
-  filter(Dataset == "D3_FOV2_20210806") %>%
-  filter(AL3 == "Epithelia I"|AL3 == "Epithelia II"|AL3 == "Blood vessels"|AL3 == "Lymphatics"| AL3 == "Fibroblasts"| AL3 == "B cells") %>%
+  filter(Dataset == "CTRL_FOV2_20210706") %>%
+  filter(AL3 == "Epithelia I"|AL3 == "Epithelia II"|AL3 == "Blood vessels"|AL3 == "Lymphatics"| AL3 == "Fibroblasts"| AL3 == "Plasma cells") %>%
   mutate(AL3 = recode(
     AL3, 
-    "B cells" = "PDPN",
     "Blood vessels" = "CD90",
     "Lymphatics" = "EMCN",
     "Fibroblasts" = "LYVE1",
     "Epithelia I" = "CD31",
-    "Epithelia II" = "EpCAM"
-  ))
+    "Epithelia II" = "EpCAM", 
+    "Plasma cells" = "FN"
+  ), 
+  AL3 = factor(AL3, c(
+    "EMCN", "LYVE1", "CD90", "EpCAM", "FN", "CD31"
+  )))
 
 plot_if_1 <- ggplot()+ 
   geom_point(data = df_fov, 
@@ -328,11 +339,11 @@ plot_if_1 <- ggplot()+
                        size = 1)+
   annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf)+
   theme(legend.title=element_blank())+ # exclude legend title
-  scale_colour_discrete(name  ="MELC IF stainings",
-                          breaks=c("CD45", "CD31", 
-                                   "EpCAM"),
-                          labels=c("CD45", "CD31", 
-                                   "EpCAM")) +
+  # scale_colour_discrete(name  ="MELC IF stainings",
+  #                         breaks=c("CD45", "CD31", 
+  #                                  "EpCAM"),
+  #                         labels=c("CD45", "CD31", 
+  #                                  "EpCAM")) +
   scale_color_manual(values = my_colors)+ 
     theme(legend.position = "bottom", 
           plot.margin=margin(0.5,1,0,1,"cm"),

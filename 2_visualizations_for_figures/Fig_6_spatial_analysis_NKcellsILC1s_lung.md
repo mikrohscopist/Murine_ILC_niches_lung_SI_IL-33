@@ -442,7 +442,7 @@ plot_if_ctrl <- plot +
            col="magenta", size=5, parse=TRUE) +
   annotate("text", x=90, y=810, label= marker3,
            col="yellow", size=5, parse=TRUE)+
-  annotate("text", x=100, y=740, label= marker4,
+  annotate("text", x=110, y=740, label= marker4,
            col="green", size=5, parse=TRUE)+
   # annotate("text", x=70, y=920, label= marker5,
   #          col="red", size=3.5, parse=TRUE)+
