@@ -116,6 +116,147 @@ SO.si$AL3 <- gsub("Mesenchymal stromal cells II", "Epithelia II" , SO.si$AL3)
 SO.si$AL2 <- gsub("Mesenchymal stromal cells I", "Fibroblasts" , SO.si$AL2)
 SO.si$AL3 <- gsub("Mesenchymal stromal cells I", "Fibroblasts" , SO.si$AL3)
 
+SO.si$AL1 <- gsub("Epithelia & stroma", "Epithelia" , SO.si$AL1)
+
+df_si <- FetchData(SO.si, c(
+  "nCount_MELC",
+  "nFeature_MELC",
+  "Location_Center_X",
+  "Location_Center_Y",
+  "Treatment",
+  "FOV",
+  "Experiment",
+  "Organ",
+  "MELC.machine",
+  "Tissue.area",
+  "Dataset",
+  "CellID",
+  "AL1",
+  "AL2",
+  "AL3",
+  nrow(SO.si)
+))
+
+# adapt order
+df_si$AL1 <- factor(df_si$AL1, c(
+  "Immune cells", "Vessels & stroma", "Epithelia"
+))
+
+df_si$AL2 <- factor(df_si$AL2, c(
+  "ILCs",
+  "CD8+ CD3- IEL",
+  "T helper cells",
+  "T cytotox. cells",
+  "Myeloid cells",
+  "B cells",
+  "Plasma cells",
+  "Fibroblasts",
+  "Blood vessels",
+  "Lymphatics",
+  "Epithelia I",
+  "Epithelia II"
+))
+
+df_si$AL3 <- factor(df_si$AL3, c(
+  "ILC2s",
+  "NK cells/ILC1s/ILC3s",
+  "CD8+ CD3- IEL",
+  "T helper cells",
+  "T cytotox. cells",
+  "Myeloid cells",
+  "B cells",
+  "Plasma cells",
+  "Fibroblasts",
+  "Blood vessels",
+  "Lymphatics",
+  "Epithelia I",
+  "Epithelia II"
+))
+
+```
+
+### SI villi
+
+Quantification proportions
+
+```{r}
+
+# info of AL is in long format
+df_al1 <- df_si %>%
+  reshape2::dcast(., Treatment + Dataset + Tissue.area ~ AL1) %>%
+  mutate(TotalCellCountFOV = `Immune cells`+ `Vessels & stroma` + `Epithelia`) %>%
+  select(Dataset, Treatment, Tissue.area, TotalCellCountFOV, 
+         `Immune cells`, `Vessels & stroma`, `Epithelia`) %>%
+  as.data.frame()
+
+
+df_al2 <- df_si %>%
+  reshape2::dcast(., Dataset ~ AL2) %>%
+  as.data.frame()
+
+
+df_al3 <- df_si %>%
+  reshape2::dcast(., Dataset ~ AL3)%>%
+  select(Dataset, `ILC2s`, `NK cells/ILC1s/ILC3s`) %>%
+  as.data.frame()
+
+# combine all ALs together
+df_al <- merge(df_al1, df_al2, by = "Dataset")
+df_al <- merge(df_al, df_al3, by = "Dataset")
+
+# Treatment
+df_al$Treatment <- factor(df_al$Treatment, 
+                              levels = c("CTRL", "1", "3"))
+
+# Convert to numeric
+df_al[, c(4:length(colnames(df_al)))] <- lapply(df_al[, c(4:length(colnames(df_al)))], as.numeric)
+
+# Check right formats
+head(df_al)
+
+
+```
+
+```{r}
+
+# Proportion of total cell count per FOV
+for (element in c(colnames(df_al)[5:length(colnames(df_al))])) {
+  number <- paste0("Prop_", element, "_perTotalCountFOV")
+  df_al[number] <- round(df_al[element]/df_al["TotalCellCountFOV"]*100, 1)
+}
+
+# Proportion of total immune count per FOV
+for (element in c(colnames(df_al)[8:14])) {
+  number <- paste0("Prop_", element, "_perTotalImmuneFOV")
+  df_al[number] <- round(df_al[element]/df_al["Immune cells"]*100, 1)
+}
+round(rowSums(df_al[39:length(colnames(df_al))], na.rm = TRUE), 0)
+
+# Proportion of total immune count per FOV
+for (element in c(colnames(df_al)[20:21])) {
+  number <- paste0("Prop_", element, "_perTotalImmuneFOV")
+  df_al[number] <- round(df_al[element]/df_al["Immune cells"]*100, 1)
+}
+
+# Proportion of total ILC count per FOV
+for (element in c(colnames(df_al)[20:21])) {
+  number <- paste0("Prop_", element, "_perTotalILCsFOV")
+  df_al[number] <- round(df_al[element]/df_al["ILCs"]*100, 1)
+}
+round(rowSums(df_al[48:49], na.rm = TRUE), 0)
+
+colnames(df_al)
+```
+
+Separate by tissue area:
+
+```{r}
+
+# separate by tissue area
+df_villi <- df_al %>%
+  filter(Tissue.area == "Villi")
+df_ilf <- df_al %>%
+  filter(Tissue.area == "ILF")
 ```
 
 ## Lung
@@ -236,6 +377,8 @@ colnames(df_lung)
 
 ```{r}
 write.csv(df_lung, paste0(output_dir, "/lung_proportions.csv"))
+write.csv(df_villi, paste0(output_dir, "/si_villi_proportions.csv"))
+write.csv(df_ilf, paste0(output_dir, "/si_ilf_proportions.csv"))
 saveRDS(SO.si, paste0(output_dir, "/si_all_cells_all_ALs.rds"))
 saveRDS(SO.lung, paste0(output_dir, "/lung_all_cells_all_ALs.rds"))
 save.image(paste0(output_dir, "/environment.RData"))
