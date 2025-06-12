@@ -1,0 +1,348 @@
+---
+title: "Supplementary Figure 8: epithelia II cells in SI villi regions"
+author: "Sandy Kroh"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    number_sections: yes
+    fig_caption: yes
+    keep_md: yes
+  pdf_document:
+    toc: yes
+params:
+  Sample: Default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+# knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
+                      fig.align='center', dpi = 600, 
+                      message = FALSE, warning = FALSE)
+options(width = 1200)
+```
+
+## Libraries
+
+```{r}
+# remove.packages("rlang")
+# remove.packages("dplyr")
+# install.packages("rlang")
+# install.packages("dplyr")
+
+library(SeuratObject)
+library(dplyr)
+library(rstatix)
+library(rlang)
+
+if (!requireNamespace("Giotto", quietly = TRUE))
+  devtools::install_github("drieslab/Giotto@suite")
+if (!requireNamespace("VoltRon", quietly = TRUE))
+  devtools::install_github("Artur-man/VoltRon")
+if (!requireNamespace("Seurat", quietly = TRUE))
+  install.packages("Seurat")
+library(Giotto)
+library(Seurat)
+library(VoltRon)
+library(ggplot2)
+library(ggpubr)
+library(readr)
+library(ggbeeswarm)
+library(stringr)
+```
+
+## Parameters
+
+```{r}
+set.seed(123)
+
+input_dir <- here::here("1_data_tidying", "Lung_SI_all_cells_all_ALs_files")
+
+output_dir <- here::here("2_visualizations_for_figures", "Supp_Fig_8_epithelia_II_cells_si_villi_files")
+dir.create(output_dir)
+
+
+
+
+main_markers <- c(
+  "EpCAM", "EMCN", "LYVE1", "PDPN", "PDGFRa", "CD8a", "CD4",
+  "CD45", "CD3", "IRF4", "Kappa", "CD11c", "CD127", "GATA3eGFP", "RORgt"
+)
+
+
+immune_markers <- c(
+ "CD3", "CD4", "CD8a", "Kappa", "IRF4", "CD11c",
+  "CD127", "CD90", "EOMES", "GATA3eGFP", "RORgt", "Ki67",  "KLRG1", "NKp46", "CD117", "Areg", "CCR6", "CD44", "MHCII", "Sca1"
+)
+
+ilc_markers <- c(
+  "CD3", "CD4", "CD8a",
+  "CD127", "CD90", "EOMES", "GATA3eGFP", "RORgt", "KLRG1", "NKp46", "CD117", "CCR6", "MHCII", "Ki67", "Areg", "IRF4", "Sca1", "CD44"
+)
+
+
+cols_nat <- c("magenta", "cyan", "blue", "purple", "green", 
+                       "red", "yellow", "olivedrab1", "slateblue1", 
+                       "darkcyan", "gold","indianred1", "seagreen", "deeppink", 
+                       "orange", "brown", "violet",
+                       "deeppink4", "pink", 
+                       "grey", "black", "lightgreen", 
+                       "#FF0066",  
+                       "lightblue", "#FFCC99", "#CC00FF", 
+                       "blueviolet",  "goldenrod4", 
+                       "navy", "olivedrab", "lightcyan", "seagreen2", "darkviolet", "lightpink", "slateblue4", "olivedrab2")
+
+colfunc <- colorRampPalette(c("darkcyan", "green", "yellow", "magenta", "purple"))
+
+cols_ilcs_lung <- c("darkcyan", "seagreen2", "deeppink4")
+cols_ilcs_si <- c("slateblue", "seagreen2")
+
+cols_treat <- c("darkcyan", "gold", "slateblue")
+
+```
+
+# Load data
+
+## Proportions
+
+```{r, fig.width=9, fig.height=6}
+
+df_villi <- read_csv(paste0(input_dir, "/si_villi_proportions.csv"), 
+    col_types = cols(...1 = col_skip()))
+df_ilf <- read_csv(paste0(input_dir, "/si_ilf_proportions.csv"), 
+    col_types = cols(...1 = col_skip()))
+df_lung <- read_csv(paste0(input_dir, "/lung_proportions.csv"), 
+    col_types = cols(...1 = col_skip()))
+
+```
+
+## Spatial data for VoltRon and Giotto
+
+```{r, fig.width=9, fig.height=6}
+
+# from import_Giotto.Rmd
+gio_list <- readRDS(here::here("data", "Giotto_data_Villi.rds"))
+
+# from import_VoltRon.Rmd
+vr_list <- readRDS(here::here("data", "VoltRon_data_Villi.rds"))
+
+# original data
+metadatax <- read_csv(here::here("data", "SO_arcsinh_si_imputed_Villi.csv"))
+
+metadatax <- metadatax %>% 
+  filter(`Tissue area` == "Villi")
+
+unique(metadatax$CellType)
+
+vr_list_names <- unique(metadatax$Dataset)
+
+
+cell_proximities_list <- list()
+for(samp in vr_list_names){
+  print(samp)
+  cell_proximities_list[[samp]] <-cellProximityEnrichment(
+    gobject = gio_list[[samp]],
+    cluster_column = 'CellType',
+    spatial_network_name = 'Delaunay_network',
+    adjust_method = 'fdr',
+    number_of_simulations = 1000)
+  cell_proximities_list[[samp]] <- cell_proximities_list[[samp]]$enrichm_res
+}
+
+vr_merged <- merge(vr_list[[1]], vr_list[-1])
+vrImageNames(vr_merged)
+unique(vr_merged$CellType)
+
+```
+
+# Visualization
+
+## IF overlay of epithelia II cells and EpCAM, Sca1, CD44, and Ki67, and DAPI
+
+```{r, fig.width=4.5, fig.height=4.5}
+
+set_ptsize <- 2
+cell_shape <- 18
+set_alpha <- 0.8
+
+# define cell type of interested that should be plotted on the overlay
+celltype_of_interest <- "Epithelia II"
+
+ColorsCellTypeSingle <-  list(
+  #`NK cells/ILC1s/ILC3s` = "cyan", 
+  `Epithelia II` = "orange")
+
+
+# overlay 1 ------------------------------------------------------------
+# define markers for the Overlay
+# CYAN
+marker1 <- "EpCAM"
+# MAGENTA
+marker2 <- "Sytox"
+# YELLOW
+marker3 <- "Sca1"
+
+name_channel_key <- paste0(marker1, "-c_", marker2, "-m_", marker3, "-y_")
+vr_merged <- combineChannels(vr_merged,
+                             channels = c(marker1, marker2, marker3),
+                             colors = c("cyan", "magenta", "yellow"),
+                             channel_key = name_channel_key)
+
+
+plot <- vrSpatialPlot(vr_merged, assay = paste0("Assay", 4), #2
+                        group.by = "CellType", 
+                        group.ids = celltype_of_interest,
+                        alpha = set_alpha, 
+                        background = c("image_1", name_channel_key), 
+                        pt.size = set_ptsize, cell.shape = cell_shape)+
+  guides(color = guide_legend(override.aes = list(size = 5)))+
+  scale_color_manual(values = ColorsCellTypeSingle)+
+  scale_fill_manual(values = ColorsCellTypeSingle)+
+  theme_void()+ NoLegend()+ ggtitle(NULL)+
+  theme(plot.title = element_blank(), 
+        text = element_text(size = 12))
+
+
+
+plot_if_1 <- plot +
+  annotate("text", x=119, y=950, label= marker1,
+           col="cyan", size=5, parse=TRUE) +
+  annotate("text", x=91, y=880, label= marker2,
+           col="magenta", size=5, parse=TRUE) +
+  annotate("text", x=91, y=810, label= marker3,
+           col="yellow", size=5, parse=TRUE)+
+  annotate("segment", x = 680, xend = 985, y = 45, yend = 45, size = 1.6, 
+  colour = "white")
+
+# define markers for the Overlay
+# CYAN
+marker1 <- "EpCAM"
+# MAGENTA
+marker2 <- "DAPI"
+# YELLOW
+marker3 <- "Sca1"
+
+name_channel_key <- paste0(marker1, "-c_", marker2, "-m_", marker3, "-y_")
+vr_merged <- combineChannels(vr_merged,
+                             channels = c(marker1, marker2, marker3),
+                             colors = c("cyan", "magenta", "yellow"),
+                             channel_key = name_channel_key)
+
+plot <- vrSpatialPlot(vr_merged, assay = paste0("Assay", 13), #2
+                        group.by = "CellType", 
+                        group.ids = celltype_of_interest,
+                        alpha = set_alpha, 
+                        background = c("image_1", name_channel_key), 
+                        pt.size = set_ptsize, cell.shape = cell_shape)+
+  guides(color = guide_legend(override.aes = list(size = 5)))+
+  scale_color_manual(values = ColorsCellTypeSingle)+
+  scale_fill_manual(values = ColorsCellTypeSingle)+
+  theme_void()+ NoLegend()+ ggtitle(NULL)+
+  theme(plot.title = element_blank(), 
+        text = element_text(size = 12))
+
+
+
+plot_if_2 <- plot +
+  annotate("text", x=119, y=950, label= marker1,
+           col="cyan", size=5, parse=TRUE) +
+  annotate("text", x=91, y=880, label= marker2,
+           col="magenta", size=5, parse=TRUE) +
+  annotate("text", x=91, y=810, label= marker3,
+           col="yellow", size=5, parse=TRUE)+
+  annotate("segment", x = 680, xend = 985, y = 45, yend = 45, size = 1.6, 
+  colour = "white")
+
+
+# second overlay ------------------------------------------------------------
+# define markers for the Overlay
+# CYAN
+marker1 <- "CD44"
+# MAGENTA
+marker2 <- "DAPI"
+# YELLOW
+marker3 <- "Ki67"
+
+name_channel_key <- paste0(marker1, "-c_", marker2, "-m_", marker3, "-y_")
+vr_merged <- combineChannels(vr_merged,
+                             channels = c(marker1, marker2, marker3),
+                             colors = c("cyan", "magenta", "yellow"),
+                             channel_key = name_channel_key)
+
+
+plot <- vrSpatialPlot(vr_merged, assay = paste0("Assay", 4), 
+                        group.by = "CellType", 
+                        group.ids = celltype_of_interest,
+                        alpha = set_alpha, 
+                        background = c("image_1", name_channel_key), 
+                        pt.size = set_ptsize, cell.shape = cell_shape)+
+  guides(color = guide_legend(override.aes = list(size = 5)))+
+  scale_color_manual(values = ColorsCellTypeSingle)+
+  scale_fill_manual(values = ColorsCellTypeSingle)+
+  theme_void()+ NoLegend()+ ggtitle(NULL)+
+  theme(plot.title = element_blank(), 
+        text = element_text(size = 12))
+
+
+
+plot_if_3 <- plot +
+  annotate("text", x=100, y=950, label= marker1,
+           col="cyan", size=5, parse=TRUE) +
+  annotate("text", x=91, y=880, label= marker2,
+           col="magenta", size=5, parse=TRUE) +
+  annotate("text", x=90, y=810, label= marker3,
+           col="yellow", size=5, parse=TRUE)+
+  annotate("segment", x = 680, xend = 985, y = 45, yend = 45, size = 1.6, 
+  colour = "white")
+
+
+
+plot <- vrSpatialPlot(vr_merged, assay = paste0("Assay", 13), 
+                        group.by = "CellType", 
+                        group.ids = celltype_of_interest,
+                        alpha = set_alpha, 
+                        background = c("image_1", name_channel_key), 
+                        pt.size = set_ptsize, cell.shape = cell_shape)+
+  guides(color = guide_legend(override.aes = list(size = 5)))+
+  scale_color_manual(values = ColorsCellTypeSingle)+
+  scale_fill_manual(values = ColorsCellTypeSingle)+
+  theme_void()+ NoLegend()+ ggtitle(NULL)+
+  theme(plot.title = element_blank(), 
+        text = element_text(size = 12))
+
+
+
+plot_if_4 <- plot +
+  annotate("text", x=100, y=950, label= marker1,
+           col="cyan", size=5, parse=TRUE) +
+  annotate("text", x=91, y=880, label= marker2,
+           col="magenta", size=5, parse=TRUE) +
+  annotate("text", x=90, y=810, label= marker3,
+           col="yellow", size=5, parse=TRUE)+
+  annotate("segment", x = 680, xend = 985, y = 45, yend = 45, size = 1.6, 
+  colour = "white")
+
+```
+
+```{r, fig.width=9, fig.height=4.7}
+
+plot_1 <- annotate_figure(plot_if_1,
+               top = text_grob("CTRL", color = "black", face = "bold", size = 14))+
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+
+plot_2 <- annotate_figure(plot_if_2,
+               top = text_grob("IL-33 day 1", color = "black", face = "bold", size = 14))+
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+plot_2
+
+ggarrange(plot_1, plot_2, ncol = 2, nrow = 1)
+```
+
+## Session Information
+
+```{r}
+save.image(paste0(output_dir, "/environment.RData"))
+sessionInfo()
+```
