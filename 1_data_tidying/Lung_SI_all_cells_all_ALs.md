@@ -1,7 +1,7 @@
 ---
 title: "Lung and SI data"
 author: "Sandy Kroh"
-date: "June 02, 2025"
+date: "June 12, 2025"
 output:
   html_document:
     toc: yes
@@ -446,6 +446,7 @@ colnames(df_lung)
 
 ``` r
 write.csv(df_lung, paste0(output_dir, "/lung_proportions.csv"))
+write.csv(df_si, paste0(output_dir, "/si_all_cells_all_ALs.csv"))
 write.csv(df_villi, paste0(output_dir, "/si_villi_proportions.csv"))
 write.csv(df_ilf, paste0(output_dir, "/si_ilf_proportions.csv"))
 saveRDS(SO.si, paste0(output_dir, "/si_all_cells_all_ALs.rds"))
