@@ -1,0 +1,867 @@
+---
+title: "Supplementary Figure 9: Quantification of ILC subtypes in the SI"
+author: "Sandy Kroh"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    number_sections: yes
+    fig_caption: yes
+    keep_md: yes
+  pdf_document:
+    toc: yes
+params:
+  Sample: Default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+# knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
+                      fig.align='center', dpi = 600, 
+                      message = FALSE, warning = FALSE)
+options(width = 1200)
+```
+
+## Libraries
+
+```{r}
+# remove.packages("rlang")
+# remove.packages("dplyr")
+# install.packages("rlang")
+# install.packages("dplyr")
+
+library(SeuratObject)
+library(dplyr)
+library(rstatix)
+library(rlang)
+
+if (!requireNamespace("Giotto", quietly = TRUE))
+  devtools::install_github("drieslab/Giotto@suite")
+if (!requireNamespace("VoltRon", quietly = TRUE))
+  devtools::install_github("Artur-man/VoltRon")
+if (!requireNamespace("Seurat", quietly = TRUE))
+  install.packages("Seurat")
+library(Giotto)
+library(Seurat)
+library(VoltRon)
+library(ggplot2)
+library(ggpubr)
+library(readr)
+library(ggbeeswarm)
+library(stringr)
+```
+
+## Parameters
+
+```{r}
+set.seed(123)
+
+input_dir <- here::here("1_data_tidying", "Lung_SI_all_cells_all_ALs_files")
+
+output_dir <- here::here("2_visualizations_for_figures", "Supp_Fig_9_quantification_spatial_analysis_SI_files")
+dir.create(output_dir)
+
+
+
+
+main_markers <- c(
+  "EpCAM", "EMCN", "LYVE1", "PDPN", "PDGFRa", "CD8a", "CD4",
+  "CD45", "CD3", "IRF4", "Kappa", "CD11c", "CD127", "GATA3eGFP", "RORgt"
+)
+
+
+immune_markers <- c(
+ "CD3", "CD4", "CD8a", "Kappa", "IRF4", "CD11c",
+  "CD127", "CD90", "EOMES", "GATA3eGFP", "RORgt", "Ki67",  "KLRG1", "NKp46", "CD117", "Areg", "CCR6", "CD44", "MHCII", "Sca1"
+)
+
+ilc_markers <- c(
+  "CD3", "CD4", "CD8a",
+  "CD127", "CD90", "EOMES", "GATA3eGFP", "RORgt", "KLRG1", "NKp46", "CD117", "CCR6", "MHCII", "Ki67", "Areg", "IRF4", "Sca1", "CD44"
+)
+
+
+cols_nat <- c("magenta", "cyan", "blue", "purple", "green", 
+                       "red", "yellow", "olivedrab1", "slateblue1", 
+                       "darkcyan", "gold","indianred1", "seagreen", "deeppink", 
+                       "orange", "brown", "violet",
+                       "deeppink4", "pink", 
+                       "grey", "black", "lightgreen", 
+                       "#FF0066",  
+                       "lightblue", "#FFCC99", "#CC00FF", 
+                       "blueviolet",  "goldenrod4", 
+                       "navy", "olivedrab", "lightcyan", "seagreen2", "darkviolet", "lightpink", "slateblue4", "olivedrab2")
+
+colfunc <- colorRampPalette(c("darkcyan", "green", "yellow", "magenta", "purple"))
+
+cols_ilcs_lung <- c("darkcyan", "seagreen2", "deeppink4")
+cols_ilcs_si <- c("slateblue", "seagreen2")
+
+cols_treat <- c("darkcyan", "gold", "slateblue")
+
+cols_organs <- c("indianred2", "seagreen", "navy")
+cols_organs_si <- c("seagreen", "navy")
+
+```
+
+# Load data
+
+## Proportions
+
+```{r, fig.width=9, fig.height=6}
+
+df_villi <- read_csv(paste0(input_dir, "/si_villi_proportions.csv"), 
+    col_types = cols(...1 = col_skip()))
+
+df_ilf <- read_csv(paste0(input_dir, "/si_ilf_proportions.csv"), 
+    col_types = cols(...1 = col_skip()))
+
+# the FOV CTRL_FOV1_20210810 is falsely labeled as villi but is actually an ILF, so it must be changed in the metadata
+df_correct <- df_villi %>%
+  filter(Dataset == "CTRL_FOV1_20210810") %>%
+  mutate(Tissue.area = "ILF")
+
+df_ilf <- rbind(df_ilf, df_correct)
+
+df_villi <- df_villi %>%
+  filter(Dataset != "CTRL_FOV1_20210810")
+
+
+df_lung <- read_csv(paste0(input_dir, "/lung_proportions.csv"), 
+    col_types = cols(...1 = col_skip()))
+
+```
+
+# Visualization
+
+## Suppl. Figure 9A - Total cell count between lung, Si villi and SI ILF at steady state
+
+```{r, fig.width=3, fig.height=3}
+
+df_villi_sub <- df_villi %>%
+  mutate(Tissue.area = gsub("Villi", "villi", Tissue.area), 
+         Tissue.area = paste0("SI ", Tissue.area)) %>%
+  select(Dataset, Treatment, TotalCellCountFOV, `Immune cells`, ILCs, Tissue.area)
+
+df_lung_sub <- df_lung %>%
+  mutate(Tissue.area = `Tissue area`) %>%
+  select(Dataset, Treatment, TotalCellCountFOV, `Immune cells`, ILCs, Tissue.area)
+
+df_ilf_sub <- df_ilf %>%
+  mutate(Tissue.area = paste0("SI ", Tissue.area)) %>%
+  select(Dataset, Treatment, TotalCellCountFOV, `Immune cells`, ILCs, Tissue.area)
+
+df <- rbind(df_villi_sub, df_lung_sub, df_ilf_sub)
+
+# filter for CTRL and convert to longer format
+df <- df %>%
+  filter(Treatment == "CTRL") %>%
+  select(Tissue.area, Dataset, TotalCellCountFOV) %>%
+  mutate(Tissue.area = factor(Tissue.area, level =c(
+    "Lung", "SI villi", "SI ILF"
+  )))
+
+# Testing for normal distribution
+shapiro.test(df$TotalCellCountFOV)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`TotalCellCountFOV` ~ Tissue.area)
+res.kruskal
+df %>% kruskal_effsize(`TotalCellCountFOV` ~ Tissue.area)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`TotalCellCountFOV` ~ Tissue.area, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ Tissue.area, data = df))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "Tissue.area")
+
+plot_count_all <- ggplot(df, aes(x = Tissue.area, y = TotalCellCountFOV, fill = "Tissue.area"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = Tissue.area), size = 2, cex = 3)+
+  scale_color_manual(values = cols_organs)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(angle = 30, 
+                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
+         axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.1, y.position = 6000) +
+  xlab(NULL)+
+  ylab("Total count per FOV [#]")+
+  ggtitle("Total cells")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,8000))+
+  NoLegend()+
+    annotate(geom = 'text',
+           x=c(1, 2, 3),
+           y=7700,
+           label=Labels,
+           #angle = 90,
+           size = 10/.pt)
+
+plot_count_all
+
+```
+
+## Suppl. Figure 9B - Total ILC count between lung, SI villi and SI ILF
+
+```{r, fig.width=3, fig.height=3}
+
+df_villi_sub <- df_villi %>%
+  mutate(Tissue.area = gsub("Villi", "villi", Tissue.area), 
+         Tissue.area = paste0("SI ", Tissue.area)) %>%
+  select(Dataset, Treatment, TotalCellCountFOV, `Immune cells`, ILCs, Tissue.area)
+
+df_lung_sub <- df_lung %>%
+  mutate(Tissue.area = `Tissue area`) %>%
+  select(Dataset, Treatment, TotalCellCountFOV, `Immune cells`, ILCs, Tissue.area)
+
+df_ilf_sub <- df_ilf %>%
+  mutate(Tissue.area = paste0("SI ", Tissue.area)) %>%
+  select(Dataset, Treatment, TotalCellCountFOV, `Immune cells`, ILCs, Tissue.area)
+
+df <- rbind(df_villi_sub, df_lung_sub, df_ilf_sub)
+
+# filter for CTRL and convert to longer format
+df <- df %>%
+  filter(Treatment == "CTRL") %>%
+  select(Tissue.area, Dataset, ILCs) %>%
+  mutate(Tissue.area = factor(Tissue.area, level =c(
+    "Lung", "SI villi", "SI ILF"
+  )))
+
+# Testing for normal distribution
+shapiro.test(df$ILCs)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`ILCs` ~ Tissue.area)
+res.kruskal
+df %>% kruskal_effsize(`ILCs` ~ Tissue.area)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`ILCs` ~ Tissue.area, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ Tissue.area, data = df))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "Tissue.area")
+
+plot_count_ilc <- ggplot(df, aes(x = Tissue.area, y = ILCs, fill = "Tissue.area"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = Tissue.area), size = 2, cex = 3)+
+  scale_color_manual(values = cols_organs)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(angle = 30, 
+                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
+         axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.1, y.position = 400) +
+  xlab(NULL)+
+  ylab("Total count per FOV [#]")+
+  ggtitle("ILCs")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,650))+
+  NoLegend()+
+    annotate(geom = 'text',
+           x=c(1, 2, 3),
+           y=600,
+           label=Labels,
+           #angle = 90,
+           size = 10/.pt)
+
+plot_count_ilc
+
+```
+
+## Suppl. Figure 9C - Total immune cells in lung, SI villi, and SI ILF
+
+```{r, fig.width=3, fig.height=3}
+
+df_villi_sub <- df_villi %>%
+  mutate(Tissue.area = gsub("Villi", "villi", Tissue.area), 
+         Tissue.area = paste0("SI ", Tissue.area)) %>%
+  select(Dataset, Treatment, TotalCellCountFOV, `Immune cells`, ILCs, Tissue.area)
+
+df_lung_sub <- df_lung %>%
+  mutate(Tissue.area = `Tissue area`) %>%
+  select(Dataset, Treatment, TotalCellCountFOV, `Immune cells`, ILCs, Tissue.area)
+
+df_ilf_sub <- df_ilf %>%
+  mutate(Tissue.area = paste0("SI ", Tissue.area)) %>%
+  select(Dataset, Treatment, TotalCellCountFOV, `Immune cells`, ILCs, Tissue.area)
+
+df <- rbind(df_villi_sub, df_lung_sub, df_ilf_sub)
+
+# filter for CTRL and convert to longer format
+df <- df %>%
+  filter(Treatment == "CTRL") %>%
+  select(Tissue.area, Dataset, `Immune cells`) %>%
+  mutate(Tissue.area = factor(Tissue.area, level =c(
+    "Lung", "SI villi", "SI ILF"
+  )))
+
+# Testing for normal distribution
+shapiro.test(df$`Immune cells`)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`Immune cells` ~ Tissue.area)
+res.kruskal
+df %>% kruskal_effsize(`Immune cells` ~ Tissue.area)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`Immune cells` ~ Tissue.area, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ Tissue.area, data = df))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "Tissue.area")
+
+plot_count_immune <- ggplot(df, aes(x = Tissue.area, y = `Immune cells`, fill = "Tissue.area"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = Tissue.area), size = 2, cex = 3)+
+  scale_color_manual(values = cols_organs)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(angle = 30, 
+                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
+         axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.1, y.position = 5000) +
+  xlab(NULL)+
+  ylab("Total count per FOV [#]")+
+  ggtitle("Immune cells")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,6900))+
+  NoLegend()+
+    annotate(geom = 'text',
+           x=c(1, 2, 3),
+           y=6500,
+           label=Labels,
+           #angle = 90,
+           size = 10/.pt)
+
+plot_count_immune
+
+```
+
+## Suppl. Figure 9D - Frequency of ILCs in lung, SI villi adn SI ILF
+
+```{r, fig.width=3, fig.height=3}
+
+df_villi_sub <- df_villi %>%
+  mutate(Tissue.area = gsub("Villi", "villi", Tissue.area), 
+         Tissue.area = paste0("SI ", Tissue.area)) %>%
+  select(Dataset, Treatment, TotalCellCountFOV, `Immune cells`, ILCs, Tissue.area)
+
+df_lung_sub <- df_lung %>%
+  mutate(Tissue.area = `Tissue area`) %>%
+  select(Dataset, Treatment, TotalCellCountFOV, `Immune cells`, ILCs, Tissue.area)
+
+df_ilf_sub <- df_ilf %>%
+  mutate(Tissue.area = paste0("SI ", Tissue.area)) %>%
+  select(Dataset, Treatment, TotalCellCountFOV, `Immune cells`, ILCs, Tissue.area)
+
+df <- rbind(df_villi_sub, df_lung_sub, df_ilf_sub)
+
+# filter for CTRL and convert to longer format
+df <- df %>%
+  filter(Treatment == "CTRL") %>%
+  mutate(ILC_freq = ILCs/`Immune cells`*100) %>%
+  select(Tissue.area, Dataset, ILC_freq) %>%
+  mutate(Tissue.area = factor(Tissue.area, level =c(
+    "Lung", "SI villi", "SI ILF"
+  )))
+
+# Testing for normal distribution
+shapiro.test(df$ILC_freq)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`ILC_freq` ~ Tissue.area)
+res.kruskal
+df %>% kruskal_effsize(`ILC_freq` ~ Tissue.area)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`ILC_freq` ~ Tissue.area, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ Tissue.area, data = df))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "Tissue.area")
+
+plot_freq_ilc <- ggplot(df, aes(x = Tissue.area, y = ILC_freq, fill = "Tissue.area"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = Tissue.area), size = 2, cex = 3)+
+  scale_color_manual(values = cols_organs)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(angle = 30, 
+                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
+         axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.1, y.position = 15) +
+  xlab(NULL)+
+  ylab("Frequency/\nimmune cells per FOV [%]")+
+  ggtitle("ILCs")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,22))+
+  NoLegend()+
+    annotate(geom = 'text',
+           x=c(1, 2, 3),
+           y=20,
+           label=Labels,
+           #angle = 90,
+           size = 10/.pt)
+
+plot_freq_ilc
+
+```
+
+Combine plots:
+
+```{r, fig.width=9, fig.height=6}
+ggarrange(plot_count_all, plot_count_immune, plot_count_ilc, plot_freq_ilc, ncol = 3, nrow = 2, labels = "AUTO")
+```
+
+## Suppl. Figure 9E - ILC subtypes in SI villi and SI ILF at steady state
+
+```{r, fig.width=9, fig.height=6}
+
+df_villi_sub <- df_villi %>%
+  mutate(Tissue.area = gsub("Villi", "villi", Tissue.area), 
+         Tissue.area = paste0("SI ", Tissue.area)) %>%
+  select(Dataset, Treatment, TotalCellCountFOV, `Immune cells`, ILCs, `NK cells/ILC1s/ILC3s`, ILC2s, Tissue.area) %>%
+  #change from wide to long format
+  tidyr::pivot_longer(names_to = "ILC_type", cols = c(`NK cells/ILC1s/ILC3s`, ILC2s))
+
+df_ilf_sub <- df_ilf %>%
+  mutate(Tissue.area = paste0("SI ", Tissue.area)) %>%
+  select(Dataset, Treatment, TotalCellCountFOV, `Immune cells`, ILCs, `NK cells/ILC1s/ILC3s`, ILC2s, Tissue.area) %>%
+  #change from wide to long format
+  tidyr::pivot_longer(names_to = "ILC_type", cols = c(`NK cells/ILC1s/ILC3s`, ILC2s))
+
+df_long <- rbind(df_villi_sub, df_ilf_sub)
+
+# filter for CTRL and convert to longer format
+df_long <- df_long %>%
+  filter(Treatment == "CTRL") %>%
+  select(Tissue.area, Dataset, ILC_type, value) %>%
+  mutate(Tissue.area = factor(Tissue.area, level =c(
+    "Lung", "SI villi", "SI ILF"
+  )), 
+  ILC_type = factor(ILC_type, level =c(
+    "NK cells/ILC1s/ILC3s", "ILC2s"
+  )))
+
+# VILLI -----------------------------------------------------------------
+df <- df_long %>%
+  filter(Tissue.area == "SI villi")
+
+# Testing for normal distribution
+shapiro.test(df$value)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`value` ~ ILC_type)
+res.kruskal
+df %>% kruskal_effsize(`value` ~ ILC_type)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`value` ~ ILC_type, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ ILC_type, data = df))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "ILC_type")
+
+plot_villi_ilcs <- ggplot(df, aes(x = ILC_type, y = value, fill = "Tissue.area"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = ILC_type), size = 2, cex = 5)+
+  scale_color_manual(values = cols_ilcs_si)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(angle = 30, 
+                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
+         axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.1, y.position = 150) +
+  xlab(NULL)+
+  ylab("Total count per FOV [#]")+
+  ggtitle("SI villi")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,310))+
+  NoLegend()+
+    annotate(geom = 'text',
+           x=c(1.5),
+           y=290,
+           label=Labels[1],
+           #angle = 90,
+           size = 10/.pt)
+
+# ILF -----------------------------------------------------------------
+df <- df_long %>%
+  filter(Tissue.area == "SI ILF")
+
+# Testing for normal distribution
+shapiro.test(df$value)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`value` ~ ILC_type)
+res.kruskal
+df %>% kruskal_effsize(`value` ~ ILC_type)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`value` ~ ILC_type, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ ILC_type, data = df))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "ILC_type")
+
+plot_ilf_ilcs <- ggplot(df, aes(x = ILC_type, y = value, fill = "Tissue.area"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = ILC_type), size = 2, cex = 5)+
+  scale_color_manual(values = cols_ilcs_si)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(angle = 30, 
+                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
+         axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.1, y.position = 150) +
+  xlab(NULL)+
+  ylab("Total count per FOV [#]")+
+  ggtitle("SI ILF")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,310))+
+  NoLegend()+
+    annotate(geom = 'text',
+           x=c(1.5),
+           y=290,
+           label=Labels[1],
+           #angle = 90,
+           size = 10/.pt)
+
+
+```
+
+## Suppl. Figure 9F - ILC proportions in the 3 tissue areas/organs
+
+```{r, fig.width=9, fig.height=3}
+
+# get all three organs/ tissue area data into long format
+df_villi_sub <- df_villi %>%
+  mutate(Tissue.area = gsub("Villi", "villi", Tissue.area), 
+         Tissue.area = paste0("SI ", Tissue.area)) %>%
+  select(Dataset, Treatment, ILCs, `NK cells/ILC1s/ILC3s`, ILC2s, Tissue.area) %>%
+  #change from wide to long format
+  tidyr::pivot_longer(names_to = "ILC_type", cols = c(`NK cells/ILC1s/ILC3s`, ILC2s)) %>%
+  mutate(value = value/ILCs*100)
+
+
+df_ilf_sub <- df_ilf %>%
+  mutate(Tissue.area = gsub("Villi", "villi", Tissue.area), 
+         Tissue.area = paste0("SI ", Tissue.area)) %>%
+  select(Dataset, Treatment, ILCs, `NK cells/ILC1s/ILC3s`, ILC2s, Tissue.area) %>%
+  #change from wide to long format
+  tidyr::pivot_longer(names_to = "ILC_type", cols = c(`NK cells/ILC1s/ILC3s`, ILC2s)) %>%
+  mutate(value = value/ILCs*100)
+
+
+df_lung_sub <- df_lung %>%
+  mutate(Tissue.area = `Tissue area`) %>%
+  select(Dataset, Treatment, ILCs, `NK cells/ILC1s`, ILC2s, ILC3s, Tissue.area) %>%
+  #change from wide to long format
+  tidyr::pivot_longer(names_to = "ILC_type", cols = c(`NK cells/ILC1s`, ILC2s, ILC3s)) %>%
+  mutate(value = value/ILCs*100)
+
+
+
+df_long <- rbind(df_villi_sub, df_ilf_sub, df_lung_sub)
+
+# filter for CTRL and convert to longer format
+df_long <- df_long %>%
+  filter(Treatment == "CTRL") %>%
+  select(Tissue.area, Dataset, ILC_type, value) %>%
+  mutate(Tissue.area = factor(Tissue.area, level =c(
+    "Lung", "SI villi", "SI ILF"
+  )), 
+  ILC_type = factor(ILC_type, level =c(
+    "NK cells/ILC1s",
+    "NK cells/ILC1s/ILC3s", "ILC2s", "ILC3s"
+  )))
+
+# LUNG ----------------------------------------------------------------------------
+df <- df_long %>%
+  filter(Tissue.area == "Lung") %>%
+  mutate(
+    ILC_type = factor(ILC_type, level =c(
+    "NK cells/ILC1s",
+    "ILC2s", "ILC3s"
+  )))
+
+# Testing for normal distribution
+shapiro.test(df$value)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`value` ~ ILC_type)
+res.kruskal
+df %>% kruskal_effsize(`value` ~ ILC_type)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`value` ~ ILC_type, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ ILC_type, data = df))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "ILC_type")
+
+plot_lung_ilcs <- ggplot(df, aes(x = ILC_type, y = value, fill = "Tissue.area"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = ILC_type), size = 2, cex = 5)+
+  scale_color_manual(values = cols_ilcs_lung)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1.6,1,"cm"),
+        axis.text.x = element_text(angle = 30, 
+                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
+         axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.08, y.position = 85) +
+  xlab(NULL)+
+  ylab("Frequency/\nimmune cells FOV [%]")+
+  ggtitle("Lung")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,100))+
+  NoLegend()+
+    annotate(geom = 'text',
+           x=c(1),
+           y=95,
+           label=Labels[1],
+           #angle = 90,
+           size = 10/.pt)
+
+# SI VILLI ----------------------------------------------------------------------------
+df <- df_long %>%
+  filter(Tissue.area == "SI villi")
+
+# Testing for normal distribution
+shapiro.test(df$value)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`value` ~ ILC_type)
+res.kruskal
+df %>% kruskal_effsize(`value` ~ ILC_type)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`value` ~ ILC_type, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ ILC_type, data = df))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "ILC_type")
+
+plot_villi_ilcs <- ggplot(df, aes(x = ILC_type, y = value, fill = "Tissue.area"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = ILC_type), size = 2, cex = 5)+
+  scale_color_manual(values = cols_ilcs_si)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(angle = 30, 
+                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
+         axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.1, y.position = 50) +
+  xlab(NULL)+
+  ylab("Frequency/\nimmune cells FOV [%]")+
+  ggtitle("SI villi")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,100))+
+  NoLegend()+
+    annotate(geom = 'text',
+           x=c(1.5),
+           y=95,
+           label=Labels[2],
+           #angle = 90,
+           size = 10/.pt)
+
+# SI ILF ----------------------------------------------------------------------------
+df <- df_long %>%
+  filter(Tissue.area == "SI ILF")
+
+# Testing for normal distribution
+shapiro.test(df$value)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`value` ~ ILC_type)
+res.kruskal
+df %>% kruskal_effsize(`value` ~ ILC_type)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`value` ~ ILC_type, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ ILC_type, data = df))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "ILC_type")
+
+plot_ilf_ilcs <- ggplot(df, aes(x = ILC_type, y = value, fill = "Tissue.area"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = ILC_type), size = 2, cex = 5)+
+  scale_color_manual(values = cols_ilcs_si)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(angle = 30, 
+                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
+         axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.1, y.position = 50) +
+  xlab(NULL)+
+  ylab("Frequency/\nimmune cells FOV [%]")+
+  ggtitle("SI ILF")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,100))+
+  NoLegend()+
+    annotate(geom = 'text',
+           x=c(1.5),
+           y=95,
+           label=Labels[2],
+           #angle = 90,
+           size = 10/.pt)
+
+ggarrange(plot_lung_ilcs, plot_villi_ilcs, plot_ilf_ilcs, ncol = 3, nrow = 1, labels = c("E", "F", "G"))
+
+
+```
+
+## Combine plots
+
+```{r, fig.width=9, fig.height=6}
+ggarrange(plot_count_all, plot_count_immune, plot_count_ilc, plot_freq_ilc, plot_villi_ilcs, plot_ilf_ilcs, ncol = 3, nrow = 2, labels = "AUTO")
+```
+
+## Session Information
+
+```{r}
+save.image(paste0(output_dir, "/environment.RData"))
+sessionInfo()
+```
