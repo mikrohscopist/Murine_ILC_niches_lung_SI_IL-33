@@ -173,6 +173,42 @@ RidgePlot(subset(SO.lung, subset = AL3 == c("NK cells/ILC1s", "ILC2s", "ILC3s"))
   theme(plot.margin = margin(0, 0, 0, 0, "cm"))
 ```
 
+```{r}
+
+fetched_data <- FetchData(SO.lung, vars = c("CD127", "CD90", "KLRG1", "ICOS",
+                                       "TBET", "EOMES", "CCR6", "NKp46", "RORgt",
+                                       "GATA3eGFP", "AL3", "Treatment", "Dataset"))
+
+fetched_data <- fetched_data %>%
+  filter(AL3 %in% c("NK cells/ILC1s", "ILC2s", "ILC3s")) %>%
+  mutate(Treatment = factor(Treatment, levels = c(
+    "CTRL", "1", "2", "3"
+  ))) %>%
+  group_by(AL3) %>%
+  summarise(CD127_median = median(CD127), 
+            GATA3eGFP_median = median(GATA3eGFP), 
+            CD90_median = median(CD90), 
+            ICOS_median = median(ICOS), 
+            KLRG1_median = median(KLRG1), 
+            RORgt_median = median(RORgt), 
+            TBET_median = median(TBET), 
+            EOMES_median = median(EOMES), 
+            CCR6_median = median(CCR6), 
+            NKp46_median = median(NKp46), 
+            CD127_div = sd(CD127),
+            CD127_skew = moments::skewness(CD127),
+            CD127_kurt = moments::kurtosis(CD127),
+            GATA3eGFP_div = sd(GATA3eGFP),
+            GATA3eGFP_skew = moments::skewness(GATA3eGFP), 
+            GATA3eGFP_kurt = moments::kurtosis(GATA3eGFP),
+            CD90_div = sd(CD90), 
+            CD90_skew = moments::skewness(CD90), 
+            CD90_kurt = moments::kurtosis(CD90)
+)
+
+fetched_data
+```
+
 ## IF overlays
 
 ### ILC1s/NK cells

@@ -113,15 +113,21 @@ SO.lung$AL2 <- factor(SO.lung$AL2, levels = c(
   "Epithelia",
   "Blood vessels",
   "Lymphatics",
-  "CD45- IRF4+ cells"
-))
+  "CD45- IRF4+ cells", 
+  "Myeloid cells", 
+  "B cells & Plasma cells", 
+  "ILCs", 
+  "T cytotox. cells", 
+  "T helper cells"
+  ))
 
 
 dot_plot <- Seurat::DotPlot(subset(SO.lung, subset = AL1 != "Immune cells"), 
                 group.by = "AL2",
                   features = c(
                     "CD45", 
-                    "IRF4",
+                    "IRF4", 
+                    "Kappa",
                     "PDGFRa", 
                     "LYVE1",
                     "CD90", 
@@ -131,7 +137,7 @@ dot_plot <- Seurat::DotPlot(subset(SO.lung, subset = AL1 != "Immune cells"),
                     "EMCN", 
                     "CD117",
                     "EpCAM", 
-                    "CD138" 
+                    "CD138"
                   ), 
                 cols ="RdBu", assay = "MELC")+   
     RotatedAxis()+
@@ -172,6 +178,7 @@ dot_plot <- Seurat::DotPlot(SO.lung,
                     "TBET", 
                     "GATA3eGFP", 
                     "KLRG1", 
+                    "ICOS",
                     "RORgt",
                     "CD4", 
                     "CD3", 
@@ -202,6 +209,54 @@ dot_plot <- Seurat::DotPlot(SO.lung,
           plot.title = element_text(size=14, hjust = 0.5))+ 
   scale_color_gradient2(midpoint = 0, low = "gold", 
                             high = "blue", space = "Lab" )
+
+dot_plot
+```
+
+```{r, fig.width=9, fig.height=5}
+
+SO.lung$AL3 <- factor(SO.lung$AL3, levels = c(
+  "Myeloid cells", 
+  "B cells & Plasma cells", 
+  "T cytotox cells", 
+  "T helper cells", 
+  "ILC3s", 
+  "ILC2s", 
+  "NK cells/ILC1s"
+))
+
+
+dot_plot <- Seurat::DotPlot(subset(SO.lung, subset = AL2 == "ILCs"), 
+                group.by = "AL3",
+                  features = c(
+                    "NKp46", 
+                    "CD117",
+                    "EOMES", 
+                    "TBET", 
+                    "GATA3eGFP", 
+                    "KLRG1", 
+                    "ICOS", 
+                    "RORgt",
+                    "MHCII", 
+                    "CD90", 
+                    "CD127", 
+                    "CD138" 
+                  ), 
+                cols ="RdBu", assay = "MELC", split.by = "Treatment")+   
+    RotatedAxis()+
+  ggtitle("ILC subtypes (AL3)")+
+    # coord_flip()+
+    theme(axis.text.x=element_text(size=12, angle = 45),
+          axis.text.y=element_text(size=14), 
+          plot.margin = margin(0.5, 1.5, 0.5, 1.5, "cm"), 
+          axis.title.y = element_blank(), 
+          plot.title = element_text(size=14, hjust = 0.5))+ 
+  scale_color_gradient2(midpoint = 0, low = "green", mid = "gold",
+                            high = "purple", space = "Lab" )+
+  geom_hline(aes(yintercept=c(4.5)),
+            color="black", size=0.2) + 
+  geom_hline(aes(yintercept=c(8.5)),
+            color="black", size=0.2)
 
 dot_plot
 ```

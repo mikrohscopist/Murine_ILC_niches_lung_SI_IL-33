@@ -287,7 +287,7 @@ g_master_list[[unic]] <- g_test+
 
 ## ILC2s localize close to vessels
 
-### IF overlays
+### B - IF overlays
 
 ```{r, fig.width=4.5, fig.height=5.4}
 img <- png::readPNG(
@@ -468,7 +468,7 @@ plot_if_d3 <- plot +
 plot_if_d3
 ```
 
-### Coenrichment plot
+### A - Coenrichment plot
 
 ```{r}
 
@@ -521,7 +521,7 @@ plot_coenrichment <- ggplot(interaction_celltypes, aes(x = condition, y = enrich
 plot_coenrichment
 ```
 
-### Minimum distance plot
+### C-D - Minimum distance plot
 
 ```{r, fig.width=4, fig.height=6}
 set.seed(8)
@@ -732,6 +732,7 @@ for (condition in c("CTRL", "1", "2", "3")) {
   assigned_name <- gsub(" ", "", paste0(celltype_of_interest, "_", condition))
   assign(assigned_name, plot )
   my_plot_list[[assigned_name]] <- plot
+  
 
 }
 
@@ -743,7 +744,34 @@ dist_lymph
 
 ```
 
-### CIN plot
+Check what is the frequency of ILC2s with a minimum distance to lymphatics less than 5 µm:
+
+```{r}
+plot_data <- df_dist_ref %>%
+  filter(Treatment == "CTRL") %>%
+  filter(RefType == "ILC2s") %>%
+  filter(NearestType == celltype_of_interest)
+
+percentage_under_5 <- plot_data %>%
+  summarise(pct = mean(Distance < 5) * 100) %>%
+  pull(pct)
+
+print(paste("Percentage of cells with Distance < 5 under healthy conditions:", round(percentage_under_5, 2), "%"))
+
+
+plot_data <- df_dist_ref %>%
+  filter(RefType == "ILC2s") %>%
+  filter(NearestType == celltype_of_interest)
+
+percentage_under_5 <- plot_data %>%
+  summarise(pct = mean(Distance < 5) * 100) %>%
+  pull(pct)
+
+print(paste("Percentage of cells with Distance < 5:", round(percentage_under_5, 2), "%"))
+
+```
+
+### E - CIN plot
 
 ```{r, fig.height=3, fig.width=9}
 

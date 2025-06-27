@@ -221,7 +221,7 @@ theme_coenrich <-   function() {
 
 # filter for CTRL and convert to longer format
 df <- df_villi %>%
-  select(Treatment, Dataset, TotalCellCountFOV, `Immune cells`, ILCs) %>%
+  select(Treatment, Dataset, TotalCellCountFOV, `Immune cells`, ILCs, ILC2s, `NK cells/ILC1s/ILC3s`) %>%
   mutate(Treatment = factor(Treatment, level =c(
     "CTRL", "1", "3"
   )))
@@ -361,6 +361,98 @@ plot_count_ilc <- ggplot(df, aes(x = Treatment, y = ILCs, fill = "Treatment"))+
   xlab(NULL)+
   ylab("Total count per FOV [#]")+
   ggtitle("ILCs")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,290))+
+  NoLegend()+
+    annotate(geom = 'text',
+           x=c(1, 2, 3),
+           y=280,
+           label=Labels,
+           #angle = 90,
+           size = annot_text_size)
+
+# ILC2s -------------------------------------------------------------------
+# Testing for normal distribution
+shapiro.test(df$ILC2s)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`ILC2s` ~ Treatment)
+res.kruskal
+df %>% kruskal_effsize(`ILC2s` ~ Treatment)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`ILC2s` ~ Treatment, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ Treatment, data = df))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "Treatment")
+
+ggplot(df, aes(x = Treatment, y = ILC2s, fill = "Treatment"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
+  scale_color_manual(values = cols_treat)+
+  theme_classic2()+
+  theme_boxplots()+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.1, y.position = 250) +
+  xlab(NULL)+
+  ylab("Total count per FOV [#]")+
+  ggtitle("ILC2s")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,290))+
+  NoLegend()+
+    annotate(geom = 'text',
+           x=c(1, 2, 3),
+           y=280,
+           label=Labels,
+           #angle = 90,
+           size = annot_text_size)
+
+# Nk cells/ILC1s/ILC3s -------------------------------------------------------
+# Testing for normal distribution
+shapiro.test(df$`NK cells/ILC1s/ILC3s`)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`NK cells/ILC1s/ILC3s` ~ Treatment)
+res.kruskal
+df %>% kruskal_effsize(`NK cells/ILC1s/ILC3s` ~ Treatment)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`NK cells/ILC1s/ILC3s` ~ Treatment, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ Treatment, data = df))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "Treatment")
+
+ggplot(df, aes(x = Treatment, y = `NK cells/ILC1s/ILC3s`, fill = "Treatment"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
+  scale_color_manual(values = cols_treat)+
+  theme_classic2()+
+  theme_boxplots()+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.1, y.position = 250) +
+  xlab(NULL)+
+  ylab("Total count per FOV [#]")+
+  ggtitle("NK cells/ILC1s/ILC3s")+
   scale_y_continuous(expand = c(0, 0), limits = c(0,290))+
   NoLegend()+
     annotate(geom = 'text',
