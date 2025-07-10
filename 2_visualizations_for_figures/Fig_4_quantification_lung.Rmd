@@ -107,7 +107,7 @@ df_lung <- read_csv(paste0(input_dir, "/lung_proportions.csv"),
 
 # Visualization
 
-## Count of ILCs \@CTRL conditions
+## 4A - Count of ILCs \@CTRL conditions
 
 ```{r, fig.width=3, fig.height=4}
 
@@ -178,7 +178,7 @@ plot_prop
 
 ```
 
-## Frequencies of ILCs within ILC compartment \@ CTRL conditions
+## 4C - Frequencies of ILCs within ILC compartment \@ CTRL conditions
 
 ```{r, fig.width=3, fig.height=4}
 
@@ -244,7 +244,7 @@ plot_freq <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
 plot_freq
 ```
 
-## Frequency of ILCs within immune compartment \@ CTRL
+## 4B - Frequency of ILCs within immune compartment \@ CTRL
 
 ```{r, fig.width=3, fig.height=4}
 

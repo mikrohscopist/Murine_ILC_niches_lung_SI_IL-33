@@ -1,0 +1,110 @@
+---
+title: "MELC markers overview"
+author: "Sandy Kroh"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+    fig_caption: yes
+    keep_md: yes
+  pdf_document:
+    toc: yes
+params:
+  Sample: Default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+# knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
+                      fig.align='center', fig.width = 9, fig.height = 6,
+                      dpi = 600, 
+                      message = FALSE, warning = FALSE)
+options(width = 1200)
+```
+
+## Libraries
+
+```{r}
+library(dplyr)
+# library(ggplot2)
+# library(stringr)
+# library(glue)
+# library(here)
+library(readr)
+# library(lubridate)
+# library(data.table)
+library(ggpubr)
+# library(ggrepel)
+# library(readxl)
+library(readxl)
+library(tidyr)
+library(here)
+```
+
+## Parameters
+
+```{r}
+set.seed(123)
+output_dir <- here::here("2_visualizations_for_figures", "Table_1_files")
+dir.create(output_dir)
+```
+
+# Loading data tables
+
+```{r}
+df <- data.frame(
+  `Type` = c(
+    "ILC inclusion", 
+    "ILC exclusion", 
+    "ILC subtypes", 
+    "Functional", 
+    "T cell subtypes",
+    "Additional immune subtypes", 
+    "Endothelia", 
+    "Stromal cells", 
+    "Epithelia"
+  ), 
+  `Markers` = c(
+    "CD45, CD127, CD90.2",
+    "CD3, B220, CD68, CD11c, Kappa", 
+    "GATA3eGFP, TBET, EOMES, RORgt, KLRG1, NKp46, CCR6, CD117, NK1.1", 
+    "ICOS, MHCII, Ki67, AREG",
+    "CD3, CD8a, CD4",
+    "CD3, B220, CD68, CD11c, Kappa, CD138, IRF4, SiglecF, GR-1, CD44",
+    "CD31, EMCN, LYVE1, CD200", 
+    "FN, PDPN, Sca1, PDGFRa",
+    "EpCAM, CD24"
+  )
+)
+
+```
+
+# Plot data table
+
+```{r, fig.height=3.5, fig.width=9}
+
+df %>%
+  ggtexttable(rows = NULL) %>%
+  tab_add_title(
+  "MELC panel design",
+  face = NULL,
+  size = 12,
+  color = NULL,
+  family = NULL,
+  # padding = unit(1.5, "line"),
+  just = "left",
+  hjust = NULL,
+  vjust = NULL
+)
+```
+
+# Session Information
+
+```{r}
+sessionInfo()
+version
+```
