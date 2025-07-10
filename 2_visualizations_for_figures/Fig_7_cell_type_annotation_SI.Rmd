@@ -269,6 +269,71 @@ plot_combined <- ggarrange(dot_plot_al2, plot1, labels = c("A", "B"), ncol = 2, 
 ggarrange( plot_combined, plot_ridge_ilctcells, labels = c("", "C"), ncol = 1, nrow = 2, heights = c(3, 9))
 ```
 
+Additional information:
+
+```{r}
+df_fetched <- FetchData(SO.si.sub, 
+                        c(colnames(SO.si.sub@meta.data), rownames(SO.si.sub)))
+
+df_fetched <- df_fetched %>%
+  filter(AL3 == "NK cells/ILC1s/ILC3s")
+
+
+df_fetched_filtered <- df_fetched %>%
+  filter(EOMES > 2) 
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+
+df_fetched_filtered <- df_fetched %>%
+  filter(CD127 > 2)
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+
+df_fetched_filtered <- df_fetched %>%
+  filter(CD90 > 2)
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+
+df_fetched_filtered <- df_fetched %>%
+  filter(CD4 > 2)
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+
+df_fetched_filtered <- df_fetched %>%
+  filter(RORgt > 2)
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+
+```
+
+```{r}
+df_fetched <- FetchData(SO.si.sub, 
+                        c(colnames(SO.si.sub@meta.data), rownames(SO.si.sub)))
+
+df_fetched <- df_fetched %>%
+  filter(AL3 == "ILC2s")
+
+
+df_fetched_filtered <- df_fetched %>%
+  filter(GATA3eGFP > 2) 
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+
+df_fetched_filtered <- df_fetched %>%
+  filter(CD127 > 2)
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+
+df_fetched_filtered <- df_fetched %>%
+  filter(CD90 > 2)
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+
+df_fetched_filtered <- df_fetched %>%
+  filter(KLRG1 > 2)
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+
+df_fetched_filtered <- df_fetched %>%
+  filter(GATA3eGFP > 2) %>%
+  filter(CD90 > 2) %>%
+  filter(CD127 > 2)
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+
+
+```
+
 ## Session Information
 
 ```{r}
