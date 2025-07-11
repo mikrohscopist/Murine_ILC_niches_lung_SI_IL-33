@@ -96,7 +96,7 @@ colfunc <- colorRampPalette(c("darkcyan", "green", "yellow", "magenta", "purple"
 SO.lung <- readRDS(paste0(input_dir, "/lung_all_cells_all_ALs.rds"))
 dim(SO.lung)
 
-SO.lung$AL1 <- gsub("Vessels", "Stromal cells", SO.lung$AL1)
+SO.lung$AL1 <- gsub("Vessels", "Endothelia & stroma", SO.lung$AL1)
 ```
 
 # Visualization
@@ -107,7 +107,7 @@ SO.lung$AL1 <- gsub("Vessels", "Stromal cells", SO.lung$AL1)
 
 ```{r, fig.width=4.5, fig.height=4.5}
 
-SO.lung$AL1 <- factor(SO.lung$AL1, levels = c("Immune cells", "Stromal cells", "Epithelia"))
+SO.lung$AL1 <- factor(SO.lung$AL1, levels = c("Immune cells", "Endothelia & stroma", "Epithelia"))
 
 dot_plot <- Seurat::DotPlot(SO.lung, 
                 group.by = "AL1",
@@ -131,7 +131,7 @@ dot_plot <- Seurat::DotPlot(SO.lung,
     coord_flip()+
     theme(axis.text.x=element_text(size=14, angle = 30),
           axis.text.y=element_text(size=12), 
-          plot.margin = margin(0, 0.5, 0.5, 0.5, "cm"), 
+          plot.margin = margin(0, 0.1, 0.5, 1, "cm"), 
           axis.title.x = element_blank(), 
           plot.title = element_blank())+ 
   scale_color_gradient2(midpoint = 0, low = "gold", 
@@ -164,7 +164,7 @@ df_fov <- df_all_cells %>%
           filter(Dataset == "D1_FOV1_20220316")
 
 df_fov$AL1 <- factor(df_fov$AL1, 
-                                       levels = c("Immune cells", "Stromal cells", "Epithelia"))
+                                       levels = c("Immune cells", "Endothelia & stroma", "Epithelia"))
 plot_ann_1 <- ggplot()+ 
   geom_point(data = df_fov, 
                        aes(x= Location_Center_X, y= Location_Center_Y, 
@@ -191,7 +191,7 @@ plot_ann_1 <- ggplot()+
                                                   "Vessels & stroma",
                                                   "Epithelia")) +
     scale_color_manual(values = my_colors)+ 
-    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=3),
+    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=2),
                   fill=guide_legend(ncol = 1,byrow=TRUE))+
   xlim(0, 2048)+
   ylim(0, 2048) +
@@ -226,7 +226,7 @@ df_fov <- df_fov %>%
   mutate(AL1 = recode(
     AL1, 
     "Immune cells" = "CD45",
-    "Stromal cells" = "CD31",
+    "Endothelia & stroma" = "CD31",
     "Epithelia" = "EpCAM"
   ))
 
@@ -254,7 +254,7 @@ plot_if_1 <- ggplot()+
          panel.background = element_rect(fill = 'black', 
                                          color = 'black', size = 1))+    
   ggplot2::theme(legend.position = "bottom")+
-  ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=3),
+  ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=2),
                   fill=guide_legend(ncol = 1,byrow=TRUE))
 
 
@@ -288,7 +288,7 @@ umap_plot <- ggplot(df_all_cells, aes(x=UMAP_1, y=UMAP_2, color=AL1)) +
   theme_classic2()+
   xlab("UMAP_1")+
   ylab("UMAP_2")+
-  ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=3),
+  ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=2),
                   fill=guide_legend(ncol = 1,byrow=TRUE))+
   scale_color_manual(values = c("darkcyan", "deeppink", "gold"))+
   theme(axis.text.x=element_text(size=12),
@@ -306,8 +306,8 @@ umap_plot
 
 Combine plots for figure
 
-```{r, fig.width=9, fig.height=9.1}
-ggarrange(umap_plot, dot_plot, plot_ann_1, plot_if_1, ncol = 2, nrow = 2, heights = c(4.5, 6.5), labels = c("A", "", "B", "C"))+
+```{r, fig.width=9, fig.height=9.4}
+ggarrange(umap_plot, dot_plot, plot_ann_1, plot_if_1, ncol = 2, nrow = 2, heights = c(4.5, 6.8), labels = c("A", "", "B", "C"))+
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
 ```
 

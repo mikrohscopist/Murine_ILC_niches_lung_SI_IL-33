@@ -333,7 +333,7 @@ df_lung <- read_csv(here::here("data", "20230808_SO_33M_arcsinh_lung_0.04_impute
 # Tidying
 df_lung <- df_lung %>% 
   rename(`Endothelial blood cells` = `EMCN CD31 Blood vessels`, 
-         `Stromal cells` = `Vessels`, 
+         `Endothelia & stroma` = `Vessels`, 
          `Lymphatics` = `LYVE1 CD90 Lymphatics`) %>%
   select(-c(`ILC2s A`, `ILC2s B`))
 
