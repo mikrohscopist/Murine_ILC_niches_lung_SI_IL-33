@@ -260,7 +260,7 @@ plot_ridge_ilctcells <- ggarrange(plotlist =  plot_ridge, common.legend = TRUE, 
 plot_ridge_ilctcells
 ```
 
-## Combine plots
+# Combine plots
 
 ```{r, fig.width=9, fig.height=12}
 
@@ -269,7 +269,7 @@ plot_combined <- ggarrange(dot_plot_al2, plot1, labels = c("A", "B"), ncol = 2, 
 ggarrange( plot_combined, plot_ridge_ilctcells, labels = c("", "C"), ncol = 1, nrow = 2, heights = c(3, 9))
 ```
 
-Additional information:
+## Additional information:
 
 ```{r}
 df_fetched <- FetchData(SO.si.sub, 

@@ -1,7 +1,7 @@
 ---
 title: "Figure 7: immune and non-immune cell types SI"
 author: "Sandy Kroh"
-date: "May 30, 2025"
+date: "July 11, 2025"
 output:
   html_document:
     toc: yes
@@ -270,7 +270,7 @@ plot_ridge_ilctcells
 
 <img src="Fig_7_cell_type_annotation_SI_files/figure-html/unnamed-chunk-6-1.png" width="100%" style="display: block; margin: auto;" />
 
-## Combine plots
+# Combine plots
 
 
 ``` r
@@ -280,6 +280,126 @@ ggarrange( plot_combined, plot_ridge_ilctcells, labels = c("", "C"), ncol = 1, n
 ```
 
 <img src="Fig_7_cell_type_annotation_SI_files/figure-html/unnamed-chunk-7-1.png" width="100%" style="display: block; margin: auto;" />
+
+## Additional information:
+
+
+``` r
+df_fetched <- FetchData(SO.si.sub, 
+                        c(colnames(SO.si.sub@meta.data), rownames(SO.si.sub)))
+
+df_fetched <- df_fetched %>%
+  filter(AL3 == "NK cells/ILC1s/ILC3s")
+
+
+df_fetched_filtered <- df_fetched %>%
+  filter(EOMES > 2) 
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+```
+
+```
+## [1] 68.47826
+```
+
+``` r
+df_fetched_filtered <- df_fetched %>%
+  filter(CD127 > 2)
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+```
+
+```
+## [1] 66.61491
+```
+
+``` r
+df_fetched_filtered <- df_fetched %>%
+  filter(CD90 > 2)
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+```
+
+```
+## [1] 58.54037
+```
+
+``` r
+df_fetched_filtered <- df_fetched %>%
+  filter(CD4 > 2)
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+```
+
+```
+## [1] 37.8882
+```
+
+``` r
+df_fetched_filtered <- df_fetched %>%
+  filter(RORgt > 2)
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+```
+
+```
+## [1] 50.31056
+```
+
+
+``` r
+df_fetched <- FetchData(SO.si.sub, 
+                        c(colnames(SO.si.sub@meta.data), rownames(SO.si.sub)))
+
+df_fetched <- df_fetched %>%
+  filter(AL3 == "ILC2s")
+
+
+df_fetched_filtered <- df_fetched %>%
+  filter(GATA3eGFP > 2) 
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+```
+
+```
+## [1] 85.71429
+```
+
+``` r
+df_fetched_filtered <- df_fetched %>%
+  filter(CD127 > 2)
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+```
+
+```
+## [1] 45.67669
+```
+
+``` r
+df_fetched_filtered <- df_fetched %>%
+  filter(CD90 > 2)
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+```
+
+```
+## [1] 71.80451
+```
+
+``` r
+df_fetched_filtered <- df_fetched %>%
+  filter(KLRG1 > 2)
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+```
+
+```
+## [1] 28.38346
+```
+
+``` r
+df_fetched_filtered <- df_fetched %>%
+  filter(GATA3eGFP > 2) %>%
+  filter(CD90 > 2) %>%
+  filter(CD127 > 2)
+nrow(df_fetched_filtered)/nrow(df_fetched)*100
+```
+
+```
+## [1] 36.84211
+```
 
 ## Session Information
 
@@ -307,10 +427,10 @@ sessionInfo()
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] ggpubr_0.6.0       readr_2.1.5        ggplot2_3.5.1      dplyr_1.1.4        Seurat_5.2.1       SeuratObject_5.0.2 sp_2.2-0          
+## [1] ggpubr_0.6.0       readr_2.1.5        ggplot2_3.5.2      dplyr_1.1.4        Seurat_5.2.1       SeuratObject_5.1.0 sp_2.2-0          
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] RColorBrewer_1.1-3     rstudioapi_0.17.1      jsonlite_1.9.1         magrittr_2.0.3         ggbeeswarm_0.7.2       spatstat.utils_3.1-3   farver_2.1.2           rmarkdown_2.29         vctrs_0.6.5            ROCR_1.0-11            spatstat.explore_3.4-2 rstatix_0.7.2          htmltools_0.5.8.1      broom_1.0.8            Formula_1.2-5          sass_0.4.10            sctransform_0.4.1      parallelly_1.43.0      KernSmooth_2.23-24     bslib_0.9.0            htmlwidgets_1.6.4      ica_1.0-3              plyr_1.8.9             plotly_4.10.4          zoo_1.8-13             cachem_1.1.0           igraph_2.1.4           mime_0.13              lifecycle_1.0.4        pkgconfig_2.0.3        Matrix_1.7-1           R6_2.6.1               fastmap_1.2.0          fitdistrplus_1.2-2     future_1.40.0          shiny_1.10.0           digest_0.6.37          colorspace_2.1-1       patchwork_1.3.0        rprojroot_2.0.4        tensor_1.5             RSpectra_0.16-2        irlba_2.3.5.1          labeling_0.4.3         progressr_0.15.1       spatstat.sparse_3.1-0  httr_1.4.7             polyclip_1.10-7        abind_1.4-8            compiler_4.4.2         here_1.0.1            
-##  [52] withr_3.0.2            backports_1.5.0        carData_3.0-5          fastDummies_1.7.5      ggsignif_0.6.4         MASS_7.3-61            tools_4.4.2            vipor_0.4.7            lmtest_0.9-40          beeswarm_0.4.0         httpuv_1.6.15          future.apply_1.11.3    goftest_1.2-3          glue_1.8.0             nlme_3.1-166           promises_1.3.2         grid_4.4.2             Rtsne_0.17             cluster_2.1.6          reshape2_1.4.4         generics_0.1.3         isoband_0.2.7          gtable_0.3.6           spatstat.data_3.1-6    tzdb_0.4.0             tidyr_1.3.1            data.table_1.17.0      hms_1.1.3              car_3.1-3              spatstat.geom_3.3-6    RcppAnnoy_0.0.22       ggrepel_0.9.6          RANN_2.6.2             pillar_1.10.2          stringr_1.5.1          spam_2.11-1            RcppHNSW_0.6.0         later_1.4.1            splines_4.4.2          lattice_0.22-6         survival_3.7-0         deldir_2.0-4           tidyselect_1.2.1       miniUI_0.1.2           pbapply_1.7-2          knitr_1.50             gridExtra_2.3          scattermore_1.2        xfun_0.51              matrixStats_1.5.0      stringi_1.8.4         
-## [103] lazyeval_0.2.2         yaml_2.3.10            evaluate_1.0.3         codetools_0.2-20       tibble_3.2.1           cli_3.6.3              uwot_0.2.3             xtable_1.8-4           reticulate_1.42.0      munsell_0.5.1          jquerylib_0.1.4        Rcpp_1.0.14            globals_0.17.0         spatstat.random_3.3-3  png_0.1-8              ggrastr_1.0.2          spatstat.univar_3.1-2  parallel_4.4.2         dotCall64_1.2          listenv_0.9.1          viridisLite_0.4.2      scales_1.3.0           ggridges_0.5.6         purrr_1.0.4            rlang_1.1.5            cowplot_1.1.3
+##   [1] RColorBrewer_1.1-3     rstudioapi_0.17.1      jsonlite_1.9.1         magrittr_2.0.3         ggbeeswarm_0.7.2       spatstat.utils_3.1-3   farver_2.1.2           rmarkdown_2.29         vctrs_0.6.5            ROCR_1.0-11            spatstat.explore_3.4-2 rstatix_0.7.2          htmltools_0.5.8.1      broom_1.0.8            Formula_1.2-5          sass_0.4.10            sctransform_0.4.1      parallelly_1.45.0      KernSmooth_2.23-24     bslib_0.9.0            htmlwidgets_1.6.4      ica_1.0-3              plyr_1.8.9             plotly_4.11.0          zoo_1.8-13             cachem_1.1.0           igraph_2.1.4           mime_0.13              lifecycle_1.0.4        pkgconfig_2.0.3        Matrix_1.7-1           R6_2.6.1               fastmap_1.2.0          fitdistrplus_1.2-2     future_1.58.0          shiny_1.10.0           digest_0.6.37          colorspace_2.1-1       patchwork_1.3.1        rprojroot_2.0.4        tensor_1.5.1           RSpectra_0.16-2        irlba_2.3.5.1          labeling_0.4.3         progressr_0.15.1       spatstat.sparse_3.1-0  httr_1.4.7             polyclip_1.10-7        abind_1.4-8            compiler_4.4.2         here_1.0.1            
+##  [52] withr_3.0.2            backports_1.5.0        carData_3.0-5          fastDummies_1.7.5      ggsignif_0.6.4         MASS_7.3-61            tools_4.4.2            vipor_0.4.7            lmtest_0.9-40          beeswarm_0.4.0         httpuv_1.6.15          future.apply_1.20.0    goftest_1.2-3          glue_1.8.0             nlme_3.1-166           promises_1.3.2         grid_4.4.2             Rtsne_0.17             cluster_2.1.6          reshape2_1.4.4         generics_0.1.4         isoband_0.2.7          gtable_0.3.6           spatstat.data_3.1-6    tzdb_0.4.0             tidyr_1.3.1            data.table_1.17.0      hms_1.1.3              car_3.1-3              spatstat.geom_3.3-6    RcppAnnoy_0.0.22       ggrepel_0.9.6          RANN_2.6.2             pillar_1.10.2          stringr_1.5.1          spam_2.11-1            RcppHNSW_0.6.0         later_1.4.1            splines_4.4.2          lattice_0.22-6         survival_3.7-0         deldir_2.0-4           tidyselect_1.2.1       miniUI_0.1.2           pbapply_1.7-2          knitr_1.50             gridExtra_2.3          scattermore_1.2        xfun_0.51              matrixStats_1.5.0      stringi_1.8.4         
+## [103] lazyeval_0.2.2         yaml_2.3.10            evaluate_1.0.4         codetools_0.2-20       tibble_3.2.1           cli_3.6.3              uwot_0.2.3             xtable_1.8-4           reticulate_1.42.0      jquerylib_0.1.4        Rcpp_1.0.14            globals_0.18.0         spatstat.random_3.3-3  png_0.1-8              ggrastr_1.0.2          spatstat.univar_3.1-2  parallel_4.4.2         dotCall64_1.2          listenv_0.9.1          viridisLite_0.4.2      scales_1.4.0           ggridges_0.5.6         purrr_1.0.4            rlang_1.1.5            cowplot_1.1.3
 ```

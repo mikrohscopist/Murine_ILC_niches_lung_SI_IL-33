@@ -1,7 +1,7 @@
 ---
 title: "Figure 4: Quantification lung"
 author: "Sandy Kroh"
-date: "June 27, 2025"
+date: "July 11, 2025"
 output:
   html_document:
     toc: yes
@@ -1634,7 +1634,7 @@ plot_freq_ilc3
 
 <img src="Fig_4_quantification_lung_files/figure-html/unnamed-chunk-15-1.png" width="100%" style="display: block; margin: auto;" />
 
-## Freq of immune cells, stromal cells and epithelia within total cells
+## Freq of immune cells, Endothelia & stroma and epithelia within total cells
 
 
 ``` r
@@ -1748,13 +1748,13 @@ plot_immune <- ggplot(df, aes(x = Treatment, y = `Immune cells`, fill = "Treatme
   NoLegend()
 
 
-# Stromal cells ---------------------------------------------------------------
+# Endothelia & stroma ---------------------------------------------------------------
 df <- df_lung %>%
-  select(Treatment, Dataset, `Prop_Stromal cells_perTotalCountFOV`) %>%
+  select(Treatment, Dataset, `Prop_Endothelia & stroma_perTotalCountFOV`) %>%
   mutate(Treatment = factor(Treatment, level =c(
     "CTRL", "1", "2", "3"
   )), 
-  `cells_of_interest` = `Prop_Stromal cells_perTotalCountFOV`)
+  `cells_of_interest` = `Prop_Endothelia & stroma_perTotalCountFOV`)
 
 # Testing for normal distribution
 shapiro.test(df$`cells_of_interest`)
@@ -1853,7 +1853,7 @@ plot_stroma <- ggplot(df, aes(x = Treatment, y = `cells_of_interest`, fill = "Tr
                        step.increase = 0.2, y.position = 80) +
   xlab(NULL)+
   ylab("Frequency/total cells per FOV [#]")+
-  ggtitle("Stromal cells")+
+  ggtitle("Endothelia & stroma")+
   scale_y_continuous(expand = c(0, 0), limits = c(0,100))+
   NoLegend()
 
@@ -2026,7 +2026,7 @@ sessionInfo()
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] ggpubr_0.6.0       readr_2.1.5        ggbeeswarm_0.7.2   rstatix_0.7.2      ggplot2_3.5.1      dplyr_1.1.4        Seurat_5.2.1       SeuratObject_5.1.0 sp_2.2-0          
+## [1] ggpubr_0.6.0       readr_2.1.5        ggbeeswarm_0.7.2   rstatix_0.7.2      ggplot2_3.5.2      dplyr_1.1.4        Seurat_5.2.1       SeuratObject_5.1.0 sp_2.2-0          
 ## 
 ## loaded via a namespace (and not attached):
 ##   [1] RColorBrewer_1.1-3     rstudioapi_0.17.1      jsonlite_1.9.1         magrittr_2.0.3         spatstat.utils_3.1-3   farver_2.1.2           rmarkdown_2.29         vctrs_0.6.5            ROCR_1.0-11            spatstat.explore_3.4-2 htmltools_0.5.8.1      broom_1.0.8            Formula_1.2-5          sass_0.4.10            sctransform_0.4.1      parallelly_1.45.0      KernSmooth_2.23-24     bslib_0.9.0            htmlwidgets_1.6.4      ica_1.0-3              plyr_1.8.9             plotly_4.11.0          zoo_1.8-13             cachem_1.1.0           igraph_2.1.4           mime_0.13              lifecycle_1.0.4        pkgconfig_2.0.3        Matrix_1.7-1           R6_2.6.1               fastmap_1.2.0          fitdistrplus_1.2-2     future_1.58.0          shiny_1.10.0           digest_0.6.37          colorspace_2.1-1       patchwork_1.3.1        rprojroot_2.0.4        tensor_1.5.1           RSpectra_0.16-2        irlba_2.3.5.1          labeling_0.4.3         progressr_0.15.1       spatstat.sparse_3.1-0  httr_1.4.7             polyclip_1.10-7        abind_1.4-8            compiler_4.4.2         here_1.0.1             bit64_4.6.0-1          withr_3.0.2           
