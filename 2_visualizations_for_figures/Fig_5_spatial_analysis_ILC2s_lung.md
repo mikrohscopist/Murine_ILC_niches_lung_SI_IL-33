@@ -1,7 +1,7 @@
 ---
 title: "Figure 5: ILC2s localize"
 author: "Sandy Kroh"
-date: "June 27, 2025"
+date: "July 11, 2025"
 output:
   html_document:
     toc: yes
@@ -355,7 +355,7 @@ df_fov <- metadatax %>%
   mutate(AL1 = recode(
     AL1,
     "Immune cells" = "CD90.2",
-    "Stromal cells" = "CD31",
+    "Endothelia & stroma" = "CD31",
     "Epithelia" = "LYVE1"
   ))
 
@@ -1474,6 +1474,110 @@ ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatm
 
 <img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-12-6.png" width="100%" style="display: block; margin: auto;" />
 
+``` r
+# NK cells/ILC1s ---------------------------------------------------------------
+celltype_of_interest <- "NK cells/ILC1s"
+
+df_sub_lung <- df_cin_lung %>%
+  filter(Reference == celltype_of_interest) %>%
+  filter(Radius == radius) %>%
+  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
+
+head(df_sub_lung)
+```
+
+```
+## # A tibble: 6 × 6
+##   Reference      Radius Treatment Dataset          `LYVE1 CD90 Lymphatics` Tissue.area
+##   <chr>          <chr>  <chr>     <chr>                              <dbl> <chr>      
+## 1 NK cells/ILC1s 15 μm  3         D3_FOV1_20210902                       1 Lung       
+## 2 NK cells/ILC1s 15 μm  3         D3_FOV2_20210902                       2 Lung       
+## 3 NK cells/ILC1s 15 μm  3         D3_FOV3_20210902                       1 Lung       
+## 4 NK cells/ILC1s 15 μm  3         D3_FOV1_20210906                       0 Lung       
+## 5 NK cells/ILC1s 15 μm  3         D3_FOV2_20210906                       2 Lung       
+## 6 NK cells/ILC1s 15 μm  3         D3_FOV3_20210906                       2 Lung
+```
+
+``` r
+plot_data <- df_sub_lung
+
+# Create lav´bels that depict mean value 
+Labs = plot_data %>% 
+  group_by(Treatment) %>%
+  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
+              )
+
+plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
+# create plot
+ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
+  scale_color_manual(values = cols_treat)+
+  theme_classic2()+
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
+        axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  NoLegend()+
+  ggtitle("NK cells/ILC1s - LYVE1 CD90 Lymphatics")+
+  xlab("Treatment")+
+  ylab("Frequency in 15 µm radius [%]")+
+  # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
+  geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-12-7.png" width="100%" style="display: block; margin: auto;" />
+
+``` r
+# # ILC3s ---------------------------------------------------------------
+# celltype_of_interest <- "ILC3s"
+# 
+# df_sub_lung <- df_cin_lung %>%
+#   filter(Reference == celltype_of_interest) %>%
+#   filter(Radius == radius) %>%
+#   select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
+# 
+# head(df_sub_lung)
+# 
+# 
+# 
+# plot_data <- df_sub_lung
+# 
+# # Create lav´bels that depict mean value 
+# Labs = plot_data %>% 
+#   group_by(Treatment) %>%
+#   summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
+#               )
+# 
+# plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
+# # create plot
+# ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
+#   geom_boxplot(fill="white")+
+#   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
+#   scale_color_manual(values = cols_treat)+
+#   theme_classic2()+
+#   theme(axis.text.x = element_text(#angle = 50,
+#                                    vjust = 1, size = 12, hjust = 0.5, face = "bold"),
+#         axis.text.y = element_text(hjust = 0.5, size = 12),
+#         axis.title.x = element_text(size = 12),
+#         axis.title.y = element_text(size = 12),
+#         plot.title = element_text(size =14, hjust = 0.5),
+#         plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
+#         legend.title = element_text(size =14),
+#         legend.text = element_text(size =12))+
+#   NoLegend()+
+#   ggtitle("ILC3s - LYVE1 CD90 Lymphatics")+
+#   xlab("Treatment")+
+#   ylab("Frequency in 15 µm radius [%]")+
+#   # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
+#   geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
+```
+
 ## Combine plots for figure
 
 
@@ -1496,6 +1600,125 @@ ggarrange(coenrichment, spiat,
 ```
 
 <img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-1.png" width="100%" style="display: block; margin: auto;" />
+
+Additional plots
+
+
+``` r
+# fine tune the co-enrichment plot
+#  -----------------------------------------
+interactions <- c("LYVE1 CD90 Lymphatics--T cytotox cells")
+unic <- "LYVE1 CD90 Lymphatics"
+background_image <- backgroundlist[["LYVE1 CD90 Lymphatics"]]
+interaction_celltypes <- NULL
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,]
+    sample <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+    if(nrow(cur_cell_proximities) > 0 & sample != "20210906_FOV3_D3"){
+      interaction_celltypes <- rbind(interaction_celltypes,
+                                     data.frame(cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,], 
+                                                experiment = strsplit(sample, split = "_")[[1]][1], fov = strsplit(sample, split = "_")[[1]][2], condition = strsplit(sample, split = "_")[[1]][3]))
+    }
+  }
+interaction_celltypes$p.adj <- ifelse(interaction_celltypes$enrichm > 0, interaction_celltypes$p.adj_higher, interaction_celltypes$p.adj_lower)
+  # plot test results
+  # sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("p=",round(interaction_celltypes$p.adj,3)), ""))
+  sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("*"), ""))
+    # print(sig_label)
+plot_coenrichment <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = condition)) +
+  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single")) +
+  facet_grid(.~condition, scales = "free_x") +
+  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), angle = 90, hjust = -0.02, size = 4) +
+  ylim(-2,2.1)+
+  NoLegend()+
+  theme_classic2()+
+  scale_fill_manual(values = cols_fov, name = "") +
+  ggtitle(gsub("LYVE1 CD90 ", "", interactions)) +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())+
+  NoLegend()+  
+  ylab("Enrichment")
+
+plot_coenrichment
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-1.png" width="100%" style="display: block; margin: auto;" />
+
+``` r
+# fine tune the co-enrichment plot
+#  -----------------------------------------
+interactions <- c("LYVE1 CD90 Lymphatics--Myeloid cells")
+unic <- "LYVE1 CD90 Lymphatics"
+background_image <- backgroundlist[["LYVE1 CD90 Lymphatics"]]
+interaction_celltypes <- NULL
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,]
+    sample <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+    if(nrow(cur_cell_proximities) > 0 & sample != "20210906_FOV3_D3"){
+      interaction_celltypes <- rbind(interaction_celltypes,
+                                     data.frame(cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,], 
+                                                experiment = strsplit(sample, split = "_")[[1]][1], fov = strsplit(sample, split = "_")[[1]][2], condition = strsplit(sample, split = "_")[[1]][3]))
+    }
+  }
+interaction_celltypes$p.adj <- ifelse(interaction_celltypes$enrichm > 0, interaction_celltypes$p.adj_higher, interaction_celltypes$p.adj_lower)
+  # plot test results
+  # sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("p=",round(interaction_celltypes$p.adj,3)), ""))
+  sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("*"), ""))
+    # print(sig_label)
+plot_coenrichment <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = condition)) +
+  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single")) +
+  facet_grid(.~condition, scales = "free_x") +
+  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), angle = 90, hjust = -0.02, size = 4) +
+  ylim(-2,2.1)+
+  NoLegend()+
+  theme_classic2()+
+  scale_fill_manual(values = cols_fov, name = "") +
+  ggtitle(gsub("LYVE1 CD90 ", "", interactions)) +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())+
+  NoLegend()+  
+  ylab("Enrichment")
+
+plot_coenrichment
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-2.png" width="100%" style="display: block; margin: auto;" />
+
+Frequency of cell types per FOV/condition:
+
+
+``` r
+df_freq_cells <- metadatax %>%
+  select(Condition, CellType, FullInfo) %>%
+  janitor::tabyl(Condition, CellType) %>%
+  janitor::adorn_percentages() %>%
+  janitor::adorn_totals(c('row', 'col')) %>%
+  janitor::adorn_pct_formatting(2)
+```
 
 ## Session Information
 
@@ -1526,9 +1749,9 @@ sessionInfo()
 ##  [1] stringr_1.5.1      ggbeeswarm_0.7.2   readr_2.1.5        ggpubr_0.6.0       ggplot2_3.5.2      VoltRon_0.2.0      Seurat_5.2.1       Giotto_4.2.2       GiottoClass_0.4.8  rlang_1.1.5        rstatix_0.7.2      dplyr_1.1.4        SeuratObject_5.1.0 sp_2.2-0          
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] matrixStats_1.5.0           spatstat.sparse_3.1-0       bitops_1.0-9                EBImage_4.48.0              httr_1.4.7                  RColorBrewer_1.1-3          tools_4.4.2                 sctransform_0.4.1           backports_1.5.0             utf8_1.2.6                  R6_2.6.1                    lazyeval_0.2.2              uwot_0.2.3                  withr_3.0.2                 gridExtra_2.3               GiottoUtils_0.2.5           progressr_0.15.1            cli_3.6.3                   Biobase_2.66.0              spatstat.explore_3.4-2      fastDummies_1.7.5           shinyjs_2.1.0               labeling_0.4.3              sass_0.4.10                 spatstat.data_3.1-6         ggridges_0.5.6              pbapply_1.7-2               parallelly_1.45.0           rstudioapi_0.17.1           generics_0.1.4              vroom_1.6.5                 gtools_3.9.5                ica_1.0-3                   spatstat.random_3.3-3       car_3.1-3                   Matrix_1.7-1                S4Vectors_0.44.0            abind_1.4-8                 terra_1.8-54                lifecycle_1.0.4             scatterplot3d_0.3-44        yaml_2.3.10                
-##  [43] carData_3.0-5               SummarizedExperiment_1.36.0 gplots_3.2.0                SparseArray_1.6.2           Rtsne_0.17                  grid_4.4.2                  promises_1.3.2              crayon_1.5.3                miniUI_0.1.2                lattice_0.22-6              cowplot_1.1.3               magick_2.8.7                pillar_1.10.2               knitr_1.50                  GenomicRanges_1.58.0        rjson_0.2.23                future.apply_1.20.0         codetools_0.2-20            glue_1.8.0                  spatstat.univar_3.1-2       data.table_1.17.0           vctrs_0.6.5                 png_0.1-8                   ids_1.0.1                   spam_2.11-1                 gtable_0.3.6                cachem_1.1.0                xfun_0.51                   S4Arrays_1.6.0              mime_0.13                   tidygraph_1.3.1             survival_3.7-0              SingleCellExperiment_1.28.1 bluster_1.16.0              rgl_1.3.18                  fitdistrplus_1.2-2          ROCR_1.0-11                 colorsGen_1.0.0             nlme_3.1-166                bit64_4.6.0-1               RcppAnnoy_0.0.22            rprojroot_2.0.4            
-##  [85] GenomeInfoDb_1.42.3         bslib_0.9.0                 irlba_2.3.5.1               vipor_0.4.7                 KernSmooth_2.23-24          colorspace_2.1-1            BiocGenerics_0.52.0         tidyselect_1.2.1            bit_4.6.0                   compiler_4.4.2              BiocNeighbors_2.0.1         DelayedArray_0.32.0         plotly_4.11.0               checkmate_2.3.2             scales_1.4.0                caTools_1.18.3              lmtest_0.9-40               tiff_0.1-12                 SpatialExperiment_1.16.0    digest_0.6.37               goftest_1.2-3               fftwtools_0.9-11            spatstat.utils_3.1-3        rmarkdown_2.29              XVector_0.46.0              htmltools_0.5.8.1           GiottoVisuals_0.2.12        pkgconfig_2.0.3             jpeg_0.1-11                 base64enc_0.1-3             MatrixGenerics_1.18.1       fastmap_1.2.0               htmlwidgets_1.6.4           UCSC.utils_1.2.0            shiny_1.10.0                Rvcg_0.25                   farver_2.1.2                jquerylib_0.1.4             zoo_1.8-13                  jsonlite_1.9.1              BiocParallel_1.40.2         RCurl_1.98-1.17            
-## [127] magrittr_2.0.3              Formula_1.2-5               GenomeInfoDbData_1.2.13     dotCall64_1.2               patchwork_1.3.1             RCDT_1.3.0                  Rcpp_1.0.14                 viridis_0.6.5               reticulate_1.42.0           stringi_1.8.4               ggraph_2.2.1                zlibbioc_1.52.0             MASS_7.3-61                 plyr_1.8.9                  parallel_4.4.2              listenv_0.9.1               ggrepel_0.9.6               deldir_2.0-4                graphlayouts_1.2.2          splines_4.4.2               tensor_1.5.1                hms_1.1.3                   locfit_1.5-9.12             colorRamp2_0.1.0            igraph_2.1.4                uuid_1.2-1                  spatstat.geom_3.3-6         ggsignif_0.6.4              RcppHNSW_0.6.0              reshape2_1.4.4              stats4_4.4.2                evaluate_1.0.4              tzdb_0.4.0                  tweenr_2.0.3                httpuv_1.6.15               RANN_2.6.2                  tidyr_1.3.1                 purrr_1.0.4                 polyclip_1.10-7             future_1.58.0               scattermore_1.2             ggforce_0.5.0              
-## [169] broom_1.0.8                 xtable_1.8-4                RSpectra_0.16-2             later_1.4.1                 viridisLite_0.4.2           Polychrome_1.5.4            tibble_3.2.1                memoise_2.0.1               beeswarm_0.4.0              IRanges_2.40.1              cluster_2.1.6               globals_0.18.0              here_1.0.1
+##   [1] matrixStats_1.5.0           spatstat.sparse_3.1-0       bitops_1.0-9                lubridate_1.9.4             EBImage_4.48.0              httr_1.4.7                  RColorBrewer_1.1-3          tools_4.4.2                 sctransform_0.4.1           backports_1.5.0             utf8_1.2.6                  R6_2.6.1                    lazyeval_0.2.2              uwot_0.2.3                  withr_3.0.2                 gridExtra_2.3               GiottoUtils_0.2.5           progressr_0.15.1            cli_3.6.3                   Biobase_2.66.0              spatstat.explore_3.4-2      fastDummies_1.7.5           shinyjs_2.1.0               labeling_0.4.3              sass_0.4.10                 spatstat.data_3.1-6         ggridges_0.5.6              pbapply_1.7-2               parallelly_1.45.0           rstudioapi_0.17.1           generics_0.1.4              vroom_1.6.5                 gtools_3.9.5                ica_1.0-3                   spatstat.random_3.3-3       car_3.1-3                   Matrix_1.7-1                S4Vectors_0.44.0            abind_1.4-8                 terra_1.8-54                lifecycle_1.0.4             scatterplot3d_0.3-44       
+##  [43] yaml_2.3.10                 snakecase_0.11.1            carData_3.0-5               SummarizedExperiment_1.36.0 gplots_3.2.0                SparseArray_1.6.2           Rtsne_0.17                  grid_4.4.2                  promises_1.3.2              crayon_1.5.3                miniUI_0.1.2                lattice_0.22-6              cowplot_1.1.3               magick_2.8.7                pillar_1.10.2               knitr_1.50                  GenomicRanges_1.58.0        rjson_0.2.23                future.apply_1.20.0         codetools_0.2-20            glue_1.8.0                  spatstat.univar_3.1-2       data.table_1.17.0           vctrs_0.6.5                 png_0.1-8                   ids_1.0.1                   spam_2.11-1                 gtable_0.3.6                cachem_1.1.0                xfun_0.51                   S4Arrays_1.6.0              mime_0.13                   tidygraph_1.3.1             survival_3.7-0              SingleCellExperiment_1.28.1 bluster_1.16.0              rgl_1.3.18                  fitdistrplus_1.2-2          ROCR_1.0-11                 colorsGen_1.0.0             nlme_3.1-166                bit64_4.6.0-1              
+##  [85] RcppAnnoy_0.0.22            rprojroot_2.0.4             GenomeInfoDb_1.42.3         bslib_0.9.0                 irlba_2.3.5.1               vipor_0.4.7                 KernSmooth_2.23-24          colorspace_2.1-1            BiocGenerics_0.52.0         tidyselect_1.2.1            bit_4.6.0                   compiler_4.4.2              BiocNeighbors_2.0.1         DelayedArray_0.32.0         plotly_4.11.0               checkmate_2.3.2             scales_1.4.0                caTools_1.18.3              lmtest_0.9-40               tiff_0.1-12                 SpatialExperiment_1.16.0    digest_0.6.37               goftest_1.2-3               fftwtools_0.9-11            spatstat.utils_3.1-3        rmarkdown_2.29              XVector_0.46.0              htmltools_0.5.8.1           GiottoVisuals_0.2.12        pkgconfig_2.0.3             jpeg_0.1-11                 base64enc_0.1-3             MatrixGenerics_1.18.1       fastmap_1.2.0               htmlwidgets_1.6.4           UCSC.utils_1.2.0            shiny_1.10.0                Rvcg_0.25                   farver_2.1.2                jquerylib_0.1.4             zoo_1.8-13                  jsonlite_1.9.1             
+## [127] BiocParallel_1.40.2         RCurl_1.98-1.17             magrittr_2.0.3              Formula_1.2-5               GenomeInfoDbData_1.2.13     dotCall64_1.2               patchwork_1.3.1             RCDT_1.3.0                  Rcpp_1.0.14                 viridis_0.6.5               reticulate_1.42.0           stringi_1.8.4               ggraph_2.2.1                zlibbioc_1.52.0             MASS_7.3-61                 plyr_1.8.9                  parallel_4.4.2              listenv_0.9.1               ggrepel_0.9.6               deldir_2.0-4                graphlayouts_1.2.2          splines_4.4.2               tensor_1.5.1                hms_1.1.3                   locfit_1.5-9.12             colorRamp2_0.1.0            igraph_2.1.4                uuid_1.2-1                  spatstat.geom_3.3-6         ggsignif_0.6.4              RcppHNSW_0.6.0              reshape2_1.4.4              stats4_4.4.2                evaluate_1.0.4              tzdb_0.4.0                  tweenr_2.0.3                httpuv_1.6.15               RANN_2.6.2                  tidyr_1.3.1                 purrr_1.0.4                 polyclip_1.10-7             future_1.58.0              
+## [169] scattermore_1.2             ggforce_0.5.0               janitor_2.2.1               broom_1.0.8                 xtable_1.8-4                RSpectra_0.16-2             later_1.4.1                 viridisLite_0.4.2           Polychrome_1.5.4            tibble_3.2.1                memoise_2.0.1               beeswarm_0.4.0              IRanges_2.40.1              cluster_2.1.6               timechange_0.3.0            globals_0.18.0              here_1.0.1
 ```

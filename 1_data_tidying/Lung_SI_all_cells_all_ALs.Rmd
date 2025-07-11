@@ -27,11 +27,15 @@ options(width = 1200)
 ## Libraries
 
 ```{r}
+library(moments)
+library(rstatix)
 library(Seurat)
 library(SeuratObject)
 library(dplyr)
 library(ggplot2)
 library(here)
+library(ggbeeswarm)
+library(ggpubr)
 # library(stringr)
 # library(glue)
 # library(here)
@@ -369,6 +373,235 @@ df_lung[, c(1:4)] <- lapply(df_lung[, c(1:4)], as.character)
 nrow(df_lung)
 
 colnames(df_lung)
+```
+
+Visualize frequencies:
+
+```{r, fig.height=6, fig.width=9}
+df_freq <- df_lung %>%
+  select(1, 4, 23:30)
+
+# frequency of myeloid cells at different conditions -----------------------------
+df_plot <-   df_freq %>%
+  select(Dataset, Treatment, `Prop_Myeloid cells_perTotalImmuneFOV`) %>%
+  mutate(Condition = Treatment, 
+         value = `Prop_Myeloid cells_perTotalImmuneFOV`, 
+         Condition = factor(Condition, levels = c(
+           "CTRL", "1", "2", "3"
+         )))
+
+# Testing for normal distribution
+shapiro.test(df_plot$value)
+moments::kurtosis(df_plot$value)
+moments::jarque.test(df_plot$value)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df_plot %>% kruskal_test(`value` ~ Condition)
+res.kruskal
+df_plot %>% kruskal_effsize(`value` ~ Condition)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df_plot %>% 
+  dunn_test(`value` ~ Condition, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ Condition, data = df_plot))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "Condition")
+
+ggplot(df_plot, aes(x = Condition, y = value, fill = "Condition"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = Condition), size = 2, cex = 2)+
+  scale_color_manual(values = cols_nat)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(angle = 30, 
+                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
+        axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.13, y.position = 50) +
+  xlab(NULL)+
+  ylab("Frequency per FOV/Immune [%]")+
+  scale_y_continuous(expand = c(0, 0), limits = c(15,70))+
+  NoLegend()
+
+df_plot %>%
+  group_by(Condition) %>%
+  summarise(median = median(value))
+
+# total count of myeloid cells at different conditions -----------------------------
+df_plot <-   df_lung %>%
+  select(Dataset, Treatment, `Myeloid cells`) %>%
+  mutate(Condition = Treatment, 
+         value = `Myeloid cells`, 
+         Condition = factor(Condition, levels = c(
+           "CTRL", "1", "2", "3"
+         )))
+
+# Testing for normal distribution
+shapiro.test(df_plot$value)
+moments::kurtosis(df_plot$value)
+moments::jarque.test(df_plot$value)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df_plot %>% kruskal_test(`value` ~ Condition)
+res.kruskal
+df_plot %>% kruskal_effsize(`value` ~ Condition)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df_plot %>% 
+  dunn_test(`value` ~ Condition, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ Condition, data = df_plot))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "Condition")
+
+ggplot(df_plot, aes(x = Condition, y = value, fill = "Condition"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = Condition), size = 2, cex = 2)+
+  scale_color_manual(values = cols_nat)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(angle = 30, 
+                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
+        axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.13, y.position = 50) +
+  xlab(NULL)+
+  ylab("Frequency per FOV/Immune [%]")+
+  # scale_y_continuous(expand = c(0, 0), limits = c(15,70))+
+  NoLegend()
+
+df_plot %>%
+  group_by(Condition) %>%
+  summarise(median = median(value))
+
+
+# frequency of different celltypes under homeostatic conditions -----------------
+df_plot <-   df_freq %>%
+  filter(Treatment == "CTRL") %>%
+  tidyr::pivot_longer(cols = -c(Dataset, Treatment), names_to = "CellType") %>%
+  mutate(CellType = gsub("Prop_|_perTotalImmuneFOV", "", CellType), 
+         CellType = factor(CellType, levels = c(
+           "ILCs",
+           "NK cells/ILC1s",
+           "ILC2s",
+           "ILC3s",
+           "Myeloid cells",
+           "B cells & Plasma cells",
+           "T cytotox cells",
+           "T helper cells"
+         ))
+  )
+
+# Testing for normal distribution
+shapiro.test(df_plot$value)
+moments::kurtosis(df_plot$value)
+moments::jarque.test(df_plot$value)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df_plot %>% kruskal_test(`value` ~ CellType)
+res.kruskal
+df_plot %>% kruskal_effsize(`value` ~ CellType)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df_plot %>% 
+  dunn_test(`value` ~ CellType, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ CellType, data = df_plot))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "CellType")
+
+ggplot(df_plot, aes(x = CellType, y = value, fill = "CellType"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = CellType), size = 2, cex = 2)+
+  scale_color_manual(values = cols_nat)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(angle = 30, 
+                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
+        axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.13, y.position = 40) +
+  xlab(NULL)+
+  ylab("Frequency per FOV/Immune [%]")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,100))+
+  NoLegend()
+
+
+
+df_lung %>%
+  select(Dataset, Treatment, `Myeloid cells`) %>%
+  mutate(Condition = Treatment, 
+         value = `Myeloid cells`, 
+         Condition = factor(Condition, levels = c(
+           "CTRL", "1", "2", "3"
+         ))) %>%
+  group_by(Condition) %>%
+  summarise(median = median(value))
+
+
+df_lung %>%
+  select(Dataset, Treatment, `Myeloid cells`, TotalCellCountFOV) %>%
+  mutate(Condition = Treatment, 
+         value = `Myeloid cells`/TotalCellCountFOV*100, 
+         Condition = factor(Condition, levels = c(
+           "CTRL", "1", "2", "3"
+         ))) %>%
+  group_by(Condition) %>%
+  summarise(median = median(value))
+
+df_lung %>%
+  select(Dataset, Treatment, `Myeloid cells`, `Immune cells`) %>%
+  mutate(Condition = Treatment, 
+         value = `Myeloid cells`/`Immune cells`*100, 
+         Condition = factor(Condition, levels = c(
+           "CTRL", "1", "2", "3"
+         ))) %>%
+  group_by(Condition) %>%
+  summarise(median = median(value))
+
 ```
 
 # Save data

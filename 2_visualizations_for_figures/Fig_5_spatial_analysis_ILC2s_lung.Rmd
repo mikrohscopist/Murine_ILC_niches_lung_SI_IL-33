@@ -305,7 +305,7 @@ df_fov <- metadatax %>%
   mutate(AL1 = recode(
     AL1,
     "Immune cells" = "CD90.2",
-    "Stromal cells" = "CD31",
+    "Endothelia & stroma" = "CD31",
     "Epithelia" = "LYVE1"
   ))
 
@@ -1197,48 +1197,48 @@ ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatm
 
 
 
-# ILC3s ---------------------------------------------------------------
-celltype_of_interest <- "ILC3s"
-
-df_sub_lung <- df_cin_lung %>%
-  filter(Reference == celltype_of_interest) %>%
-  filter(Radius == radius) %>%
-  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
-
-head(df_sub_lung)
-
-
-
-plot_data <- df_sub_lung
-
-# Create lav´bels that depict mean value 
-Labs = plot_data %>% 
-  group_by(Treatment) %>%
-  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
-              )
-
-plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
-# create plot
-ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
-  geom_boxplot(fill="white")+
-  geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
-  scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(axis.text.x = element_text(#angle = 50,
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-        axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
-  NoLegend()+
-  ggtitle("ILC3s - LYVE1 CD90 Lymphatics")+
-  xlab("Treatment")+
-  ylab("Frequency in 15 µm radius [%]")+
-  # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
-  geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
+# # ILC3s ---------------------------------------------------------------
+# celltype_of_interest <- "ILC3s"
+# 
+# df_sub_lung <- df_cin_lung %>%
+#   filter(Reference == celltype_of_interest) %>%
+#   filter(Radius == radius) %>%
+#   select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
+# 
+# head(df_sub_lung)
+# 
+# 
+# 
+# plot_data <- df_sub_lung
+# 
+# # Create lav´bels that depict mean value 
+# Labs = plot_data %>% 
+#   group_by(Treatment) %>%
+#   summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
+#               )
+# 
+# plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
+# # create plot
+# ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
+#   geom_boxplot(fill="white")+
+#   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
+#   scale_color_manual(values = cols_treat)+
+#   theme_classic2()+
+#   theme(axis.text.x = element_text(#angle = 50,
+#                                    vjust = 1, size = 12, hjust = 0.5, face = "bold"),
+#         axis.text.y = element_text(hjust = 0.5, size = 12),
+#         axis.title.x = element_text(size = 12),
+#         axis.title.y = element_text(size = 12),
+#         plot.title = element_text(size =14, hjust = 0.5),
+#         plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
+#         legend.title = element_text(size =14),
+#         legend.text = element_text(size =12))+
+#   NoLegend()+
+#   ggtitle("ILC3s - LYVE1 CD90 Lymphatics")+
+#   xlab("Treatment")+
+#   ylab("Frequency in 15 µm radius [%]")+
+#   # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
+#   geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
 
 ```
 

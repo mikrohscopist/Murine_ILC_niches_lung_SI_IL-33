@@ -22,11 +22,15 @@ editor_options:
 
 
 ``` r
+library(moments)
+library(rstatix)
 library(Seurat)
 library(SeuratObject)
 library(dplyr)
 library(ggplot2)
 library(here)
+library(ggbeeswarm)
+library(ggpubr)
 # library(stringr)
 # library(glue)
 # library(here)
@@ -439,6 +443,527 @@ colnames(df_lung)
 ## [25] "Prop_ILCs_perTotalImmuneFOV"                   "Prop_T cytotox cells_perTotalImmuneFOV"        "Prop_T helper cells_perTotalImmuneFOV"         "Prop_NK cells/ILC1s_perTotalImmuneFOV"         "Prop_ILC2s_perTotalImmuneFOV"                  "Prop_ILC3s_perTotalImmuneFOV"                  "Prop_NK cells/ILC1s_perTotalILCsFOV"           "Prop_ILC2s_perTotalILCsFOV"                    "Prop_ILC3s_perTotalILCsFOV"                    "Tissue area"                                   "Organ"
 ```
 
+Visualize frequencies:
+
+
+``` r
+df_freq <- df_lung %>%
+  select(1, 4, 23:30)
+
+# frequency of myeloid cells at different conditions -----------------------------
+df_plot <-   df_freq %>%
+  select(Dataset, Treatment, `Prop_Myeloid cells_perTotalImmuneFOV`) %>%
+  mutate(Condition = Treatment, 
+         value = `Prop_Myeloid cells_perTotalImmuneFOV`, 
+         Condition = factor(Condition, levels = c(
+           "CTRL", "1", "2", "3"
+         )))
+
+# Testing for normal distribution
+shapiro.test(df_plot$value)
+```
+
+```
+## 
+## 	Shapiro-Wilk normality test
+## 
+## data:  df_plot$value
+## W = 0.96916, p-value = 0.403
+```
+
+``` r
+moments::kurtosis(df_plot$value)
+```
+
+```
+## [1] 2.122535
+```
+
+``` r
+moments::jarque.test(df_plot$value)
+```
+
+```
+## 
+## 	Jarque-Bera Normality Test
+## 
+## data:  df_plot$value
+## JB = 1.4368, p-value = 0.4875
+## alternative hypothesis: greater
+```
+
+``` r
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df_plot %>% kruskal_test(`value` ~ Condition)
+res.kruskal
+```
+
+```
+## # A tibble: 1 × 6
+##   .y.       n statistic    df        p method        
+## * <chr> <int>     <dbl> <int>    <dbl> <chr>         
+## 1 value    36      20.7     3 0.000122 Kruskal-Wallis
+```
+
+``` r
+df_plot %>% kruskal_effsize(`value` ~ Condition)
+```
+
+```
+## # A tibble: 1 × 5
+##   .y.       n effsize method  magnitude
+## * <chr> <int>   <dbl> <chr>   <ord>    
+## 1 value    36   0.553 eta2[H] large
+```
+
+``` r
+# Pairwise comparisons using Dunn's test
+pwc <- df_plot %>% 
+  dunn_test(`value` ~ Condition, p.adjust.method = "bonferroni") 
+pwc
+```
+
+```
+## # A tibble: 6 × 9
+##   .y.   group1 group2    n1    n2 statistic        p   p.adj p.adj.signif
+## * <chr> <chr>  <chr>  <int> <int>     <dbl>    <dbl>   <dbl> <chr>       
+## 1 value CTRL   1          9     9    3.49   0.000482 0.00289 **          
+## 2 value CTRL   2          9     9    3.48   0.000503 0.00302 **          
+## 3 value CTRL   3          9     9    0.593  0.553    1       ns          
+## 4 value 1      2          9     9   -0.0112 0.991    1       ns          
+## 5 value 1      3          9     9   -2.90   0.00376  0.0226  *           
+## 6 value 2      3          9     9   -2.89   0.00390  0.0234  *
+```
+
+``` r
+# add N to plot
+tab <- data.frame(xtabs(~ Condition, data = df_plot))
+head(tab)
+```
+
+```
+##   Condition Freq
+## 1      CTRL    9
+## 2         1    9
+## 3         2    9
+## 4         3    9
+```
+
+``` r
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "Condition")
+
+ggplot(df_plot, aes(x = Condition, y = value, fill = "Condition"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = Condition), size = 2, cex = 2)+
+  scale_color_manual(values = cols_nat)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(angle = 30, 
+                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
+        axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.13, y.position = 50) +
+  xlab(NULL)+
+  ylab("Frequency per FOV/Immune [%]")+
+  scale_y_continuous(expand = c(0, 0), limits = c(15,70))+
+  NoLegend()
+```
+
+<img src="Lung_SI_all_cells_all_ALs_files/figure-html/unnamed-chunk-10-1.png" width="100%" style="display: block; margin: auto;" />
+
+``` r
+df_plot %>%
+  group_by(Condition) %>%
+  summarise(median = median(value))
+```
+
+```
+## # A tibble: 4 × 2
+##   Condition median
+##   <fct>      <dbl>
+## 1 CTRL        25.5
+## 2 1           40.2
+## 3 2           41.2
+## 4 3           30.2
+```
+
+``` r
+# total count of myeloid cells at different conditions -----------------------------
+df_plot <-   df_lung %>%
+  select(Dataset, Treatment, `Myeloid cells`) %>%
+  mutate(Condition = Treatment, 
+         value = `Myeloid cells`, 
+         Condition = factor(Condition, levels = c(
+           "CTRL", "1", "2", "3"
+         )))
+
+# Testing for normal distribution
+shapiro.test(df_plot$value)
+```
+
+```
+## 
+## 	Shapiro-Wilk normality test
+## 
+## data:  df_plot$value
+## W = 0.81941, p-value = 4.053e-05
+```
+
+``` r
+moments::kurtosis(df_plot$value)
+```
+
+```
+## [1] 3.488854
+```
+
+``` r
+moments::jarque.test(df_plot$value)
+```
+
+```
+## 
+## 	Jarque-Bera Normality Test
+## 
+## data:  df_plot$value
+## JB = 9.9302, p-value = 0.006977
+## alternative hypothesis: greater
+```
+
+``` r
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df_plot %>% kruskal_test(`value` ~ Condition)
+res.kruskal
+```
+
+```
+## # A tibble: 1 × 6
+##   .y.       n statistic    df          p method        
+## * <chr> <int>     <dbl> <int>      <dbl> <chr>         
+## 1 value    36      28.6     3 0.00000271 Kruskal-Wallis
+```
+
+``` r
+df_plot %>% kruskal_effsize(`value` ~ Condition)
+```
+
+```
+## # A tibble: 1 × 5
+##   .y.       n effsize method  magnitude
+## * <chr> <int>   <dbl> <chr>   <ord>    
+## 1 value    36   0.800 eta2[H] large
+```
+
+``` r
+# Pairwise comparisons using Dunn's test
+pwc <- df_plot %>% 
+  dunn_test(`value` ~ Condition, p.adjust.method = "bonferroni") 
+pwc
+```
+
+```
+## # A tibble: 6 × 9
+##   .y.   group1 group2    n1    n2 statistic           p      p.adj p.adj.signif
+## * <chr> <chr>  <chr>  <int> <int>     <dbl>       <dbl>      <dbl> <chr>       
+## 1 value CTRL   1          9     9      3.40 0.000672    0.00403    **          
+## 2 value CTRL   2          9     9      2.04 0.0418      0.251      ns          
+## 3 value CTRL   3          9     9      5.17 0.000000236 0.00000142 ****        
+## 4 value 1      2          9     9     -1.36 0.172       1          ns          
+## 5 value 1      3          9     9      1.77 0.0771      0.463      ns          
+## 6 value 2      3          9     9      3.13 0.00173     0.0104     *
+```
+
+``` r
+# add N to plot
+tab <- data.frame(xtabs(~ Condition, data = df_plot))
+head(tab)
+```
+
+```
+##   Condition Freq
+## 1      CTRL    9
+## 2         1    9
+## 3         2    9
+## 4         3    9
+```
+
+``` r
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "Condition")
+
+ggplot(df_plot, aes(x = Condition, y = value, fill = "Condition"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = Condition), size = 2, cex = 2)+
+  scale_color_manual(values = cols_nat)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(angle = 30, 
+                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
+        axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.13, y.position = 50) +
+  xlab(NULL)+
+  ylab("Frequency per FOV/Immune [%]")+
+  # scale_y_continuous(expand = c(0, 0), limits = c(15,70))+
+  NoLegend()
+```
+
+<img src="Lung_SI_all_cells_all_ALs_files/figure-html/unnamed-chunk-10-2.png" width="100%" style="display: block; margin: auto;" />
+
+``` r
+df_plot %>%
+  group_by(Condition) %>%
+  summarise(median = median(value))
+```
+
+```
+## # A tibble: 4 × 2
+##   Condition median
+##   <fct>      <dbl>
+## 1 CTRL          51
+## 2 1            164
+## 3 2            109
+## 4 3            383
+```
+
+``` r
+# frequency of different celltypes under homeostatic conditions -----------------
+df_plot <-   df_freq %>%
+  filter(Treatment == "CTRL") %>%
+  tidyr::pivot_longer(cols = -c(Dataset, Treatment), names_to = "CellType") %>%
+  mutate(CellType = gsub("Prop_|_perTotalImmuneFOV", "", CellType), 
+         CellType = factor(CellType, levels = c(
+           "ILCs",
+           "NK cells/ILC1s",
+           "ILC2s",
+           "ILC3s",
+           "Myeloid cells",
+           "B cells & Plasma cells",
+           "T cytotox cells",
+           "T helper cells"
+         ))
+  )
+
+# Testing for normal distribution
+shapiro.test(df_plot$value)
+```
+
+```
+## 
+## 	Shapiro-Wilk normality test
+## 
+## data:  df_plot$value
+## W = 0.87294, p-value = 2.952e-06
+```
+
+``` r
+moments::kurtosis(df_plot$value)
+```
+
+```
+## [1] 2.972862
+```
+
+``` r
+moments::jarque.test(df_plot$value)
+```
+
+```
+## 
+## 	Jarque-Bera Normality Test
+## 
+## data:  df_plot$value
+## JB = 11.966, p-value = 0.002521
+## alternative hypothesis: greater
+```
+
+``` r
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df_plot %>% kruskal_test(`value` ~ CellType)
+res.kruskal
+```
+
+```
+## # A tibble: 1 × 6
+##   .y.       n statistic    df        p method        
+## * <chr> <int>     <dbl> <int>    <dbl> <chr>         
+## 1 value    72      63.9     7 2.47e-11 Kruskal-Wallis
+```
+
+``` r
+df_plot %>% kruskal_effsize(`value` ~ CellType)
+```
+
+```
+## # A tibble: 1 × 5
+##   .y.       n effsize method  magnitude
+## * <chr> <int>   <dbl> <chr>   <ord>    
+## 1 value    72   0.890 eta2[H] large
+```
+
+``` r
+# Pairwise comparisons using Dunn's test
+pwc <- df_plot %>% 
+  dunn_test(`value` ~ CellType, p.adjust.method = "bonferroni") 
+pwc
+```
+
+```
+## # A tibble: 28 × 9
+##    .y.   group1         group2                    n1    n2 statistic        p   p.adj p.adj.signif
+##  * <chr> <chr>          <chr>                  <int> <int>     <dbl>    <dbl>   <dbl> <chr>       
+##  1 value ILCs           NK cells/ILC1s             9     9    -1.83  0.0670   1       ns          
+##  2 value ILCs           ILC2s                      9     9    -1.36  0.174    1       ns          
+##  3 value ILCs           ILC3s                      9     9    -3.30  0.000959 0.0269  *           
+##  4 value ILCs           Myeloid cells              9     9     2.05  0.0408   1       ns          
+##  5 value ILCs           B cells & Plasma cells     9     9     2.94  0.00333  0.0931  ns          
+##  6 value ILCs           T cytotox cells            9     9    -0.975 0.330    1       ns          
+##  7 value ILCs           T helper cells             9     9     1.49  0.135    1       ns          
+##  8 value NK cells/ILC1s ILC2s                      9     9     0.473 0.636    1       ns          
+##  9 value NK cells/ILC1s ILC3s                      9     9    -1.47  0.141    1       ns          
+## 10 value NK cells/ILC1s Myeloid cells              9     9     3.88  0.000106 0.00296 **          
+## # ℹ 18 more rows
+```
+
+``` r
+# add N to plot
+tab <- data.frame(xtabs(~ CellType, data = df_plot))
+head(tab)
+```
+
+```
+##                 CellType Freq
+## 1                   ILCs    9
+## 2         NK cells/ILC1s    9
+## 3                  ILC2s    9
+## 4                  ILC3s    9
+## 5          Myeloid cells    9
+## 6 B cells & Plasma cells    9
+```
+
+``` r
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "CellType")
+
+ggplot(df_plot, aes(x = CellType, y = value, fill = "CellType"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = CellType), size = 2, cex = 2)+
+  scale_color_manual(values = cols_nat)+
+  theme_classic2()+
+  theme(plot.margin=margin(1,0.5,1,1,"cm"),
+        axis.text.x = element_text(angle = 30, 
+                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
+        axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        legend.title = element_text(size =14),
+        legend.text = element_text(size =12))+
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.13, y.position = 40) +
+  xlab(NULL)+
+  ylab("Frequency per FOV/Immune [%]")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,100))+
+  NoLegend()
+```
+
+<img src="Lung_SI_all_cells_all_ALs_files/figure-html/unnamed-chunk-10-3.png" width="100%" style="display: block; margin: auto;" />
+
+``` r
+df_lung %>%
+  select(Dataset, Treatment, `Myeloid cells`) %>%
+  mutate(Condition = Treatment, 
+         value = `Myeloid cells`, 
+         Condition = factor(Condition, levels = c(
+           "CTRL", "1", "2", "3"
+         ))) %>%
+  group_by(Condition) %>%
+  summarise(median = median(value))
+```
+
+```
+## # A tibble: 4 × 2
+##   Condition median
+##   <fct>      <dbl>
+## 1 CTRL          51
+## 2 1            164
+## 3 2            109
+## 4 3            383
+```
+
+``` r
+df_lung %>%
+  select(Dataset, Treatment, `Myeloid cells`, TotalCellCountFOV) %>%
+  mutate(Condition = Treatment, 
+         value = `Myeloid cells`/TotalCellCountFOV*100, 
+         Condition = factor(Condition, levels = c(
+           "CTRL", "1", "2", "3"
+         ))) %>%
+  group_by(Condition) %>%
+  summarise(median = median(value))
+```
+
+```
+## # A tibble: 4 × 2
+##   Condition median
+##   <fct>      <dbl>
+## 1 CTRL        4.79
+## 2 1           9.28
+## 3 2          10.2 
+## 4 3          10.3
+```
+
+``` r
+df_lung %>%
+  select(Dataset, Treatment, `Myeloid cells`, `Immune cells`) %>%
+  mutate(Condition = Treatment, 
+         value = `Myeloid cells`/`Immune cells`*100, 
+         Condition = factor(Condition, levels = c(
+           "CTRL", "1", "2", "3"
+         ))) %>%
+  group_by(Condition) %>%
+  summarise(median = median(value))
+```
+
+```
+## # A tibble: 4 × 2
+##   Condition median
+##   <fct>      <dbl>
+## 1 CTRL        25.5
+## 2 1           40.2
+## 3 2           41.2
+## 4 3           30.2
+```
+
 # Save data
 
 ## Session Information
@@ -473,10 +998,10 @@ sessionInfo()
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] readr_2.1.5        here_1.0.1         ggplot2_3.5.2      dplyr_1.1.4        Seurat_5.2.1       SeuratObject_5.1.0 sp_2.2-0          
+##  [1] readr_2.1.5        ggpubr_0.6.0       ggbeeswarm_0.7.2   here_1.0.1         ggplot2_3.5.2      dplyr_1.1.4        Seurat_5.2.1       SeuratObject_5.1.0 sp_2.2-0           rstatix_0.7.2      moments_0.14.1    
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] deldir_2.0-4           pbapply_1.7-2          gridExtra_2.3          rlang_1.1.5            magrittr_2.0.3         RcppAnnoy_0.0.22       spatstat.geom_3.3-6    matrixStats_1.5.0      ggridges_0.5.6         compiler_4.4.2         png_0.1-8              vctrs_0.6.5            reshape2_1.4.4         stringr_1.5.1          crayon_1.5.3           pkgconfig_2.0.3        fastmap_1.2.0          utf8_1.2.6             promises_1.3.2         rmarkdown_2.29         tzdb_0.4.0             bit_4.6.0              purrr_1.0.4            xfun_0.51              cachem_1.1.0           jsonlite_1.9.1         goftest_1.2-3          later_1.4.1            spatstat.utils_3.1-3   irlba_2.3.5.1          parallel_4.4.2         cluster_2.1.6          R6_2.6.1               ica_1.0-3              bslib_0.9.0            stringi_1.8.4          RColorBrewer_1.1-3     spatstat.data_3.1-6    reticulate_1.42.0      parallelly_1.45.0      spatstat.univar_3.1-2  lmtest_0.9-40          jquerylib_0.1.4        scattermore_1.2        Rcpp_1.0.14            knitr_1.50             tensor_1.5.1           future.apply_1.20.0    zoo_1.8-13             sctransform_0.4.1      httpuv_1.6.15         
-##  [52] Matrix_1.7-1           splines_4.4.2          igraph_2.1.4           tidyselect_1.2.1       abind_1.4-8            rstudioapi_0.17.1      yaml_2.3.10            spatstat.random_3.3-3  codetools_0.2-20       miniUI_0.1.2           spatstat.explore_3.4-2 listenv_0.9.1          lattice_0.22-6         tibble_3.2.1           plyr_1.8.9             withr_3.0.2            shiny_1.10.0           ROCR_1.0-11            evaluate_1.0.4         Rtsne_0.17             future_1.58.0          fastDummies_1.7.5      survival_3.7-0         polyclip_1.10-7        fitdistrplus_1.2-2     pillar_1.10.2          KernSmooth_2.23-24     plotly_4.11.0          generics_0.1.4         vroom_1.6.5            rprojroot_2.0.4        RcppHNSW_0.6.0         hms_1.1.3              scales_1.4.0           globals_0.18.0         xtable_1.8-4           glue_1.8.0             lazyeval_0.2.2         tools_4.4.2            data.table_1.17.0      RSpectra_0.16-2        RANN_2.6.2             dotCall64_1.2          cowplot_1.1.3          grid_4.4.2             tidyr_1.3.1            colorspace_2.1-1       nlme_3.1-166           patchwork_1.3.1        cli_3.6.3              spatstat.sparse_3.1-0 
-## [103] spam_2.11-1            viridisLite_0.4.2      uwot_0.2.3             gtable_0.3.6           sass_0.4.10            digest_0.6.37          progressr_0.15.1       ggrepel_0.9.6          htmlwidgets_1.6.4      farver_2.1.2           htmltools_0.5.8.1      lifecycle_1.0.4        httr_1.4.7             mime_0.13              bit64_4.6.0-1          MASS_7.3-61
+##   [1] RColorBrewer_1.1-3     rstudioapi_0.17.1      jsonlite_1.9.1         magrittr_2.0.3         spatstat.utils_3.1-3   farver_2.1.2           rmarkdown_2.29         vctrs_0.6.5            ROCR_1.0-11            spatstat.explore_3.4-2 htmltools_0.5.8.1      broom_1.0.8            Formula_1.2-5          sass_0.4.10            sctransform_0.4.1      parallelly_1.45.0      KernSmooth_2.23-24     bslib_0.9.0            htmlwidgets_1.6.4      ica_1.0-3              plyr_1.8.9             plotly_4.11.0          zoo_1.8-13             cachem_1.1.0           igraph_2.1.4           mime_0.13              lifecycle_1.0.4        pkgconfig_2.0.3        Matrix_1.7-1           R6_2.6.1               fastmap_1.2.0          fitdistrplus_1.2-2     future_1.58.0          shiny_1.10.0           digest_0.6.37          colorspace_2.1-1       patchwork_1.3.1        rprojroot_2.0.4        tensor_1.5.1           RSpectra_0.16-2        irlba_2.3.5.1          labeling_0.4.3         progressr_0.15.1       spatstat.sparse_3.1-0  httr_1.4.7             polyclip_1.10-7        abind_1.4-8            compiler_4.4.2         bit64_4.6.0-1          withr_3.0.2            backports_1.5.0       
+##  [52] carData_3.0-5          fastDummies_1.7.5      ggsignif_0.6.4         MASS_7.3-61            tools_4.4.2            vipor_0.4.7            lmtest_0.9-40          beeswarm_0.4.0         httpuv_1.6.15          future.apply_1.20.0    goftest_1.2-3          glue_1.8.0             nlme_3.1-166           promises_1.3.2         grid_4.4.2             Rtsne_0.17             cluster_2.1.6          reshape2_1.4.4         generics_0.1.4         gtable_0.3.6           spatstat.data_3.1-6    tzdb_0.4.0             tidyr_1.3.1            hms_1.1.3              data.table_1.17.0      utf8_1.2.6             car_3.1-3              spatstat.geom_3.3-6    RcppAnnoy_0.0.22       ggrepel_0.9.6          RANN_2.6.2             pillar_1.10.2          stringr_1.5.1          vroom_1.6.5            spam_2.11-1            RcppHNSW_0.6.0         later_1.4.1            splines_4.4.2          lattice_0.22-6         bit_4.6.0              survival_3.7-0         deldir_2.0-4           tidyselect_1.2.1       miniUI_0.1.2           pbapply_1.7-2          knitr_1.50             gridExtra_2.3          scattermore_1.2        xfun_0.51              matrixStats_1.5.0      stringi_1.8.4         
+## [103] lazyeval_0.2.2         yaml_2.3.10            evaluate_1.0.4         codetools_0.2-20       tibble_3.2.1           cli_3.6.3              uwot_0.2.3             xtable_1.8-4           reticulate_1.42.0      jquerylib_0.1.4        Rcpp_1.0.14            globals_0.18.0         spatstat.random_3.3-3  png_0.1-8              spatstat.univar_3.1-2  parallel_4.4.2         dotCall64_1.2          listenv_0.9.1          viridisLite_0.4.2      scales_1.4.0           ggridges_0.5.6         crayon_1.5.3           purrr_1.0.4            rlang_1.1.5            cowplot_1.1.3
 ```

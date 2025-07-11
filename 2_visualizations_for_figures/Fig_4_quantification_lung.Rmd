@@ -924,7 +924,7 @@ plot_freq_ilc3 <- ggplot(df, aes(x = Treatment, y = `ILC3s`, fill = "Treatment")
 plot_freq_ilc3
 ```
 
-## Freq of immune cells, stromal cells and epithelia within total cells
+## Freq of immune cells, Endothelia & stroma and epithelia within total cells
 
 ```{r, fig.width=9, fig.height=3}
 
@@ -984,13 +984,13 @@ plot_immune <- ggplot(df, aes(x = Treatment, y = `Immune cells`, fill = "Treatme
   NoLegend()
 
 
-# Stromal cells ---------------------------------------------------------------
+# Endothelia & stroma ---------------------------------------------------------------
 df <- df_lung %>%
-  select(Treatment, Dataset, `Prop_Stromal cells_perTotalCountFOV`) %>%
+  select(Treatment, Dataset, `Prop_Endothelia & stroma_perTotalCountFOV`) %>%
   mutate(Treatment = factor(Treatment, level =c(
     "CTRL", "1", "2", "3"
   )), 
-  `cells_of_interest` = `Prop_Stromal cells_perTotalCountFOV`)
+  `cells_of_interest` = `Prop_Endothelia & stroma_perTotalCountFOV`)
 
 # Testing for normal distribution
 shapiro.test(df$`cells_of_interest`)
@@ -1035,7 +1035,7 @@ plot_stroma <- ggplot(df, aes(x = Treatment, y = `cells_of_interest`, fill = "Tr
                        step.increase = 0.2, y.position = 80) +
   xlab(NULL)+
   ylab("Frequency/total cells per FOV [#]")+
-  ggtitle("Stromal cells")+
+  ggtitle("Endothelia & stroma")+
   scale_y_continuous(expand = c(0, 0), limits = c(0,100))+
   NoLegend()
 
