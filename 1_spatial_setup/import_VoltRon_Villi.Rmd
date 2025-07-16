@@ -1,0 +1,202 @@
+---
+title: "Import VoltRon"
+author: "Sandy Kroh"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+    fig_caption: yes
+    keep_md: yes
+  pdf_document:
+    toc: yes
+params:
+  Sample: Default
+editor_options:
+  chunk_output_type: inline
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Libraries
+
+```{r}
+if (!requireNamespace("Seurat", quietly = TRUE))
+  install.packages("Seurat")
+if (!requireNamespace("VoltRon", quietly = TRUE))
+  devtools::install_github("Artur-man/VoltRon")
+if (!requireNamespace("magick", quietly = TRUE))
+  install.packages("magick")
+library(Seurat)
+library(VoltRon)
+library(magick)
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+```
+
+Define Ourput folder
+
+```{r}
+output_dir <- "C:/Users/NieHau/Desktop/Sandy/VoltRon/VoltRon_murine_SI_MELC_data_files/Villi/data/import_VoltRon_Villi_files"
+dir.create(output_dir)
+```
+
+## Import Data
+
+The main loop to go over each FOV and create VoltRon assays
+
+```{r}
+datax <- read.csv("C:/Users/NieHau/Desktop/Sandy/R/R_analysis_output/SI_MELC_data_analysis_by_treatment/CTRL_D1_D3/Quantification_preparation_LevAnn_SI_data_files/SO_arcsinh_si_imputed_all_cells.csv")
+
+unique(datax$CellType)
+
+datax$Tissue.area <- factor(datax$Tissue.area, levels = c("ILF", "Villi"))
+unique(datax$Tissue.area)
+
+# Filter only datasets with ILF tissue regions
+datax <- datax %>%
+  dplyr::filter(Tissue.area == "Villi")
+
+unique(datax$Dataset)
+unique(datax$Tissue.area)
+```
+
+```{r}
+
+image_folders_path <- "C:/Users/NieHau/Desktop/Sandy/VoltRon/VoltRon_murine_SI_MELC_data_files/Villi/images/"
+samples <- unique(datax$Dataset)
+# samples <- samples[!samples %in% "20210906_FOV3_D3"]
+# samples <- "20210906_FOV3_D3"
+
+# do this for all samples
+vr_list <- NULL
+for(samp in samples){
+  # current data fram cur_datax
+  cur_datax <- datax[datax$Dataset == samp,]
+  rownames(cur_datax) <- cur_datax$CellID
+  
+  # current feature data frame
+  cur_data <- cur_datax[,15:length(colnames(cur_datax))]
+  rownames(cur_data) <- cur_datax$CellID
+
+  # sample and image folder
+  image_folder <- unique(cur_datax$Dataset)
+  print(image_folder)
+
+  # metadata
+  cur_metadata <- cur_datax[,c(2:7, 10:12)]
+  rownames(cur_metadata) <- cur_datax$CellID
+
+  # coordinates
+  cur_coords <- as.matrix(cur_datax[,c("Loc_X", "Loc_Y")])
+  rownames(cur_coords) <- cur_datax$CellID
+
+  # make voltron objects
+  file_names <- list.files(paste0(image_folders_path, image_folder))
+  file_names <- gsub(".png", "", file_names)
+  image_names <- c("DAPI", file_names)
+  image_list <- list()
+  for(img in image_names){
+    try({
+      image_list[[img]] <- magick::image_read(paste0(image_folders_path,  image_folder, "/", img, ".png"))
+    })
+  }
+  vr_list[[image_folder]] <- formVoltRon(t(cur_data), metadata = cur_metadata, image = image_list, coords = cur_coords, main.assay = "MELC", sample_name = image_folder)
+  
+  # flip and resize images
+  vr_list[[image_folder]] <- flipCoordinates(vr_list[[image_folder]])
+  vr_list[[image_folder]] <- resizeImage(vr_list[[image_folder]], size = 1000)
+}
+saveRDS(vr_list, file = paste0(output_dir, "/VoltRon_data_Villi.rds"))
+```
+
+## Manipulate VoltRon list
+
+Here, we merge all VoltRon objects into one object
+
+```{r}
+vr_list <- readRDS(paste0(output_dir, "/VoltRon_data_Villi.rds"))
+vr_merged <- merge(vr_list[[1]], vr_list[-1])
+```
+
+Getting a full list of all images available in VoltRon
+
+```{r}
+vrImageNames(vr_merged)
+```
+
+Getting all FOVs
+
+```{r}
+SampleMetadata(vr_merged)
+```
+
+## Visualization
+
+Different visualization scripts. If resolution of the figures are low, run it in the console instead of the rmarkdown
+
+```{r, fig.width=9, fig.height=15}
+# visualize all FOVs, default image is DAPI
+vrSpatialPlot(vr_merged, group.by = "CellType", alpha = 0.2, ncol = 3, pt.size = 0.5) +
+    theme(plot.margin = margin(0.1,0.1,0.1,0.1, "cm"), 
+          title =element_text(size=5), 
+          axis.title = element_blank(), 
+          axis.ticks = element_blank(), 
+          axis.text = element_blank())+
+    theme(legend.text = element_text(size = 12), 
+                                  legend.title = element_text(size = 14))+
+    ggplot2::theme(legend.position = "bottom")+
+    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=1))+
+    theme(legend.key = element_rect(fill = "white"))
+
+# with B220 or CD31 as background
+vrSpatialPlot(vr_merged, group.by = "CellType", alpha = 0.2, ncol = 3, background = "CD45", pt.size = 0.5) +
+    theme(plot.margin = margin(0.1,0.1,0.1,0.1, "cm"), 
+          title =element_text(size=5), 
+          axis.title = element_blank(), 
+          axis.ticks = element_blank(), 
+          axis.text = element_blank())+
+    theme(legend.text = element_text(size = 12), 
+                                  legend.title = element_text(size = 14))+
+    ggplot2::theme(legend.position = "bottom")+
+    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=1))+
+    theme(legend.key = element_rect(fill = "white"))
+vrSpatialPlot(vr_merged, group.by = "CellType", alpha = 0.2, ncol = 3, background = "LYVE1", pt.size = 0.5) +
+    theme(plot.margin = margin(0.1,0.1,0.1,0.1, "cm"), 
+          title =element_text(size=5), 
+          axis.title = element_blank(), 
+          axis.ticks = element_blank(), 
+          axis.text = element_blank())+
+    theme(legend.text = element_text(size = 12), 
+                                  legend.title = element_text(size = 14))+
+    ggplot2::theme(legend.position = "bottom")+
+    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=1))+
+    theme(legend.key = element_rect(fill = "white"))
+
+# visualize first section 
+for (variable in unique(vr_merged@sample.metadata$Assay)) {
+  plot <- vrSpatialPlot(vr_merged, assay = variable, group.by = "CellType", alpha = 0.2, background = "CD45", ncol = 2, pt.size = 0.5) +
+    theme(plot.margin = margin(0.1,0.1,0.1,0.1, "cm"), 
+          title =element_text(size=5), 
+          axis.title = element_blank(), 
+          axis.ticks = element_blank(), 
+          axis.text = element_blank())+
+    theme(legend.text = element_text(size = 12), 
+                                  legend.title = element_text(size = 14))+
+    ggplot2::theme(legend.position = "bottom")+
+    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=1))+
+    theme(legend.key = element_rect(fill = "white"))
+  print(plot)
+}
+```
+
+```{r eval=FALSE, include=FALSE}
+save.image(paste0(output_dir, "/environment_Villi.RData"))
+
+```

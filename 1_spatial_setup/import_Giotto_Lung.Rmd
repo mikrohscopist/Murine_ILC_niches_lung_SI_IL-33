@@ -1,0 +1,123 @@
+---
+title: "Create Giotto object lung data"
+author: "Sandy Kroh"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    number_sections: yes
+    fig_caption: yes
+    keep_md: yes
+  pdf_document:
+    toc: yes
+params:
+  Sample: Default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Libraries
+
+```{r}
+if (!requireNamespace("Giotto", quietly = TRUE))
+  devtools::install_github("drieslab/Giotto@suite")
+library(Giotto)
+library(ggplot2)
+library(ggpubr)
+```
+
+## Directories
+
+```{r}
+output_dir <- here::here("1_spatial_setup", "import_Giotto_Lung_files")
+dir.create(output_dir)
+
+```
+
+# Configuring Giotto package and raw data
+
+Checking if miniconda and python is in place:
+
+```{r}
+# configure Giotto
+genv_exists = checkGiottoEnvironment()
+print(genv_exists)
+if(!genv_exists){
+  # The following command need only be run once to install the Giotto environment.
+  installGiottoEnvironment()
+}
+```
+
+## Import raw data
+
+Load data frame with annotated cell types:
+
+```{r}
+datax <- read.csv(paste0(here::here(), "/data/MELC_data_murine_lung_CTRL_D1_D2_D3_withfolders.csv"))
+
+# inspect cell types
+unique(datax$CellType)
+```
+
+```{r}
+samples <- unique(datax$FullInfo)
+samples <- samples[!samples %in% "20210906_FOV3_D3"]
+gio_list <- NULL
+for(samp in samples){
+
+  # cur_datax
+  cur_datax <- datax[datax$FullInfo == samp,]
+
+  # sample and image folder
+  image_folder <- unique(cur_datax$Sample)
+  print(image_folder)
+
+  # data
+  cur_data <- cur_datax[,2:34]
+  rownames(cur_data) <- cur_datax$CellID
+  cur_data <- t(cur_data)
+
+  # metadata
+  cur_metadata <- cur_datax[,38:46]
+  rownames(cur_metadata) <- cur_datax$CellID
+
+  # coordinates
+  cur_coords <- cur_datax[,c("Loc_X", "Loc_Y")]
+  rownames(cur_coords) <- cur_datax$CellID
+
+  # main giotto object
+  gio_list[[image_folder]] <- createGiottoObject(expression = cur_data, spatial_locs = cur_coords)
+
+  # metadata
+  gio_list[[image_folder]] <- addCellMetadata(gobject =  gio_list[[image_folder]], new_metadata = cur_metadata)
+
+  # make delaunay graph
+  gio_list[[image_folder]] <- createSpatialDelaunayNetwork(gio_list[[image_folder]])
+}
+
+```
+
+## Visualization
+
+Visualization of Giotto objects
+
+```{r}
+for (variable in 1:length(samples)) {
+  print(spatPlot2D(gio_list[[variable]], cell_color = "CellType", point_size = 1)+
+          ggtitle(names(gio_list[variable])))
+}
+```
+
+# Save data
+
+## Session information
+
+```{r}
+saveRDS(gio_list, file = paste0(here::here(), "/data/Giotto_data_lung.rds"))
+save.image(paste0(output_dir, "/environment.RData"))
+sessionInfo()
+```
