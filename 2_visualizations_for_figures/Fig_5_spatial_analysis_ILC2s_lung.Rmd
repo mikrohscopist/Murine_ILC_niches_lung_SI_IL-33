@@ -41,7 +41,9 @@ library(dplyr)
 if (!requireNamespace("Giotto", quietly = TRUE))
   devtools::install_github("drieslab/Giotto@suite")
 if (!requireNamespace("VoltRon", quietly = TRUE))
-  devtools::install_github("Artur-man/VoltRon")
+#  devtools::install_github("Artur-man/VoltRon")
+  devtools::install_github("BIMSBbioinfo/VoltRon@dev")
+
 if (!requireNamespace("Seurat", quietly = TRUE))
   install.packages("Seurat")
 library(Giotto)
@@ -526,10 +528,6 @@ plot_coenrichment
 ```{r, fig.width=4, fig.height=6}
 set.seed(8)
 radius <- 10
-unit <- "\u03BC"
-thresh <- 0.04
-nmarkers <- 33
-save_name <- "SPIAT_cin_"
 
 cols_nat <- c("magenta", "cyan", "blue", "purple", "green", 
                        "red", "yellow", "olivedrab1", "slateblue1", 
@@ -573,76 +571,13 @@ celltypes <- c(
   "Epithelia"
 )
 
-input_dir <- "C:/Users/NieHau/Desktop/Sandy/R/R_analysis_output/Niche_analysis_SPIAT_lung/Output_SPIAT/cells_in_neighborhood/"
-
-list_files <- list.files(path=input_dir, 
-                         pattern=NULL, all.files=FALSE,
-                         full.names=FALSE)
-
-df_cin = data.frame()
-for (element in list_files) {
-  dir <- paste0(input_dir, element)
-  df_sub <- read_csv(dir, 
+df_dist_all <- read_csv(here::here("data", "SPIAT_min_dist_all_lung.csv"), 
     col_types = cols(...1 = col_skip()))
-  df_cin <- rbind(df_cin, df_sub)
-}
 
-df_cin$Experiment <- str_sub(df_cin$Dataset,-8,-1)
-df_cin$FOV <- str_sub(df_cin$Dataset,-10,-10)  
-df_cin$Treatment <- gsub("D", "", str_extract(df_cin$Dataset, "[^_]+"))
-df_cin$ExpID <- paste0(df_cin$Experiment, "_", df_cin$FOV)
-colnames(df_cin) <- gsub("Reference cell", "Reference", colnames(df_cin))
-# colnames(df_cin) <- gsub("NK cells & ILC1s", "NK cells/ILC1s", colnames(df_cin))
-# df_cin$Reference <- gsub("NK cells & ILC1s", "NK cells/ILC1s", df_cin$Reference)
-head(df_cin)
+df_dist_all$RefType <- factor(df_dist_all$RefType, levels = celltypes)
+df_dist_all$NearestType <- factor(df_dist_all$NearestType, levels = celltypes)
 
-# get the meta data of the treatment from the df_cin
-df_treat <- cbind(df_cin["ExpID"], df_cin["Treatment"])
-df_treat <- df_treat[!duplicated(df_treat), ]
-head(df_treat)
-
-
-input_dir <- "C:/Users/NieHau/Desktop/Sandy/R/R_analysis_output/Niche_analysis_SPIAT_lung/Output_SPIAT/cell_distances_minimal_all/"
-
-list_files <- list.files(path=input_dir, 
-                         pattern=NULL, all.files=FALSE,
-                         full.names=FALSE)
-
-df_dist = data.frame()
-for (element in list_files) {
-  dir <- paste0(input_dir, element)
-  df_sub <- read_csv(dir, 
-    col_types = cols(...1 = col_skip()))
-  df_sub$Name <- element
-  df_dist <- rbind(df_dist, df_sub)
-}
-
-
-head(df_dist)
-df_dist$ExpID <- str_sub(df_dist$Name,7,16)
-df_dist$Experiment <- str_sub(df_dist$Name,7,14)
-df_dist$FOV <- str_sub(df_dist$Name,16,16)  
-
-df_dist <- merge(df_dist, df_treat, 
-                 by = "ExpID", 
-                 all.x = TRUE) 
-
-df_dist <- df_dist %>%
-  mutate(Pair = paste(RefType, "--", NearestType))
-
-
-df_dist$RefType <- gsub("NK cells & ILC1s", "NK cells/ILC1s", df_dist$RefType)
-df_dist$NearestType <- gsub("NK cells & ILC1s", "NK cells/ILC1s", df_dist$NearestType)
-
-df_dist$RefType <- factor(df_dist$RefType, levels = celltypes)
-df_dist$NearestType <- factor(df_dist$NearestType, levels = celltypes)
-
-
-
-
-df_dist_all <- df_dist
-
-head(df_dist)
+head(df_dist_all)
 
 
 
@@ -776,28 +711,23 @@ print(paste("Percentage of cells with Distance < 5:", round(percentage_under_5, 
 ```{r, fig.height=3, fig.width=9}
 
 library(stringr)
+tissuearea <- "Lung"
+input_dir <- here::here("data", "CIN_analysis", tissuearea, "/")
 
-input_dir <- "C:/Users/NieHau/Desktop/Sandy/R/R_analysis_output/Niche_analysis_SPIAT_all_organs_CIN/Output/"
 
 # List all radii calculated 
-list_files_rad <- list.files(path="C:/Users/NieHau/Desktop/Sandy/R/R_analysis_output/Niche_analysis_SPIAT_all_organs_CIN/Output/Lung", 
+list_files_rad <- list.files(path=input_dir, 
                          pattern=NULL, all.files=FALSE,
                          full.names=FALSE)
 
 list_files_rad
-
-
 df_cin_lung = data.frame()
-
-tissuearea <- "Lung"
 
 # define a dataframe to collect all data from one tissue area
 df_radius <- data.frame()
 for (defined_radius in list_files_rad) {
   print(defined_radius)
   list_files <- list.files(path=paste0(input_dir,
-                                   tissuearea, 
-                                   "/", 
                                    defined_radius, 
                                    "/"), 
                        pattern=NULL, all.files=FALSE,
@@ -806,13 +736,11 @@ for (defined_radius in list_files_rad) {
   df_cin = data.frame()
   for (element in list_files) {
     dir <- paste0(input_dir,
-                  tissuearea, 
-                  "/", defined_radius, 
+                  defined_radius, 
                   "/", element)
     df_sub <- read_csv(dir, 
       col_types = cols(...1 = col_skip()))
-    df_sub$Filename <- paste0(tissuearea, 
-                  "/", defined_radius, 
+    df_sub$Filename <- paste0(defined_radius, 
                   "/", element)
     df_cin <- rbind(df_cin, df_sub)
   }

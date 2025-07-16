@@ -1,0 +1,679 @@
+---
+title: "SPIAT Cells in neighborhood"
+author: "Sandy Kroh"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+    fig_caption: yes
+    keep_md: yes
+  pdf_document:
+    toc: yes
+params:
+  Sample: Default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+# knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
+                      fig.align='center', 
+                      fig.height=6, 
+                      fig.width=6, 
+                      dpi = 300,
+                      message = FALSE, warning = FALSE)
+options(width = 1200)
+```
+
+## Libraries
+
+```{r}
+library(SPIAT)
+library(dplyr)
+library(ggplot2)
+library(stringr)
+library(glue)
+library(here)
+library(readr)
+library(lubridate)
+library(data.table)
+library(clustree)
+library(magrittr)
+library(ggpubr)
+library(ggrepel)
+library(moments)
+library(plotrix)
+library(rstatix)
+library(forcats)
+library(scales)
+library(patchwork)
+```
+
+## Directories & parameters
+
+```{r}
+output_env_dir <- here::here("1_spatial_setup", "SPIAT_CIN_analysis_files")
+dir.create(output_env_dir)
+
+output_dir <- here::here("data", "CIN_analysis")
+dir.create(output_dir)
+
+save_name <- "SPIAT"
+```
+
+# Lung
+
+## Load data
+
+```{r}
+set.seed(8)
+
+# files names of the seurat object of the different annotation levels
+filename <- here::here("data", "20230712_SO_33M_arcsinh_lung_0.04_imputed_SPIAT_data.csv")
+  
+df_all <- read_csv(filename, 
+    col_types = cols(...1 = col_skip()))
+
+
+# df_all <- df_all %>%
+#   mutate(Loc_X = Location_Center_X, 
+#          Loc_Y = Location_Center_Y, 
+#          CellType = annotation_lvl3,
+#          AL1 = annotation_lvl1, 
+#          AL2 = annotation_lvl2, 
+#          AL3 = annotation_lvl3
+#          ) %>%
+#   select(-c(annotation_lvl1, annotation_lvl2, annotation_lvl3, annotation_lvl4, 
+#             Location_Center_X, Location_Center_Y, 
+#             UMAP_1, UMAP_2, harmony_1, harmony_2))
+# 
+
+unique(df_all$Dataset)
+```
+
+## Data preparation
+
+X and y coordinates are converted from pixel to µm by the factor 0.325.
+
+```{r}
+# max values x and y before conversion
+max(df_all$Loc_X)
+max(df_all$Loc_Y)
+
+df_all <- df_all %>%
+  mutate(Loc_X = Loc_X * 0.325,
+         Loc_Y = Loc_Y * 0.325)
+
+# max values x and y after conversion
+max(df_all$Loc_X)
+max(df_all$Loc_Y)
+
+```
+
+Combine ILCs A and ILC2s B into ILC2s
+
+```{r}
+
+df_all$ref_markers <- gsub("CD127,CD45,CD90,KLRG1,Kappa,MHCII,GATA3eGFP", 
+                           "CD127,CD45,CD90,KLRG1,GATA3eGFP", df_all$ref_markers)
+df_all$ref_markers <- gsub("CD127,CD45,CD90,KLRG1,GATA3eGFP,Ki67", 
+                           "CD127,CD45,CD90,KLRG1,GATA3eGFP", df_all$ref_markers)
+
+df_all$CellType <- gsub("NK cells/ILC1s", "NK cells & ILC1s", df_all$CellType)
+```
+
+Define markers, cell_types and reference:
+
+```{r}
+# markers defined here have to be in the same order as in the df 
+# you can also just simply use colnames of the respective columns
+markers <-  c("Areg",
+              "B220",
+              "CCR6", 
+              "CD117",
+              "CD11c",
+              "CD127",
+              "CD138",
+              "CD3",
+              "CD31",
+              "CD4",
+              "CD44",
+              "CD45",
+              "CD68",
+              "CD8a",
+              "CD90",
+              "EMCN",
+              "EpCAM",
+              "ICOS",
+              "KLRG1",
+              "Kappa",
+              "LYVE1",
+              "MHCII", 
+              "NKp46",
+              "PDGFRa",
+              "PDPN",
+              "Sca1",
+              "EOMES",
+              "GATA3",
+              "GATA3eGFP",
+              "IRF4",
+              "Ki67", 
+              "RORgt",
+              "TBET")
+
+# define cell types (also have to be in same order as in df)
+cell_types <- unique(df_all$CellType)
+
+# Specify the markers used for identification of the different cell types here
+# format needs to be as shown here
+# order needs to be the same as in the df
+reference <- c(
+      "EpCAM", # Epithelia
+      "CD31,EMCN", # EMCN CD31 Blood vessels
+      "CD31,LYVE1", # LYVE1 CD31 vessels
+      "CD90,LYVE1", # LYVE1 CD90 Lymphatics
+      "CD11c,CD45,CD68", # Myeloid cells
+      "B220,CD138,CD45,IRF4,MHCII", # B cells & Plasma cells
+      "CD117,CD45,NKp46,EOMES,TBET", # NK cells/ILC1s
+      "CCR6,CD127,CD45,CD90,ICOS,RORgt", # ILC3s
+      "CD3,CD45,CD8a", # T cytotox cells
+      "CD3,CD4,CD45", # T helper cells
+      "CD127,CD45,CD90,KLRG1,GATA3eGFP" # ILC2s
+    )
+
+my_colors <- c(
+      "green", # Epithelia
+      "red", # EMCN CD31 Blood vessels
+      "yellow", # LYVE1 CD31 vessels
+      "gold", # LYVE1 CD90 Lymphatics
+      "darkviolet", # Myeloid cells
+      "deeppink4", # B cells & Plasma cells
+      "navy", # NK cells/ILC1s
+      "darkcyan", # ILC3s
+      "slateblue4", # T cytotox cells
+      "deeppink", # T helper cells
+      "seagreen2" # ILC2s 
+    )
+```
+
+## Cells in neighborhood analysis
+
+The next chunk will take the radius and unit provided in the header of the document and loop through all the available datasets in the Dataset column of the df_all dataframe. It will create csv files containing all the frequencies of neighboring cells within the radius provided and save the files in the folder provided.
+
+```{r}
+for (radius in c(10, 15, 20, 25)) {
+  unit <- "micm"
+  datasets <- unique(df_all$Dataset)
+  organ <- "Lung"
+  tissuearea <- "Lung"
+  cur_output_dir <- paste0(output_dir, "/", tissuearea, "/", radius, "_", unit)
+  dir.create(cur_output_dir)
+  
+  for (variable in datasets) {
+    # extract meta data from dataset name
+    exp <- str_sub(variable,-8,-1)   
+    fov <- str_sub(variable,-10,-10)   
+    treat <- gsub("D", "", str_extract(variable, "[^_]+"))
+    dataset <- paste0(exp, "_", fov)
+    
+  
+    # filter dataframe for dataset
+    df <- df_all %>%
+      filter(Dataset == variable)
+    
+    
+    # create gfi object from filtered dataframe
+    ## rows are markers, columns are cells
+    df_features <- t(df[, 12:44])
+    intensity_matrix <- matrix(df_features, nrow = nrow(df_features), 
+                               ncol = ncol(df_features))
+    # define marker names as rownames
+    rownames(intensity_matrix) <- rownames(df_features)
+    
+    # define cell IDs as colnames
+    colnames(intensity_matrix) <- paste0("Cell_" , df$CellID) 
+    
+    # metadata (phenotypes, x/y coordinates, cell_types)
+    # the order of the elements in these vectors correspond to the cell order 
+    # in `intensity matrix`
+    #phenotypes <- df$annotation_lvl2
+    phenotypes <- df$ref_markers
+    coord_x <- df$Loc_X
+    coord_y <- df$Loc_Y
+    sample_id <- df$Dataset
+    condition <- df$Treatment 
+    
+    # gfi = general format image
+    gfi <- format_image_to_spe(format = "general", 
+                                                intensity_matrix = intensity_matrix,
+                                                phenotypes = phenotypes, 
+                                                coord_x = coord_x,
+                                                coord_y = coord_y)
+    
+    # specify cell types
+    gfi_form <- define_celltypes(
+      gfi, 
+      categories = reference, 
+      category_colname = "Phenotype", 
+      names = cell_types,
+      new_colname = "Cell.Type")
+    
+    
+    # Cells in neighborhood
+    # Preparing a data frmae to collect all cells in neighborhood 
+    #for the respective dataset
+    # Reference cell type is assigned in Reference cell column
+    # create data frame with 0 rows and 5 columns
+    df_neigh <- data.frame(matrix(ncol = length(cell_types)+2, 
+                                    nrow = length(cell_types)))
+      
+    #provide column names
+    colnames(df_neigh) <- c("Dataset", cell_types, "Reference cell")
+    df_neigh$Dataset <- as.character(variable)
+    df_neigh$Organ <- organ
+    df_neigh$Tissue.area <- tissuearea
+  
+    # loop through the cell types and create one data frame with 
+    # all the neighboring frequencies for the resepctive reference cell type
+    for (index in seq(length(cell_types))) {
+        ref <- cell_types[index]
+        ref_name <- gsub(" ", "", ref)
+        df_neigh[index, "Reference cell"] <- ref
+        for (element in cell_types) {
+          apocwr <- average_percentage_of_cells_within_radius(spe_object = gfi_form, 
+                                                  reference_celltype = ref, 
+                                                  target_celltype = element, 
+                                                  radius=radius, 
+                                                  feature_colname="Cell.Type")
+          df_neigh[index, element] <- as.numeric(round(apocwr))
+          # print(paste0(ref, 
+          #             " in radius of ", radius, " ", 
+          #             unit, " around ", element, ": ",
+          #             round(apocwr, 1)))
+        }
+        
+        rowSums(df_neigh[2:(length(cell_types)+1)], na.rm = TRUE)
+        head(df_neigh)
+        }
+    
+    # save csv file of ILC2 A neighbor hood for respective dataset
+    write.csv(df_neigh, 
+              file = paste0(cur_output_dir, 
+                                    "/", 
+                                    save_name, 
+                                    "_", 
+                                    dataset, 
+                                    "_rad", 
+                                    radius,"_", unit, 
+                            "_", 
+                            tissuearea,
+                                    "_freq.csv"))
+    
+    
+    
+  }
+
+}
+
+```
+
+# Villi
+
+## Load data
+
+```{r}
+filename <- here::here("data", "SO_arcsinh_si_imputed_all_cells.csv")
+  
+df_all <- read_csv(filename, 
+    col_types = cols(...1 = col_skip()))
+head(df_all)
+
+
+
+```
+
+## Data preparation
+
+```{r}
+# max values x and y before conversion
+max(df_all$Loc_X)
+max(df_all$Loc_Y)
+
+df_all <- df_all %>%
+  mutate(Loc_X = Loc_X * 0.325,
+         Loc_Y = Loc_Y * 0.325)
+
+# max values x and y after conversion
+max(df_all$Loc_X)
+max(df_all$Loc_Y)
+
+unique(df_all$`Tissue area`)
+```
+
+```{r}
+# markers defined here have to be in the same order as in the df 
+# you can also just simply use colnames of the respective columns
+markers <-  c("Areg",
+              "CCR6", 
+              "CD117",
+              "CD11c",
+              "CD127",
+              "CD3",
+              "CD4",
+              "CD44",
+              "CD45",
+              "CD8a",
+              "CD90",
+              "EMCN",
+              "EpCAM",
+              "KLRG1",
+              "Kappa",
+              "LYVE1",
+              "MHCII", 
+              "NKp46",
+              "PDGFRa",
+              "PDPN",
+              "Sca1",
+              "EOMES",
+              "GATA3eGFP",
+              "IRF4",
+              "Ki67", 
+              "RORgt")
+
+# define cell types (also have to be in same order as in df)
+cell_types <- unique(df_all$CellType)
+
+# Specify the markers used for identification of the different cell types here
+# format needs to be as shown here
+# order needs to be the same as in the df
+reference <- c(
+      "EpCAM", # Epithelia I
+      "CD44,EpCAM,Sca1,Ki67", # Epithelia II
+      "CD44,CD90,LYVE1,PDPN,Sca1", # Fibroblasts
+      "CD90,EMCN,LYVE1,Sca1", # Blood vessels
+      "CD90,LYVE1,PDPN", # Lymphatics
+      "CD11c,CD45", # Myeloid cells
+      "CD45,Kappa", # B cells 
+      "CD45,Kappa,IRF4", #Plasma cells/Plasmablasts
+      "CD45,GATA3eGFP", # ILC2s
+      "CD45,CD8a,EpCAM", # IEL
+      "CCR6,CD117,CD11c,CD127,CD3,CD4,CD90,EMCN,Kappa,LYVE1,MHCII,NKp46,PDGFRa,Sca1,EOMES,IRF4,RORgt", # Unresolved
+      "CD127,CD45,EOMES,RORgt", # NK cells7ILC1s/ILC3s
+      "CD3,CD45,CD8a", # T cytotox cells
+      "CD3,CD4,CD45" # T helper cells
+    )
+
+df_all <- df_all %>%
+  mutate(`ref_markers` = CellType) %>%
+  mutate(`ref_markers` = recode(
+    CellType, 
+      "Epithelia I" = "EpCAM", # 
+      "Epithelia II" = "CD44,EpCAM,Sca1,Ki67", # 
+      "Fibroblasts" = "CD44,CD90,LYVE1,PDPN,Sca1", # 
+      "Blood vessels" = "CD90,EMCN,LYVE1,Sca1", # 
+      "Lymphatics" = "CD90,LYVE1,PDPN", # 
+      "Myeloid cells" = "CD11c,CD45", # 
+      "B cells" = "CD45,Kappa", #  
+      "Plasma cells/Plasmablasts" = "CD45,Kappa,IRF4", #
+      "ILC2s" = "CD45,GATA3eGFP", # 
+      "CD8+ CD3- IEL" = "CD45,CD8a,EpCAM", # 
+      "Unresolved" = "CCR6,CD117,CD11c,CD127,CD3,CD4,CD90,EMCN,Kappa,LYVE1,MHCII,NKp46,PDGFRa,Sca1,EOMES,IRF4,RORgt", # 
+      "NK cells/ILC1s/ILC3s" = "CD127,CD45,EOMES,RORgt", # 
+      "T cytotox. cells" = "CD3,CD45,CD8a", # 
+      "T helper cells" = "CD3,CD4,CD45" # 
+    
+  ))
+```
+
+## Cells in neighborhood
+
+```{r}
+for (radius in c(10, 15, 20, 25)) {
+  unit <- "micm"
+  organ <- "SI"
+  tissuearea <- "Villi"
+  
+  # get only the datasets of the selected tissue area
+  df_ta <- df_all %>%
+    filter(`Tissue area` == tissuearea)
+  
+  datasets <- unique(df_ta$Dataset)
+  cur_output_dir <- paste0(output_dir, "/", tissuearea, "/", radius, "_", unit)
+  dir.create(cur_output_dir)
+  
+  for (variable in datasets) {
+    # extract meta data from dataset name
+    exp <- str_sub(variable,-8,-1)   
+    fov <- str_sub(variable,-10,-10)   
+    treat <- gsub("D", "", str_extract(variable, "[^_]+"))
+    dataset <- paste0(exp, "_", fov)
+    
+  
+    # filter dataframe for dataset
+    df <- df_all %>%
+      filter(Dataset == variable)
+    
+    
+    ## rows are markers, columns are cells
+    df_features <- t(df[, 14:39])
+    intensity_matrix <- matrix(df_features, nrow = nrow(df_features), 
+                               ncol = ncol(df_features))
+    # define marker names as rownames
+    rownames(intensity_matrix) <- rownames(df_features)
+    
+    # define cell IDs as colnames
+    colnames(intensity_matrix) <- paste0("Cell_" , df$CellID) 
+    
+    # metadata (phenotypes, x/y coordinates, cell_types)
+    # the order of the elements in these vectors correspond to the cell order 
+    # in `intensity matrix`
+    #phenotypes <- df$annotation_lvl2
+    phenotypes <- df$ref_markers
+    coord_x <- df$Loc_X
+    coord_y <- df$Loc_Y
+    sample_id <- df$Dataset
+    condition <- df$Treatment 
+    
+    # gfi = general format image
+    gfi <- format_image_to_spe(format = "general", 
+                                                intensity_matrix = intensity_matrix,
+                                                phenotypes = phenotypes, 
+                                                coord_x = coord_x,
+                                                coord_y = coord_y)  
+      
+  
+    gfi_form <- define_celltypes(
+        gfi, 
+        categories = reference, 
+        category_colname = "Phenotype", 
+        names = cell_types,
+        new_colname = "Cell.Type")
+  
+    # Cells in neighborhood
+    # Preparing a data frmae to collect all cells in neighborhood 
+    #for the respective dataset
+    # Reference cell type is assigned in Reference cell column
+    # create data frame with 0 rows and 5 columns
+    df_neigh <- data.frame(matrix(ncol = length(cell_types)+2, 
+                                    nrow = length(cell_types)))
+      
+    #provide column names
+    colnames(df_neigh) <- c("Dataset", cell_types, "Reference cell")
+    df_neigh$Dataset <- as.character(variable)
+    df_neigh$Organ <- organ
+    df_neigh$Tissue.area <- tissuearea
+  
+    # loop through the cell types and create one data frame with 
+    # all the neighboring frequencies for the resepctive reference cell type
+    for (index in seq(length(cell_types))) {
+        ref <- cell_types[index]
+        ref_name <- gsub(" ", "", ref)
+        df_neigh[index, "Reference cell"] <- ref
+        for (element in cell_types) {
+          apocwr <- average_percentage_of_cells_within_radius(spe_object = gfi_form, 
+                                                  reference_celltype = ref, 
+                                                  target_celltype = element, 
+                                                  radius=radius, 
+                                                  feature_colname="Cell.Type")
+          df_neigh[index, element] <- as.numeric(round(apocwr))
+          # print(paste0(ref, 
+          #             " in radius of ", radius, " ", unit, " around ", element, ": ",
+          #             round(apocwr, 1)))
+        }
+        
+        rowSums(df_neigh[2:(length(cell_types)+1)], na.rm = TRUE)
+        head(df_neigh)
+        }
+    
+    # save csv file of ILC2 A neighbor hood for respective dataset
+    write.csv(df_neigh, 
+              file = paste0(cur_output_dir, 
+                                    "/", 
+                                    save_name, 
+                                    "_", 
+                                    dataset, 
+                                    "_rad", 
+                                    radius,"_", unit, 
+                            "_", 
+                            tissuearea,
+                                    "_freq.csv"))
+    
+    
+    
+  }
+  
+
+}
+```
+
+# ILF
+
+## Cells in neighborhood
+
+```{r}
+for (radius in c(10, 15, 20, 25)) {
+  unit <- "micm"
+  organ <- "SI"
+  tissuearea <- "ILF"
+  
+  # get only the datasets of the selected tissue area
+  df_ta <- df_all %>%
+    filter(`Tissue area` == tissuearea)
+  
+  datasets <- unique(df_ta$Dataset)
+  cur_output_dir <- paste0(output_dir, "/", tissuearea, "/", radius, "_", unit)
+  dir.create(cur_output_dir)
+  
+  for (variable in datasets) {
+    # extract meta data from dataset name
+    exp <- str_sub(variable,-8,-1)   
+    fov <- str_sub(variable,-10,-10)   
+    treat <- gsub("D", "", str_extract(variable, "[^_]+"))
+    dataset <- paste0(exp, "_", fov)
+    
+  
+    # filter dataframe for dataset
+    df <- df_all %>%
+      filter(Dataset == variable)
+    
+    
+    ## rows are markers, columns are cells
+    df_features <- t(df[, 14:39])
+    intensity_matrix <- matrix(df_features, nrow = nrow(df_features), 
+                               ncol = ncol(df_features))
+    # define marker names as rownames
+    rownames(intensity_matrix) <- rownames(df_features)
+    
+    # define cell IDs as colnames
+    colnames(intensity_matrix) <- paste0("Cell_" , df$CellID) 
+    
+    # metadata (phenotypes, x/y coordinates, cell_types)
+    # the order of the elements in these vectors correspond to the cell order 
+    # in `intensity matrix`
+    #phenotypes <- df$annotation_lvl2
+    phenotypes <- df$ref_markers
+    coord_x <- df$Loc_X
+    coord_y <- df$Loc_Y
+    sample_id <- df$Dataset
+    condition <- df$Treatment 
+    
+    # gfi = general format image
+    gfi <- format_image_to_spe(format = "general", 
+                                                intensity_matrix = intensity_matrix,
+                                                phenotypes = phenotypes, 
+                                                coord_x = coord_x,
+                                                coord_y = coord_y)  
+      
+  
+    gfi_form <- define_celltypes(
+        gfi, 
+        categories = reference, 
+        category_colname = "Phenotype", 
+        names = cell_types,
+        new_colname = "Cell.Type")
+  
+    # Cells in neighborhood
+    # Preparing a data frmae to collect all cells in neighborhood 
+    #for the respective dataset
+    # Reference cell type is assigned in Reference cell column
+    # create data frame with 0 rows and 5 columns
+    df_neigh <- data.frame(matrix(ncol = length(cell_types)+2, 
+                                    nrow = length(cell_types)))
+      
+    #provide column names
+    colnames(df_neigh) <- c("Dataset", cell_types, "Reference cell")
+    df_neigh$Dataset <- as.character(variable)
+    df_neigh$Organ <- organ
+    df_neigh$Tissue.area <- tissuearea
+  
+    # loop through the cell types and create one data frame with 
+    # all the neighboring frequencies for the resepctive reference cell type
+    for (index in seq(length(cell_types))) {
+        ref <- cell_types[index]
+        ref_name <- gsub(" ", "", ref)
+        df_neigh[index, "Reference cell"] <- ref
+        for (element in cell_types) {
+          apocwr <- average_percentage_of_cells_within_radius(spe_object = gfi_form, 
+                                                  reference_celltype = ref, 
+                                                  target_celltype = element, 
+                                                  radius=radius, 
+                                                  feature_colname="Cell.Type")
+          df_neigh[index, element] <- as.numeric(round(apocwr))
+          # print(paste0(ref, 
+          #             " in radius of ", radius, " ", unit, " around ", element, ": ",
+          #             round(apocwr, 1)))
+        }
+        
+        rowSums(df_neigh[2:(length(cell_types)+1)], na.rm = TRUE)
+        head(df_neigh)
+        }
+    
+    # save csv file of ILC2 A neighbor hood for respective dataset
+    write.csv(df_neigh, 
+              file = paste0(cur_output_dir, 
+                                    "/", 
+                                    save_name, 
+                                    "_", 
+                                    dataset, 
+                                    "_rad", 
+                                    radius,"_", unit, 
+                            "_", 
+                            tissuearea,
+                                    "_freq.csv"))
+    
+    
+    
+  }
+  
+
+}
+```
+
+# Session Information
+
+```{r}
+sessionInfo()
+```
