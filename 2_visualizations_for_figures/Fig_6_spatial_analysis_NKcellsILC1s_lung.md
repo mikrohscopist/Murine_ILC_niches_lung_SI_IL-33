@@ -1,7 +1,7 @@
 ---
 title: "Figure 6: Spatial analysis of NK cells/ILC1s in lung"
 author: "Sandy Kroh"
-date: "July 11, 2025"
+date: "July 14, 2025"
 output:
   html_document:
     toc: yes
@@ -542,7 +542,7 @@ plot_coenrichment <- ggplot(interaction_celltypes, aes(x = condition, y = enrich
         axis.title.x = element_blank(),
         axis.title.y = element_text(size = 12),
         plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
         legend.position = "none",
         strip.background=element_blank(),
         strip.background.x= element_blank(),
@@ -1435,7 +1435,7 @@ Combine plots:
 
 ``` r
 plot1 <- ggarrange(plot_coenrichment, dist_lymph,  
-          ncol = 2, nrow = 1, widths = c(1, 2, 2),
+          ncol = 2, nrow = 1, widths = c(1.3, 2, 2),
           labels = c("A"))
 
 ggarrange(plot1, plot_if,  
