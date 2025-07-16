@@ -27,7 +27,7 @@ knitr::opts_chunk$set(echo = TRUE, out.width = "100%",
 if (!requireNamespace("Seurat", quietly = TRUE))
   install.packages("Seurat")
 if (!requireNamespace("VoltRon", quietly = TRUE))
-  devtools::install_github("Artur-man/VoltRon")
+  devtools::install_github("BIMSBbioinfo/VoltRon@dev")#  devtools::install_github("Artur-man/VoltRon")
 if (!requireNamespace("magick", quietly = TRUE))
   install.packages("magick")
 library(Seurat)
@@ -130,17 +130,18 @@ SampleMetadata(vr_merged)
 
 Different visualization scripts.
 
-```{r, fig.width=9, fig.height=8}
+```{r, fig.width=9, fig.height=37}
 # visualize all FOVs, default image is DAPI
-vrSpatialPlot(vr_merged, group.by = "CellType", alpha = 1, ncol = 3)
+vrSpatialPlot(vr_merged, group.by = "CellType", alpha = 0.2, ncol = 3, 
+                  legend.loc = "bottom", legend.text.size = 11,legend.pt.size = 3, pt.size = 1) +
+    theme(plot.margin = margin(0.1,0.1,0.1,0.1, "cm"), 
+          title =element_text(size=4), 
+          axis.title = element_blank(), 
+          axis.ticks = element_blank(), 
+          axis.text = element_blank(),
+          legend.text = element_text(size = 8), 
+          legend.title = element_blank())
 
-# with B220 or CD31 as background
-vrSpatialPlot(vr_merged, group.by = "CellType", alpha = 0.1, ncol = 3, background = c("image_1", "B220"))
-vrSpatialPlot(vr_merged, group.by = "CellType", alpha = 0.1, ncol = 3, background = c("image_1", "CD31"))
-vrSpatialPlot(vr_merged, group.by = "CellType", alpha = 0.1, ncol = 3, background = c("image_1", "CD44"))
-
-# visualize first section 
-vrSpatialPlot(vr_merged, assay = "Assay1", group.by = "CellType", alpha = 0.1, background = c("image_1", "CD31", ncol = 3))
 ```
 
 # Save data
