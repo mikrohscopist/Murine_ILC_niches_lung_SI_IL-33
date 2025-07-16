@@ -1,5 +1,5 @@
 ---
-title: "import_VoltRon_ILC2s_combined"
+title: "import VoltRon Lung"
 date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
   html_document:
@@ -17,7 +17,8 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
+                      fig.align='center', dpi = 300)
 ```
 
 ## Libraries
@@ -38,41 +39,30 @@ library(ggplot2)
 library(ggpubr)
 ```
 
-## Change CSV data
+## Directories
 
-Here, we are changing the csv file to include the names of the actual folder with channel images
+```{r}
+output_dir <- here::here("1_spatial_setup", "import_VoltRon_Lung_files")
+dir.create(output_dir)
 
-```{r eval=FALSE, include=FALSE}
-datax <- read.csv("data/MELC_data_murine_lung_CTRL_D1_D2_D3.csv")
-samples <- datax$FullInfo
-samples <- gsub("FOV", "", samples)
-samples <- gsub("_D1", "", samples)
-samples <- gsub("_D2", "", samples)
-samples <- gsub("D3", "lu_d3", samples)
-samples <- gsub("CTRL", "lu_ctrl", samples)
-datax$Sample <- samples
-write.csv(datax, "data/MELC_data_murine_lung_CTRL_D1_D2_D3_withfolders.csv", row.names = FALSE, quote = FALSE)
 ```
 
-## Import Data
+# Import Data
+
+```{r}
+datax <- read.csv(paste0(here::here(), "/data/MELC_data_murine_lung_CTRL_D1_D2_D3_withfolders.csv"))
+
+# inspect cell types
+unique(datax$CellType)
+```
 
 The main loop to go over each FOV and create VoltRon assays
 
 ```{r}
-# folder path and samples
-datax <- read_csv("C:/Users/NieHau/Desktop/Sandy/VoltRon/VoltRon_murine_lung_MELC_data_files/data/MELC_data_murine_lung_CTRL_D1_D2_D3_withfolders.csv")
 
-# Combine ILC2s A and ILC2s B into ILC2s
-datax$CellType <- datax$AL3
+image_folders_path <- paste0(here::here(), "/data/MELC_data/Lung/")
 
-# rename NK cells/ILC1s to NK cells/ILC1s/ILC3s
-# datax$CellType <- gsub("NK cells/ILC1s", "NK cells/ILC1s/ILC3s", datax$CellType)
-unique(datax$CellType)
-
-image_folders_path <- "C:/Users/NieHau/Desktop/Sandy/VoltRon/VoltRon_murine_lung_MELC_data_files/images/"
 samples <- unique(datax$Sample)
-# samples <- samples[!samples %in% "20210906_FOV3_D3"]
-# samples <- "20210906_FOV3_D3"
 
 # do this for all samples
 vr_list <- NULL
@@ -113,7 +103,7 @@ for(samp in samples[-35]){
   vr_list[[image_folder]] <- flipCoordinates(vr_list[[image_folder]])
   vr_list[[image_folder]] <- resizeImage(vr_list[[image_folder]], size = 1000)
 }
-saveRDS(vr_list, file = "C:/Users/NieHau/Desktop/Sandy/VoltRon/VoltRon_murine_lung_MELC_data_files/data/VoltRon_data_lung_ILC2s_combined.rds")
+
 ```
 
 ## Manipulate VoltRon list
@@ -121,7 +111,6 @@ saveRDS(vr_list, file = "C:/Users/NieHau/Desktop/Sandy/VoltRon/VoltRon_murine_lu
 Here, we merge all VoltRon objects into one object
 
 ```{r}
-vr_list <- readRDS("C:/Users/NieHau/Desktop/Sandy/VoltRon/VoltRon_murine_lung_MELC_data_files/data/VoltRon_data_lung_ILC2s_combined.rds")
 vr_merged <- merge(vr_list[[1]], vr_list[-1])
 ```
 
@@ -137,9 +126,9 @@ Getting all FOVs
 SampleMetadata(vr_merged)
 ```
 
-## Visualization
+# Visualization
 
-Different visualization scripts. If resolution of the figures are low, run it in the console instead of the rmarkdown
+Different visualization scripts.
 
 ```{r, fig.width=9, fig.height=8}
 # visualize all FOVs, default image is DAPI
@@ -154,6 +143,12 @@ vrSpatialPlot(vr_merged, group.by = "CellType", alpha = 0.1, ncol = 3, backgroun
 vrSpatialPlot(vr_merged, assay = "Assay1", group.by = "CellType", alpha = 0.1, background = c("image_1", "CD31", ncol = 3))
 ```
 
+# Save data
+
+## Session info
+
 ```{r}
-save.image("C:/Users/NieHau/Desktop/Sandy/VoltRon/VoltRon_murine_lung_MELC_data_files/data/import_VoltRon_ILC2s_combined_files/environment.Rdata")
+saveRDS(vr_list, file = paste0(here::here(), "/data/VoltRon_data_lung.rds"))
+save.image(paste0(output_dir, "/environment.RData"))
+sessionInfo()
 ```

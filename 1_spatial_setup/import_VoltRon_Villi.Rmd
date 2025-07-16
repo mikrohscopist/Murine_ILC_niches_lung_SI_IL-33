@@ -1,5 +1,5 @@
 ---
-title: "Import VoltRon"
+title: "Import VoltRon SI Villi"
 author: "Sandy Kroh"
 date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
@@ -15,11 +15,11 @@ params:
   Sample: Default
 editor_options:
   chunk_output_type: inline
-bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
+                      fig.align='center', dpi = 300)
 ```
 
 ## Libraries
@@ -40,39 +40,30 @@ library(ggplot2)
 library(ggpubr)
 ```
 
-Define Ourput folder
+## Directories
 
 ```{r}
-output_dir <- "C:/Users/NieHau/Desktop/Sandy/VoltRon/VoltRon_murine_SI_MELC_data_files/Villi/data/import_VoltRon_Villi_files"
+output_dir <- here::here("1_spatial_setup", "import_VoltRon_Villi_files")
 dir.create(output_dir)
+
 ```
 
-## Import Data
+# Import Data
 
 The main loop to go over each FOV and create VoltRon assays
 
 ```{r}
-datax <- read.csv("C:/Users/NieHau/Desktop/Sandy/R/R_analysis_output/SI_MELC_data_analysis_by_treatment/CTRL_D1_D3/Quantification_preparation_LevAnn_SI_data_files/SO_arcsinh_si_imputed_all_cells.csv")
+datax <- read.csv(paste0(here::here(), "/data/SO_arcsinh_si_imputed_Villi.csv"))
 
+# inspect cell types
 unique(datax$CellType)
 
-datax$Tissue.area <- factor(datax$Tissue.area, levels = c("ILF", "Villi"))
-unique(datax$Tissue.area)
-
-# Filter only datasets with ILF tissue regions
-datax <- datax %>%
-  dplyr::filter(Tissue.area == "Villi")
-
-unique(datax$Dataset)
-unique(datax$Tissue.area)
 ```
 
 ```{r}
 
-image_folders_path <- "C:/Users/NieHau/Desktop/Sandy/VoltRon/VoltRon_murine_SI_MELC_data_files/Villi/images/"
+image_folders_path <- paste0(here::here(), "/data/MELC_data/SI_Villi/")
 samples <- unique(datax$Dataset)
-# samples <- samples[!samples %in% "20210906_FOV3_D3"]
-# samples <- "20210906_FOV3_D3"
 
 # do this for all samples
 vr_list <- NULL
@@ -113,7 +104,7 @@ for(samp in samples){
   vr_list[[image_folder]] <- flipCoordinates(vr_list[[image_folder]])
   vr_list[[image_folder]] <- resizeImage(vr_list[[image_folder]], size = 1000)
 }
-saveRDS(vr_list, file = paste0(output_dir, "/VoltRon_data_Villi.rds"))
+
 ```
 
 ## Manipulate VoltRon list
@@ -121,7 +112,6 @@ saveRDS(vr_list, file = paste0(output_dir, "/VoltRon_data_Villi.rds"))
 Here, we merge all VoltRon objects into one object
 
 ```{r}
-vr_list <- readRDS(paste0(output_dir, "/VoltRon_data_Villi.rds"))
 vr_merged <- merge(vr_list[[1]], vr_list[-1])
 ```
 
@@ -137,66 +127,29 @@ Getting all FOVs
 SampleMetadata(vr_merged)
 ```
 
-## Visualization
+# Visualization
 
-Different visualization scripts. If resolution of the figures are low, run it in the console instead of the rmarkdown
-
-```{r, fig.width=9, fig.height=15}
+```{r, fig.width=9, fig.height=23}
 # visualize all FOVs, default image is DAPI
-vrSpatialPlot(vr_merged, group.by = "CellType", alpha = 0.2, ncol = 3, pt.size = 0.5) +
+vrSpatialPlot(vr_merged, group.by = "CellType", alpha = 0.2, ncol = 3, 
+                  legend.loc = "bottom", legend.pt.size = 1, pt.size = 1) +
     theme(plot.margin = margin(0.1,0.1,0.1,0.1, "cm"), 
-          title =element_text(size=5), 
+          title =element_text(size=4), 
           axis.title = element_blank(), 
           axis.ticks = element_blank(), 
-          axis.text = element_blank())+
-    theme(legend.text = element_text(size = 12), 
-                                  legend.title = element_text(size = 14))+
-    ggplot2::theme(legend.position = "bottom")+
-    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=1))+
-    theme(legend.key = element_rect(fill = "white"))
+          axis.text = element_blank(),
+          legend.text = element_text(size = 8), 
+          legend.title = element_text(size = 8))+
+    ggplot2::guides(color=guide_legend(override.aes = list(size=20), ncol=4))
 
-# with B220 or CD31 as background
-vrSpatialPlot(vr_merged, group.by = "CellType", alpha = 0.2, ncol = 3, background = "CD45", pt.size = 0.5) +
-    theme(plot.margin = margin(0.1,0.1,0.1,0.1, "cm"), 
-          title =element_text(size=5), 
-          axis.title = element_blank(), 
-          axis.ticks = element_blank(), 
-          axis.text = element_blank())+
-    theme(legend.text = element_text(size = 12), 
-                                  legend.title = element_text(size = 14))+
-    ggplot2::theme(legend.position = "bottom")+
-    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=1))+
-    theme(legend.key = element_rect(fill = "white"))
-vrSpatialPlot(vr_merged, group.by = "CellType", alpha = 0.2, ncol = 3, background = "LYVE1", pt.size = 0.5) +
-    theme(plot.margin = margin(0.1,0.1,0.1,0.1, "cm"), 
-          title =element_text(size=5), 
-          axis.title = element_blank(), 
-          axis.ticks = element_blank(), 
-          axis.text = element_blank())+
-    theme(legend.text = element_text(size = 12), 
-                                  legend.title = element_text(size = 14))+
-    ggplot2::theme(legend.position = "bottom")+
-    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=1))+
-    theme(legend.key = element_rect(fill = "white"))
-
-# visualize first section 
-for (variable in unique(vr_merged@sample.metadata$Assay)) {
-  plot <- vrSpatialPlot(vr_merged, assay = variable, group.by = "CellType", alpha = 0.2, background = "CD45", ncol = 2, pt.size = 0.5) +
-    theme(plot.margin = margin(0.1,0.1,0.1,0.1, "cm"), 
-          title =element_text(size=5), 
-          axis.title = element_blank(), 
-          axis.ticks = element_blank(), 
-          axis.text = element_blank())+
-    theme(legend.text = element_text(size = 12), 
-                                  legend.title = element_text(size = 14))+
-    ggplot2::theme(legend.position = "bottom")+
-    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=1))+
-    theme(legend.key = element_rect(fill = "white"))
-  print(plot)
-}
 ```
 
-```{r eval=FALSE, include=FALSE}
-save.image(paste0(output_dir, "/environment_Villi.RData"))
+# Save data
 
+## Session info
+
+```{r}
+saveRDS(vr_list, file = paste0(here::here(), "/data/VoltRon_data_Villi.rds"))
+save.image(paste0(output_dir, "/environment.RData"))
+sessionInfo()
 ```
