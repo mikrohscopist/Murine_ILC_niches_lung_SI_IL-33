@@ -346,7 +346,9 @@ plot_if_1 <- ggplot()+
                                          color = 'black', size = 1))+    
   ggplot2::theme(legend.position = "bottom")+
   ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=3),
-                  fill=guide_legend(ncol = 3,byrow=TRUE))
+                  fill=guide_legend(ncol = 3,byrow=TRUE))+
+  annotate("segment", x = 1400, xend = 2080, y = 9, yend = 9, size = 1.6, 
+  colour = "white")
 
 plot_if_1
 ```

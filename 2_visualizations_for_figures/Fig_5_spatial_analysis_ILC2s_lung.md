@@ -1,7 +1,7 @@
 ---
 title: "Figure 5: ILC2s localize"
 author: "Sandy Kroh"
-date: "July 11, 2025"
+date: "July 16, 2025"
 output:
   html_document:
     toc: yes
@@ -950,11 +950,12 @@ print(paste("Percentage of cells with Distance < 5:", round(percentage_under_5, 
 
 ``` r
 library(stringr)
+tissuearea <- "Lung"
+input_dir <- here::here("data", "CIN_analysis", tissuearea, "/")
 
-input_dir <- "C:/Users/NieHau/Desktop/Sandy/R/R_analysis_output/Niche_analysis_SPIAT_all_organs_CIN/Output/"
 
 # List all radii calculated 
-list_files_rad <- list.files(path="C:/Users/NieHau/Desktop/Sandy/R/R_analysis_output/Niche_analysis_SPIAT_all_organs_CIN/Output/Lung", 
+list_files_rad <- list.files(path=input_dir, 
                          pattern=NULL, all.files=FALSE,
                          full.names=FALSE)
 
@@ -968,15 +969,11 @@ list_files_rad
 ``` r
 df_cin_lung = data.frame()
 
-tissuearea <- "Lung"
-
 # define a dataframe to collect all data from one tissue area
 df_radius <- data.frame()
 for (defined_radius in list_files_rad) {
   print(defined_radius)
   list_files <- list.files(path=paste0(input_dir,
-                                   tissuearea, 
-                                   "/", 
                                    defined_radius, 
                                    "/"), 
                        pattern=NULL, all.files=FALSE,
@@ -985,13 +982,11 @@ for (defined_radius in list_files_rad) {
   df_cin = data.frame()
   for (element in list_files) {
     dir <- paste0(input_dir,
-                  tissuearea, 
-                  "/", defined_radius, 
+                  defined_radius, 
                   "/", element)
     df_sub <- read_csv(dir, 
       col_types = cols(...1 = col_skip()))
-    df_sub$Filename <- paste0(tissuearea, 
-                  "/", defined_radius, 
+    df_sub$Filename <- paste0(defined_radius, 
                   "/", element)
     df_cin <- rbind(df_cin, df_sub)
   }
@@ -1037,14 +1032,14 @@ head(df_cin_lung)
 
 ```
 ## # A tibble: 6 × 21
-##   Dataset          Epithelia `EMCN CD31 Blood vessels` `LYVE1 CD31 vessels` `LYVE1 CD90 Lymphatics` `Myeloid cells` `B cells & Plasma cells` `NK cells/ILC1s` ILC3s `T cytotox cells` `T helper cells` ILC2s Reference               Organ Tissue.area Filename                                               Radius Experiment FOV   Treatment ExpID     
-##   <chr>                <dbl>                     <dbl>                <dbl>                   <dbl>           <dbl>                    <dbl>            <dbl> <dbl>             <dbl>            <dbl> <dbl> <chr>                   <chr> <chr>       <chr>                                                  <chr>  <chr>      <chr> <chr>     <chr>     
-## 1 D3_FOV1_20210902        88                         4                    3                       1               3                        1                0     0                 0                0     0 Epithelia               Lung  Lung        Lung/10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
-## 2 D3_FOV1_20210902         2                        70                    6                       1               5                       11                1     0                 1                3     1 EMCN CD31 Blood vessels Lung  Lung        Lung/10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
-## 3 D3_FOV1_20210902         5                        18                   59                       2               7                        6                1     0                 1                2     1 LYVE1 CD31 vessels      Lung  Lung        Lung/10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
-## 4 D3_FOV1_20210902         5                        14                    8                      47              15                        8                0     0                 0                0     2 LYVE1 CD90 Lymphatics   Lung  Lung        Lung/10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
-## 5 D3_FOV1_20210902         5                        14                    6                       3              59                        4                1     0                 0                2     5 Myeloid cells           Lung  Lung        Lung/10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
-## 6 D3_FOV1_20210902         1                        27                    5                       1               3                       54                1     0                 2                4     1 B cells & Plasma cells  Lung  Lung        Lung/10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
+##   Dataset          Epithelia `EMCN CD31 Blood vessels` `LYVE1 CD31 vessels` `LYVE1 CD90 Lymphatics` `Myeloid cells` `B cells & Plasma cells` `NK cells/ILC1s` ILC3s `T cytotox cells` `T helper cells` ILC2s Reference               Organ Tissue.area Filename                                          Radius Experiment FOV   Treatment ExpID     
+##   <chr>                <dbl>                     <dbl>                <dbl>                   <dbl>           <dbl>                    <dbl>            <dbl> <dbl>             <dbl>            <dbl> <dbl> <chr>                   <chr> <chr>       <chr>                                             <chr>  <chr>      <chr> <chr>     <chr>     
+## 1 D3_FOV1_20210902        88                         4                    3                       1               3                        1                0     0                 0                0     0 Epithelia               Lung  Lung        10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
+## 2 D3_FOV1_20210902         2                        70                    6                       1               5                       11                1     0                 1                3     1 EMCN CD31 Blood vessels Lung  Lung        10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
+## 3 D3_FOV1_20210902         5                        18                   59                       2               7                        6                1     0                 1                2     1 LYVE1 CD31 vessels      Lung  Lung        10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
+## 4 D3_FOV1_20210902         5                        14                    8                      47              15                        8                0     0                 0                0     2 LYVE1 CD90 Lymphatics   Lung  Lung        10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
+## 5 D3_FOV1_20210902         5                        14                    6                       3              59                        4                1     0                 0                2     5 Myeloid cells           Lung  Lung        10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
+## 6 D3_FOV1_20210902         1                        27                    5                       1               3                       54                1     0                 2                4     1 B cells & Plasma cells  Lung  Lung        10_micm/SPIAT_20210902_1_rad10_micm_Lung_freq.csv 10 μm  20210902   1     D3        20210902_1
 ```
 
 ``` r

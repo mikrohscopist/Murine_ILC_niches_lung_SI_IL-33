@@ -42,6 +42,8 @@ if (!requireNamespace("Giotto", quietly = TRUE))
   devtools::install_github("drieslab/Giotto@suite")
 if (!requireNamespace("VoltRon", quietly = TRUE))
   devtools::install_github("Artur-man/VoltRon")
+#  devtools::install_github("BIMSBbioinfo/VoltRon@dev")
+
 if (!requireNamespace("Seurat", quietly = TRUE))
   install.packages("Seurat")
 library(Giotto)
@@ -218,7 +220,7 @@ for(unic in uni_celltypes){
             # axis.title.x = element_blank(),
             axis.title.y = element_text(size = 12),
             plot.title = element_text(size =14, hjust = 0.5),
-            plot.margin = margin(1, 1, 0.5, 0, "cm"),
+            plot.margin = margin(1, 0.5, 0.5, 0, "cm"),
             legend.position = "none",
             strip.background=element_blank(),
             strip.background.x= element_blank(),
@@ -231,7 +233,7 @@ for(unic in uni_celltypes){
     
     
     g_master_list[[unic]] <- g_test+
-    theme(plot.margin = margin(1, 1, 0, 0, "cm"))
+    theme(plot.margin = margin(1, 0, 0, 0, "cm"))
   }
 }
 
@@ -270,7 +272,7 @@ g_test <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = c
         # axis.title.x = element_blank(),
         axis.title.y = element_text(size = 12),
         plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(1, 0.5, 0, 0.5, "cm"),
+        plot.margin = margin(1, 0.5, 0.5, 0, "cm"),
         legend.position = "none",
         strip.background=element_blank(),
         strip.background.x= element_blank(),
@@ -283,7 +285,7 @@ g_test <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = c
 
 
 g_master_list[[unic]] <- g_test+
-    theme(plot.margin = margin(1, 0.5, 0, 0.5, "cm"))
+    theme(plot.margin = margin(1, 0, 0, 0, "cm"))
 
 ```
 
@@ -410,7 +412,7 @@ plot_coenrichment_myeloid <- ggplot(interaction_celltypes, aes(x = condition, y 
         axis.title.x = element_blank(),
         axis.title.y = element_text(size = 12),
         plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
+        plot.margin = margin(0.5, 0, 0.5, 0, "cm"),
         legend.position = "none",
         strip.background=element_blank(),
         strip.background.x= element_blank(),
@@ -498,13 +500,13 @@ plot <- vrSpatialPlot(vr_merged, assay = paste0("Assay", 24), #2
 
 
 plot_if_myeloid <- plot +
-  annotate("text", x=100, y=950, label= marker1,
+  annotate("text", x=110, y=950, label= marker1,
            col="cyan", size=5, parse=TRUE) +
-  annotate("text", x=300, y=950, label= marker2,
+  annotate("text", x=330, y=950, label= marker2,
            col="magenta", size=5, parse=TRUE) +
-  annotate("text", x=500, y=950, label= marker3,
+  annotate("text", x=550, y=950, label= marker3,
            col="yellow", size=5, parse=TRUE)+
-  annotate("text", x=700, y=950, label= marker6,
+  annotate("text", x=770, y=950, label= marker6,
            col="blue", size=5, parse=TRUE)+
   # annotate("text", x=305, y=920, label= marker4,
   #          col="green", size=3.5, parse=TRUE)+
@@ -518,8 +520,8 @@ plot_if_myeloid
 
 combine plots:
 
-```{r, fig.width=6, fig.height=3.5}
-plot_2a <- ggarrange(plot_coenrichment_myeloid, plot_if_myeloid, ncol = 2, nrow = 1, widths = c(1.5, 2), labels = c("A"))
+```{r, fig.width=7, fig.height=3.1}
+plot_2a <- ggarrange(plot_coenrichment_myeloid, plot_if_myeloid, ncol = 2, nrow = 1, widths = c(2.5, 2), labels = c("A"))
 
 plot_2a
 ```
@@ -565,7 +567,7 @@ plot_coenrichment_ilc2s <- ggplot(interaction_celltypes, aes(x = condition, y = 
         axis.title.x = element_blank(),
         axis.title.y = element_text(size = 12),
         plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
+        plot.margin = margin(0.5, 0, 0.5, 0, "cm"),
         legend.position = "none",
         strip.background=element_blank(),
         strip.background.x= element_blank(),
@@ -647,15 +649,15 @@ plot <- vrSpatialPlot(vr_merged, assay = paste0("Assay", 34),
 
 
 plot_if_ilc2s_ov <- plot +
-  annotate("text", x=130, y=950, label= marker1,
+  annotate("text", x=150, y=950, label= marker1,
            col="cyan", size=5, parse=TRUE) +
-  annotate("text", x=350, y=950, label= marker2,
+  annotate("text", x=430, y=950, label= marker2,
            col="magenta", size=5, parse=TRUE) +
-  annotate("text", x=210, y=880, label= marker3,
+  annotate("text", x=240, y=880, label= marker3,
            col="yellow", size=5, parse=TRUE)+
-  annotate("text", x=100, y=810, label= marker6,
+  annotate("text", x=120, y=810, label= marker6,
            col="blue", size=5, parse=TRUE)+
-  annotate("text", x=300, y=810, label= marker4,
+  annotate("text", x=400, y=810, label= marker4,
            col="green", size=5, parse=TRUE)+
   # annotate("text", x=70, y=920, label= marker5,
   #          col="red", size=3.5, parse=TRUE)+
@@ -668,8 +670,8 @@ plot_if_ilc2s_ov
 
 Combine plots for 2B:
 
-```{r, fig.width=6, fig.height=3.5}
-plot_2b <- ggarrange(plot_coenrichment_ilc2s, plot_if_ilc2s_ov, ncol = 2, nrow = 1, widths = c(1.5, 2), labels = c("B"))
+```{r, fig.width=7, fig.height=3.1}
+plot_2b <- ggarrange(plot_coenrichment_ilc2s, plot_if_ilc2s_ov, ncol = 2, nrow = 1, widths = c(2.5, 2), labels = c("B"))
 
 plot_2b
 ```
@@ -678,7 +680,7 @@ plot_2b
 
 Myeloid cells:
 
-```{r, fig.width=3, fig.height=3.5}
+```{r, fig.width=2, fig.height=3.5}
 
 
 df_sub_lung <- df_cin_lung %>%
@@ -711,7 +713,7 @@ plot_cin_myeloid <- ggplot(plot_data, aes(x = Treatment, y = `Myeloid cells`, fi
         axis.title.x = element_text(size = 12),
         axis.title.y = element_text(size = 12),
         plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
+        plot.margin = margin(0.5, 0, 0.5, 0, "cm"),
         legend.title = element_text(size =14),
         legend.text = element_text(size =12))+
   NoLegend()+
@@ -725,7 +727,7 @@ plot_cin_myeloid
 
 ILC2s:
 
-```{r, fig.width=3, fig.height=3.5}
+```{r, fig.width=2, fig.height=3.5}
 
 
 df_sub_lung <- df_cin_lung %>%
@@ -758,7 +760,7 @@ plot_cin_ilc2s <- ggplot(plot_data, aes(x = Treatment, y = `ILC2s`, fill = "Trea
         axis.title.x = element_text(size = 12),
         axis.title.y = element_text(size = 12),
         plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
+        plot.margin = margin(0.5, 0, 0.5, 0, "cm"),
         legend.title = element_text(size =14),
         legend.text = element_text(size =12))+
   NoLegend()+
@@ -780,10 +782,10 @@ plot_2c
 
 Combine subplots A, B and C:
 
-```{r, fig.width=9, fig.height=7}
+```{r, fig.width=9, fig.height=6.2}
 plot <- ggarrange(plot_2a, plot_2b, ncol = 1, nrow = 2)
 
-plot_2 <- ggarrange(plot, plot_2c, ncol = 2, nrow = 1, widths = c(7, 3))
+plot_2 <- ggarrange(plot, plot_2c, ncol = 2, nrow = 1, widths = c(7, 2))
 
 plot_2
 ```
@@ -792,7 +794,7 @@ plot_2
 
 ```{r, fig.width=9, fig.height=12}
 
-ggarrange(plot_2, enrichment_scores_all, ncol = 1, nrow = 2, heights = c(7, 5))
+ggarrange(plot_2, enrichment_scores_all, ncol = 1, nrow = 2, heights = c(5.8, 5))
 ```
 
 ```{r, fig.height=6, fig.width=9}
