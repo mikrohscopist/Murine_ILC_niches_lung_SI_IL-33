@@ -1,0 +1,155 @@
+---
+title: "Import VoltRon SI Villi"
+author: "Sandy Kroh"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+    fig_caption: yes
+    keep_md: yes
+  pdf_document:
+    toc: yes
+params:
+  Sample: Default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
+                      fig.align='center', dpi = 300)
+```
+
+## Libraries
+
+```{r}
+if (!requireNamespace("Seurat", quietly = TRUE))
+  install.packages("Seurat")
+if (!requireNamespace("VoltRon", quietly = TRUE))
+  devtools::install_github("Artur-man/VoltRon")
+if (!requireNamespace("magick", quietly = TRUE))
+  install.packages("magick")
+library(Seurat)
+library(VoltRon)
+library(magick)
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+```
+
+## Directories
+
+```{r}
+output_dir <- here::here("1_spatial_setup", "import_VoltRon_Villi_files")
+dir.create(output_dir)
+
+```
+
+# Import Data
+
+The main loop to go over each FOV and create VoltRon assays
+
+```{r}
+datax <- read.csv(paste0(here::here(), "/data/SO_arcsinh_si_imputed_Villi.csv"))
+
+# inspect cell types
+unique(datax$CellType)
+
+```
+
+```{r}
+
+image_folders_path <- paste0(here::here(), "/data/MELC_data/SI_Villi/")
+samples <- unique(datax$Dataset)
+
+# do this for all samples
+vr_list <- NULL
+for(samp in samples){
+  # current data fram cur_datax
+  cur_datax <- datax[datax$Dataset == samp,]
+  rownames(cur_datax) <- cur_datax$CellID
+  
+  # current feature data frame
+  cur_data <- cur_datax[,15:length(colnames(cur_datax))]
+  rownames(cur_data) <- cur_datax$CellID
+
+  # sample and image folder
+  image_folder <- unique(cur_datax$Dataset)
+  print(image_folder)
+
+  # metadata
+  cur_metadata <- cur_datax[,c(2:7, 10:12)]
+  rownames(cur_metadata) <- cur_datax$CellID
+
+  # coordinates
+  cur_coords <- as.matrix(cur_datax[,c("Loc_X", "Loc_Y")])
+  rownames(cur_coords) <- cur_datax$CellID
+
+  # make voltron objects
+  file_names <- list.files(paste0(image_folders_path, image_folder))
+  file_names <- gsub(".png", "", file_names)
+  image_names <- c("DAPI", file_names)
+  image_list <- list()
+  for(img in image_names){
+    try({
+      image_list[[img]] <- magick::image_read(paste0(image_folders_path,  image_folder, "/", img, ".png"))
+    })
+  }
+  vr_list[[image_folder]] <- formVoltRon(t(cur_data), metadata = cur_metadata, image = image_list, coords = cur_coords, main.assay = "MELC", sample_name = image_folder)
+  
+  # flip and resize images
+  vr_list[[image_folder]] <- flipCoordinates(vr_list[[image_folder]])
+  vr_list[[image_folder]] <- resizeImage(vr_list[[image_folder]], size = 1000)
+}
+
+```
+
+## Manipulate VoltRon list
+
+Here, we merge all VoltRon objects into one object
+
+```{r}
+vr_merged <- merge(vr_list[[1]], vr_list[-1])
+```
+
+Getting a full list of all images available in VoltRon
+
+```{r}
+vrImageNames(vr_merged)
+```
+
+Getting all FOVs
+
+```{r}
+SampleMetadata(vr_merged)
+```
+
+# Visualization
+
+```{r, fig.width=9, fig.height=23}
+# visualize all FOVs, default image is DAPI
+vrSpatialPlot(vr_merged, group.by = "CellType", alpha = 0.2, ncol = 3, 
+                  legend.loc = "bottom", legend.pt.size = 1, pt.size = 1) +
+    theme(plot.margin = margin(0.1,0.1,0.1,0.1, "cm"), 
+          title =element_text(size=4), 
+          axis.title = element_blank(), 
+          axis.ticks = element_blank(), 
+          axis.text = element_blank(),
+          legend.text = element_text(size = 8), 
+          legend.title = element_text(size = 8))+
+    ggplot2::guides(color=guide_legend(override.aes = list(size=20), ncol=4))
+
+```
+
+# Save data
+
+## Session info
+
+```{r}
+saveRDS(vr_list, file = paste0(here::here(), "/data/VoltRon_data_Villi.rds"))
+save.image(paste0(output_dir, "/environment.RData"))
+sessionInfo()
+```
