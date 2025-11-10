@@ -1,7 +1,7 @@
 ---
 title: "Supplementary Figure 2: Spatial analysis of ILC2s in lung"
 author: "Sandy Kroh"
-date: "July 16, 2025"
+date: "September 01, 2025"
 output:
   html_document:
     toc: yes
@@ -460,8 +460,8 @@ radius <- unique(df_cin_lung$Radius)[2]
 
 
 ``` r
-enrichment_scores_all <- ggarrange(plotlist = g_master_list[c(9, 8, 7, 6, 3, 2, 1)], ncol = 4, nrow = 2, 
-          labels = c("D"))
+enrichment_scores_all <- ggarrange(plotlist = g_master_list[c(9, 8, 7, 6, 3, 2, 1)], ncol = 3, nrow = 3, 
+          labels = c("E"))
 
 enrichment_scores_all
 ```
@@ -932,14 +932,47 @@ plot_2
 
 <img src="Supp_Fig_2_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-16-1.png" width="100%" style="display: block; margin: auto;" />
 
-## Additional visualizations
+Show IF overlay of ILC2 markers and myeloid markers:
 
 
 ``` r
-ggarrange(plot_2, enrichment_scores_all, ncol = 1, nrow = 2, heights = c(5.8, 5))
+img <- png::readPNG(
+    "D:/Repositories/2025_Kroh_et_al/Murine_ILC_niches_lung_SI_IL-33/data/images/Supp_Fig_2_ILC2_niche/Element 75@4x.png"
+  )
+
+library(png)
+library(grid)
+# img <- readPNG(system.file("img", "Rlogo.png", package="png"))
+g <- rasterGrob(img, interpolate=TRUE)
+
+plot_2d <- ggplot(plot_data, aes(x = Treatment, y = `ILC2s`, color = "Treatment")) +
+  geom_point()+
+  scale_color_manual(values = alpha(cols_nat, 0))+
+  annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf) +
+  theme_void()+
+  NoLegend()+
+  theme(plot.margin = margin(0, 0.5, 8, 0.2, "cm"))
+
+plot_2d
 ```
 
 <img src="Supp_Fig_2_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-17-1.png" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+enrichment_scores_all_combined <- ggarrange(plot_2d, enrichment_scores_all, ncol = 2, nrow = 1, widths = c(2, 6), labels = c("D", ""))
+```
+
+## 
+
+
+``` r
+ggarrange(plot_2, enrichment_scores_all_combined, ncol = 1, nrow = 2, heights = c(5.8, 7))
+```
+
+<img src="Supp_Fig_2_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-19-1.png" width="100%" style="display: block; margin: auto;" />
+
+## Additional visualizations
 
 
 ``` r
@@ -978,7 +1011,7 @@ ggplot(df_sub_lung_long, aes(x = Treatment, y = `Percentage`, fill = "Treatment"
   facet_wrap(~CellType, nrow = 2, ncol = 6)
 ```
 
-<img src="Supp_Fig_2_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="Supp_Fig_2_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-20-1.png" width="100%" style="display: block; margin: auto;" />
 
 CIN ILC2s all cells CTRL
 
@@ -1021,7 +1054,7 @@ plot_cin_ilc2s_all <- ggplot(plot_data, aes(x = CellType, y = `Percentage`, fill
 plot_cin_ilc2s_all
 ```
 
-<img src="Supp_Fig_2_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-19-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="Supp_Fig_2_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-21-1.png" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 
@@ -1046,15 +1079,15 @@ sessionInfo()
 ## tzcode source: internal
 ## 
 ## attached base packages:
-## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## [1] grid      stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-##  [1] stringr_1.5.1      ggbeeswarm_0.7.2   readr_2.1.5        ggpubr_0.6.1       ggplot2_3.5.2      VoltRon_0.2.0      Seurat_5.2.1       Giotto_4.2.2       GiottoClass_0.4.8  rlang_1.1.5        rstatix_0.7.2      dplyr_1.1.4        SeuratObject_5.1.0 sp_2.2-0          
+##  [1] png_0.1-8          stringr_1.5.1      ggbeeswarm_0.7.2   readr_2.1.5        ggpubr_0.6.1       ggplot2_3.5.2      VoltRon_0.2.0      Seurat_5.2.1       Giotto_4.2.2       GiottoClass_0.4.8  rlang_1.1.5        rstatix_0.7.2      dplyr_1.1.4        SeuratObject_5.1.0 sp_2.2-0          
 ## 
 ## loaded via a namespace (and not attached):
 ##   [1] matrixStats_1.5.0           spatstat.sparse_3.1-0       bitops_1.0-9                EBImage_4.48.0              httr_1.4.7                  RColorBrewer_1.1-3          tools_4.4.2                 sctransform_0.4.1           backports_1.5.0             utf8_1.2.6                  R6_2.6.1                    lazyeval_0.2.2              uwot_0.2.3                  withr_3.0.2                 gridExtra_2.3               GiottoUtils_0.2.5           progressr_0.15.1            cli_3.6.3                   Biobase_2.66.0              spatstat.explore_3.4-2      fastDummies_1.7.5           shinyjs_2.1.0               labeling_0.4.3              sass_0.4.10                 spatstat.data_3.1-6         ggridges_0.5.6              pbapply_1.7-2               parallelly_1.45.0           rstudioapi_0.17.1           generics_0.1.4              vroom_1.6.5                 gtools_3.9.5                ica_1.0-3                   spatstat.random_3.3-3       car_3.1-3                   Matrix_1.7-1                S4Vectors_0.44.0            abind_1.4-8                 terra_1.8-54                lifecycle_1.0.4             scatterplot3d_0.3-44        yaml_2.3.10                
-##  [43] carData_3.0-5               SummarizedExperiment_1.36.0 gplots_3.2.0                SparseArray_1.6.2           Rtsne_0.17                  grid_4.4.2                  promises_1.3.2              crayon_1.5.3                miniUI_0.1.2                lattice_0.22-6              beachmat_2.22.0             cowplot_1.2.0               magick_2.8.7                pillar_1.11.0               knitr_1.50                  GenomicRanges_1.58.0        rjson_0.2.23                future.apply_1.20.0         codetools_0.2-20            glue_1.8.0                  spatstat.univar_3.1-2       data.table_1.17.0           vctrs_0.6.5                 png_0.1-8                   ids_1.0.1                   spam_2.11-1                 gtable_0.3.6                cachem_1.1.0                xfun_0.51                   S4Arrays_1.6.0              mime_0.13                   tidygraph_1.3.1             survival_3.7-0              SingleCellExperiment_1.28.1 bluster_1.16.0              rgl_1.3.18                  fitdistrplus_1.2-2          ROCR_1.0-11                 colorsGen_1.0.0             nlme_3.1-166                bit64_4.6.0-1               RcppAnnoy_0.0.22           
-##  [85] rprojroot_2.0.4             GenomeInfoDb_1.42.3         bslib_0.9.0                 irlba_2.3.5.1               vipor_0.4.7                 KernSmooth_2.23-24          colorspace_2.1-1            BiocGenerics_0.52.0         tidyselect_1.2.1            bit_4.6.0                   compiler_4.4.2              BiocNeighbors_2.0.1         DelayedArray_0.32.0         plotly_4.11.0               checkmate_2.3.2             scales_1.4.0                caTools_1.18.3              lmtest_0.9-40               tiff_0.1-12                 SpatialExperiment_1.16.0    digest_0.6.37               goftest_1.2-3               fftwtools_0.9-11            spatstat.utils_3.1-3        rmarkdown_2.29              XVector_0.46.0              htmltools_0.5.8.1           GiottoVisuals_0.2.12        pkgconfig_2.0.3             jpeg_0.1-11                 base64enc_0.1-3             MatrixGenerics_1.18.1       fastmap_1.2.0               htmlwidgets_1.6.4           UCSC.utils_1.2.0            shiny_1.11.1                Rvcg_0.25                   farver_2.1.2                jquerylib_0.1.4             zoo_1.8-13                  jsonlite_1.9.1              BiocParallel_1.40.2        
-## [127] BiocSingular_1.22.0         RCurl_1.98-1.17             magrittr_2.0.3              Formula_1.2-5               GenomeInfoDbData_1.2.13     dotCall64_1.2               patchwork_1.3.1             RCDT_1.3.0                  Rcpp_1.0.14                 viridis_0.6.5               reticulate_1.42.0           stringi_1.8.4               ggraph_2.2.1                zlibbioc_1.52.0             MASS_7.3-61                 plyr_1.8.9                  parallel_4.4.2              listenv_0.9.1               ggrepel_0.9.6               deldir_2.0-4                graphlayouts_1.2.2          splines_4.4.2               tensor_1.5.1                hms_1.1.3                   locfit_1.5-9.12             colorRamp2_0.1.0            BPCells_0.3.0               igraph_2.1.4                uuid_1.2-1                  spatstat.geom_3.3-6         ggsignif_0.6.4              RcppHNSW_0.6.0              reshape2_1.4.4              stats4_4.4.2                ScaledMatrix_1.14.0         evaluate_1.0.4              tzdb_0.4.0                  tweenr_2.0.3                httpuv_1.6.15               RANN_2.6.2                  tidyr_1.3.1                 purrr_1.0.4                
-## [169] polyclip_1.10-7             future_1.58.0               scattermore_1.2             ggforce_0.5.0               rsvd_1.0.5                  broom_1.0.8                 xtable_1.8-4                RSpectra_0.16-2             later_1.4.1                 viridisLite_0.4.2           Polychrome_1.5.4            tibble_3.2.1                beeswarm_0.4.0              memoise_2.0.1               IRanges_2.40.1              cluster_2.1.6               globals_0.18.0              here_1.0.1
+##  [43] carData_3.0-5               SummarizedExperiment_1.36.0 gplots_3.2.0                SparseArray_1.6.2           Rtsne_0.17                  promises_1.3.2              crayon_1.5.3                miniUI_0.1.2                lattice_0.22-6              beachmat_2.22.0             cowplot_1.2.0               magick_2.8.7                pillar_1.11.0               knitr_1.50                  GenomicRanges_1.58.0        rjson_0.2.23                future.apply_1.20.0         codetools_0.2-20            glue_1.8.0                  spatstat.univar_3.1-2       data.table_1.17.0           vctrs_0.6.5                 ids_1.0.1                   spam_2.11-1                 gtable_0.3.6                cachem_1.1.0                xfun_0.51                   S4Arrays_1.6.0              mime_0.13                   tidygraph_1.3.1             survival_3.7-0              SingleCellExperiment_1.28.1 bluster_1.16.0              rgl_1.3.18                  fitdistrplus_1.2-2          ROCR_1.0-11                 colorsGen_1.0.0             nlme_3.1-166                bit64_4.6.0-1               RcppAnnoy_0.0.22            rprojroot_2.0.4             GenomeInfoDb_1.42.3        
+##  [85] bslib_0.9.0                 irlba_2.3.5.1               vipor_0.4.7                 KernSmooth_2.23-24          colorspace_2.1-1            BiocGenerics_0.52.0         tidyselect_1.2.1            bit_4.6.0                   compiler_4.4.2              BiocNeighbors_2.0.1         DelayedArray_0.32.0         plotly_4.11.0               checkmate_2.3.2             scales_1.4.0                caTools_1.18.3              lmtest_0.9-40               tiff_0.1-12                 SpatialExperiment_1.16.0    digest_0.6.37               goftest_1.2-3               fftwtools_0.9-11            spatstat.utils_3.1-3        rmarkdown_2.29              XVector_0.46.0              htmltools_0.5.8.1           GiottoVisuals_0.2.12        pkgconfig_2.0.3             jpeg_0.1-11                 base64enc_0.1-3             MatrixGenerics_1.18.1       fastmap_1.2.0               htmlwidgets_1.6.4           UCSC.utils_1.2.0            shiny_1.11.1                Rvcg_0.25                   farver_2.1.2                jquerylib_0.1.4             zoo_1.8-13                  jsonlite_2.0.0              BiocParallel_1.40.2         BiocSingular_1.22.0         RCurl_1.98-1.17            
+## [127] magrittr_2.0.3              Formula_1.2-5               GenomeInfoDbData_1.2.13     dotCall64_1.2               patchwork_1.3.1             RCDT_1.3.0                  Rcpp_1.0.14                 viridis_0.6.5               reticulate_1.42.0           stringi_1.8.4               ggraph_2.2.1                zlibbioc_1.52.0             MASS_7.3-61                 plyr_1.8.9                  parallel_4.4.2              listenv_0.9.1               ggrepel_0.9.6               deldir_2.0-4                graphlayouts_1.2.2          splines_4.4.2               tensor_1.5.1                hms_1.1.3                   locfit_1.5-9.12             colorRamp2_0.1.0            BPCells_0.3.0               igraph_2.1.4                uuid_1.2-1                  spatstat.geom_3.3-6         ggsignif_0.6.4              RcppHNSW_0.6.0              reshape2_1.4.4              stats4_4.4.2                ScaledMatrix_1.14.0         evaluate_1.0.4              tzdb_0.4.0                  tweenr_2.0.3                httpuv_1.6.15               RANN_2.6.2                  tidyr_1.3.1                 purrr_1.0.4                 polyclip_1.10-7             future_1.58.0              
+## [169] scattermore_1.2             ggforce_0.5.0               rsvd_1.0.5                  broom_1.0.8                 xtable_1.8-4                RSpectra_0.16-2             later_1.4.1                 viridisLite_0.4.2           Polychrome_1.5.4            tibble_3.2.1                beeswarm_0.4.0              memoise_2.0.1               IRanges_2.40.1              cluster_2.1.6               globals_0.18.0              here_1.0.1
 ```

@@ -180,7 +180,7 @@ fetched_data <- FetchData(SO.lung, vars = c("CD127", "CD90", "KLRG1", "ICOS",
                                        "GATA3eGFP", "AL3", "Treatment", "Dataset"))
 
 fetched_data <- fetched_data %>%
-  filter(AL3 %in% c("NK cells/ILC1s", "ILC2s", "ILC3s")) %>%
+  filter(AL3 %in% c("NK cells/ILC1s", "ILC2s", "ILC3s", "T helper cells", "T cytotox cells")) %>%
   mutate(Treatment = factor(Treatment, levels = c(
     "CTRL", "1", "2", "3"
   ))) %>%

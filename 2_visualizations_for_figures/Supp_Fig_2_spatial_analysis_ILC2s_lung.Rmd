@@ -364,9 +364,9 @@ radius <- unique(df_cin_lung$Radius)[2]
 
 ## Coenrichment scores of ILCs and other cell types
 
-```{r, fig.width=9, fig.height=6}
-enrichment_scores_all <- ggarrange(plotlist = g_master_list[c(9, 8, 7, 6, 3, 2, 1)], ncol = 4, nrow = 2, 
-          labels = c("D"))
+```{r, fig.width=6, fig.height=9}
+enrichment_scores_all <- ggarrange(plotlist = g_master_list[c(9, 8, 7, 6, 3, 2, 1)], ncol = 3, nrow = 3, 
+          labels = c("E"))
 
 enrichment_scores_all
 ```
@@ -790,12 +790,44 @@ plot_2 <- ggarrange(plot, plot_2c, ncol = 2, nrow = 1, widths = c(7, 2))
 plot_2
 ```
 
-## Additional visualizations
+Show IF overlay of ILC2 markers and myeloid markers:
 
-```{r, fig.width=9, fig.height=12}
+```{r, fig.width=3, fig.height=6.2}
 
-ggarrange(plot_2, enrichment_scores_all, ncol = 1, nrow = 2, heights = c(5.8, 5))
+img <- png::readPNG(
+    "D:/Repositories/2025_Kroh_et_al/Murine_ILC_niches_lung_SI_IL-33/data/images/Supp_Fig_2_ILC2_niche/Element 75@4x.png"
+  )
+
+library(png)
+library(grid)
+# img <- readPNG(system.file("img", "Rlogo.png", package="png"))
+g <- rasterGrob(img, interpolate=TRUE)
+
+plot_2d <- ggplot(plot_data, aes(x = Treatment, y = `ILC2s`, color = "Treatment")) +
+  geom_point()+
+  scale_color_manual(values = alpha(cols_nat, 0))+
+  annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf) +
+  theme_void()+
+  NoLegend()+
+  theme(plot.margin = margin(0, 0.5, 8, 0.2, "cm"))
+
+plot_2d
 ```
+
+```{r, fig.width=9, fig.height=6}
+enrichment_scores_all_combined <- ggarrange(plot_2d, enrichment_scores_all, ncol = 2, nrow = 1, widths = c(2, 6), labels = c("D", ""))
+
+```
+
+## 
+
+```{r, fig.width=9, fig.height=14}
+
+
+ggarrange(plot_2, enrichment_scores_all_combined, ncol = 1, nrow = 2, heights = c(5.8, 7))
+```
+
+## Additional visualizations
 
 ```{r, fig.height=6, fig.width=9}
 
