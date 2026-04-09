@@ -13,6 +13,7 @@ data/*
 *.RDataTmp1
 *.roi
 *.tiff
+*.tif
 
 
 # Optionally allow only PNGs inside _files folders
