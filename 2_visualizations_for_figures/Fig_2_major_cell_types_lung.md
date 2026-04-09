@@ -265,15 +265,15 @@ df_legend <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# --- NEW: Create HTML/Markdown styled labels for ggtext ---
-# This wraps each marker name in a span tag with its specific color
+# --- CHANGED: Add a black background 'badge' to the text using CSS padding and border-radius ---
+# Swap pure Yellow for a readable dark gold JUST for the text
+text_colors <- ifelse(df_legend$Color == "Yellow", "Gold", df_legend$Color)
+
 markdown_labels <- setNames(
-  paste0("<span style='color:", df_legend$Color, ";'>", 
-         df_legend$Marker, "</span>"),
+  paste0("<span style='color:", text_colors, ";'>", df_legend$Marker, "</span>"),
   df_legend$Marker
 )
 
-# 7. Build the ggplot object
 p_right_overlay <- ggplot() +
   annotation_custom(rg_overlay, xmin = 0, xmax = img_w, ymin = 0, ymax = img_h) +
   geom_point(data = df_legend, aes(x = 0, y = 0, color = Marker), alpha = 0) +
@@ -290,13 +290,17 @@ p_right_overlay <- ggplot() +
   theme_void() +
   theme(
     panel.background = element_rect(fill = "black", color = NA),
-    plot.background = element_rect(fill = "black", color = NA),
-    plot.margin = margin(0.3, 0.2, 0.2, 0.2, "cm"),
+    plot.background = element_rect(fill = "white", color = NA),
+    
+    # FIXED: Removed the invalid color argument from margin()
+    plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+    
     legend.position = "bottom",
     legend.title = element_blank(),
-    # --- NEW: Use element_markdown to parse the HTML colors ---
+    
+    # Use element_markdown to parse the HTML colors
     legend.text = element_markdown(size = 14, face = "bold"),
-    legend.background = element_rect(fill = "black", color = NA),
+    legend.background = element_rect(fill = "white", color = NA),
     legend.key = element_blank(),
     legend.margin = margin(t = 10, b = 10)
   )
