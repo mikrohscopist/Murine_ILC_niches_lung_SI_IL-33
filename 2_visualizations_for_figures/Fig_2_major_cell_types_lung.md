@@ -1,7 +1,7 @@
 ---
 title: "Figure 2: major immune and non-immune cell types lung"
 author: "Sandy Kroh"
-date: "July 11, 2025"
+date: "April 09, 2026"
 output:
   html_document:
     toc: yes
@@ -141,141 +141,184 @@ dot_plot <- Seurat::DotPlot(SO.lung,
 dot_plot
 ```
 
-<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-4-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-4-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Comparison annotation & IF overlay
 
-Annotated cells of AL1:
-
 
 ``` r
+library(ggplot2)
+library(dplyr)
+library(png)
+library(grid)
+library(patchwork)
+library(ggtext) # Required for element_markdown()
+
+# ==============================================================================
+# PLOT 1: Cell Annotation Spatial Map
+# ==============================================================================
+
+# 1. Fetch data
 df_all_cells <- FetchData(SO.lung, 
-                        vars = c("Dataset",
-                                 "Treatment",
-                                 "AL1", 
-                                 "CellID", 
-                                 "Experiment", 
-                                 "Location_Center_X", 
-                                 "Location_Center_Y", 
-                                 "UMAP_1", "UMAP_2"))
+                          vars = c("Dataset", "Treatment", "AL1", "CellID", 
+                                   "Experiment", "Location_Center_X", 
+                                   "Location_Center_Y", "UMAP_1", "UMAP_2"))
 
-
-my_colors <- c("darkcyan", "deeppink", "gold")
-
-
+# 2. Filter and factor
 df_fov <- df_all_cells %>%
-          filter(Dataset == "D1_FOV1_20220316")
+  filter(Dataset == "D1_FOV1_20220316") %>%
+  mutate(AL1 = factor(AL1, levels = c("Immune cells", "Endothelia & stroma", "Epithelia")))
 
-df_fov$AL1 <- factor(df_fov$AL1, 
-                                       levels = c("Immune cells", "Endothelia & stroma", "Epithelia"))
-plot_ann_1 <- ggplot()+ 
-  geom_point(data = df_fov, 
-                       aes(x= Location_Center_X, y= Location_Center_Y, 
-                           color = AL1), 
-                      size = 0.5)+
-    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=3), 
-                    fill=guide_legend(ncol = 1,byrow=TRUE))+
-    theme(legend.position = "bottom", 
-          plot.margin=margin(1,0,0,0,"cm"),
-          text = element_blank(),
-           axis.ticks = element_blank(),
-         panel.grid =  element_blank(),
-          legend.ticks = element_blank(),
-         legend.title=element_blank(),
-         legend.key = element_blank(),
-        legend.text = element_text(size=14), 
-         panel.background = element_rect(fill = 'black', 
-                                         color = 'black', size = 1))+    
-    scale_colour_discrete(name  ="Annotated cell types",
-                          breaks=c("Immune cells",
-                                                  "Vessels & stroma",
-                                                  "Epithelia"),
-                          labels=c("Immune cells",
-                                                  "Vessels & stroma",
-                                                  "Epithelia")) +
-    scale_color_manual(values = my_colors)+ 
-    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=2),
-                  fill=guide_legend(ncol = 1,byrow=TRUE))+
-  xlim(0, 2048)+
-  ylim(0, 2048) +
-  scale_y_reverse()
+# 3. Create the plot
+p_left_plot <- ggplot(df_fov, aes(x = Location_Center_X, y = Location_Center_Y, color = AL1)) + 
+  geom_point(size = 0.5) +
+  
+  # Set axes to exactly 0-2048 with ZERO expansion padding
+  scale_x_continuous(limits = c(0, 2048), expand = c(0, 0)) +
+  scale_y_reverse(limits = c(2048, 0), expand = c(0, 0)) +
+  
+  # Lock aspect ratio so it matches the image perfectly
+  coord_fixed() + 
+  
+  # Combine color logic
+  scale_color_manual(
+    name = "Annotated cell types",
+    values = c("Immune cells" = "darkcyan", 
+               "Endothelia & stroma" = "deeppink", 
+               "Epithelia" = "gold"),
+    labels = c("Immune cells", "Vessels & stroma", "Epithelia")
+  ) +
+  
+  # Format legend
+  guides(color = guide_legend(override.aes = list(size = 5), ncol = 2)) +
+  
+  # Clean theme setup
+  theme_void() + 
+  theme(
+    legend.position = "bottom", 
+    legend.text = element_text(size = 14),
+    legend.title = element_blank(),
+    plot.margin = margin(0.2, 0.1, 0.1, 0.1, "cm"),
+    panel.background = element_rect(fill = "black", color = NA),
+    plot.background = element_rect(fill = "white", color = NA)
+    )
 
-plot_ann_1 <- ggarrange(plot_ann_1,
-          nrow = 1, ncol = 1, 
-          #widths = c(4.5, 4.5), 
-          align = "v",
-          font.label=list(size=12),hjust=-0.5
-          )+    
-  ggplot2::theme(legend.position = "left")+
-  theme(plot.margin=margin(0,0,0,0,"cm"))
-plot_ann_1
-```
+# ==============================================================================
+# PLOT 2: Multichannel Image Overlay with ggtext Legend
+# ==============================================================================
 
-<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-5-1.png" width="100%" style="display: block; margin: auto;" />
+# 1. Configuration for Overlay
+image_path <- "D:/Repositories/2025_Kroh_et_al/Murine_ILC_niches_lung_SI_IL-33/data/MELC_data/Lung/20220316_1"
 
-IF overlay:
+# Map false colors to marker names
+markers <- list(
+  Magenta = "CD31",
+  Cyan    = "CD45",
+  Yellow  = "EpCAM",
+  Blue    = "DAPI"
+)
 
+# 2. Get true image dimensions
+ref_file <- file.path(image_path, paste0(markers[[1]], ".png"))
+if(file.exists(ref_file)) {
+  ref_img <- readPNG(ref_file)
+  img_h <- nrow(ref_img)
+  img_w <- ncol(ref_img)
+} else {
+  stop("Could not find the first reference image to determine dimensions.")
+}
 
-``` r
-img <- png::readPNG(
-    "C:/Users/NieHau/Desktop/Sandy/R/R_analysis_output/LUNG_MELC_data_analysis_by_treatment/CTRL_D1_D2_D3/Overlays_for_R/20220316_1_D1_mu_lung_CD45-c_CD31-m_EpCAM-y.png"
+# 3. Initialize matrices
+R <- matrix(0, nrow = img_h, ncol = img_w)
+G <- matrix(0, nrow = img_h, ncol = img_w)
+B <- matrix(0, nrow = img_h, ncol = img_w)
+
+# 4. Loop and construct RGB channels
+for (color in names(markers)) {
+  marker_name <- markers[[color]]
+  file_path <- file.path(image_path, paste0(marker_name, ".png"))
+  
+  if (file.exists(file_path)) {
+    img <- readPNG(file_path)
+    if (length(dim(img)) == 3) img <- img[,,1]
+    
+    if (color == "Magenta") { R <- R + img; B <- B + img }
+    else if (color == "Cyan") { G <- G + img; B <- B + img }
+    else if (color == "Yellow") { R <- R + img; G <- G + img }
+    else if (color == "Blue") { B <- B + img }
+  } else {
+    message("⚠️ Missing image for overlay: ", marker_name)
+  }
+}
+
+# 5. Clip and Combine
+R[R > 1] <- 1; G[G > 1] <- 1; B[B > 1] <- 1
+overlay_array <- array(0, dim = c(img_h, img_w, 3))
+overlay_array[,,1] <- R; overlay_array[,,2] <- G; overlay_array[,,3] <- B
+
+rg_overlay <- rasterGrob(overlay_array, width = unit(1, "npc"), height = unit(1, "npc"), interpolate = FALSE)
+
+# Dummy Legend Data
+df_legend <- data.frame(
+  Marker = factor(unlist(markers), levels = unlist(markers)), 
+  Color = names(markers), 
+  stringsAsFactors = FALSE
+)
+
+# --- NEW: Create HTML/Markdown styled labels for ggtext ---
+# This wraps each marker name in a span tag with its specific color
+markdown_labels <- setNames(
+  paste0("<span style='color:", df_legend$Color, ";'>", 
+         df_legend$Marker, "</span>"),
+  df_legend$Marker
+)
+
+# 7. Build the ggplot object
+p_right_overlay <- ggplot() +
+  annotation_custom(rg_overlay, xmin = 0, xmax = img_w, ymin = 0, ymax = img_h) +
+  geom_point(data = df_legend, aes(x = 0, y = 0, color = Marker), alpha = 0) +
+  scale_color_manual(
+    name = "Protein Marker",
+    values = setNames(df_legend$Color, df_legend$Marker),
+    labels = markdown_labels # Inject the HTML colored text here
+  ) +
+  guides(color = guide_legend(override.aes = list(shape = NA), 
+                              nrow = 1, keywidth = 0, keyheight = 0)) +
+  
+  # Locked Aspect Ratio
+  coord_fixed(xlim = c(0, img_w), ylim = c(0, img_h), expand = FALSE) +
+  theme_void() +
+  theme(
+    panel.background = element_rect(fill = "black", color = NA),
+    plot.background = element_rect(fill = "black", color = NA),
+    plot.margin = margin(0.3, 0.2, 0.2, 0.2, "cm"),
+    legend.position = "bottom",
+    legend.title = element_blank(),
+    # --- NEW: Use element_markdown to parse the HTML colors ---
+    legend.text = element_markdown(size = 14, face = "bold"),
+    legend.background = element_rect(fill = "black", color = NA),
+    legend.key = element_blank(),
+    legend.margin = margin(t = 10, b = 10)
   )
 
-
-my_colors <- c("cyan", "magenta", "yellow")
-
-g <- grid::rasterGrob(img, interpolate=TRUE)
-
-
-
-df_fov <- df_fov %>%
-  mutate(AL1 = recode(
-    AL1, 
-    "Immune cells" = "CD45",
-    "Endothelia & stroma" = "CD31",
-    "Epithelia" = "EpCAM"
-  ))
-
-plot_if_1 <- ggplot()+ 
-  geom_point(data = df_fov, 
-                       aes(x= Location_Center_X, y= Location_Center_Y, color = AL1), 
-                       size = 1)+
-  annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf)+
-  theme(legend.title=element_blank())+ # exclude legend title
-  scale_colour_discrete(name  ="MELC IF stainings",
-                          breaks=c("CD45", "CD31", 
-                                   "EpCAM"),
-                          labels=c("CD45", "CD31", 
-                                   "EpCAM")) +
-  scale_color_manual(values = my_colors)+ 
-    theme(legend.position = "bottom", 
-          plot.margin=margin(1,0,0,0,"cm"),
-          text = element_blank(),
-           axis.ticks = element_blank(),
-         panel.grid =  element_blank(),
-          legend.ticks = element_blank(),
-         legend.title=element_blank(),
-         legend.key = element_blank(),
-        legend.text = element_text(size=14), 
-         panel.background = element_rect(fill = 'black', 
-                                         color = 'black', size = 1))+    
-  ggplot2::theme(legend.position = "bottom")+
-  ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=2),
-                  fill=guide_legend(ncol = 1,byrow=TRUE))
-
-
-plot_if_1 <- ggarrange(plot_if_1, 
-            nrow = 1, ncol = 1, 
-          #widths = c(4.5, 4.5), 
-          align = "v",
-          font.label=list(size=12),hjust=-0.5
-          )+    
-  ggplot2::theme(legend.position = "left")
-  
-plot_if_1
+print(p_left_plot)
 ```
 
-<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-6-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-5-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+``` r
+print(p_right_overlay)
+```
+
+<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-5-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+``` r
+plot_middle <- ggarrange(p_left_plot, p_right_overlay, ncol = 2, nrow = 1)
+
+plot_middle
+```
+
+<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-5-3.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## UMAP AL1
 
@@ -312,17 +355,140 @@ umap_plot <- ggplot(df_all_cells, aes(x=UMAP_1, y=UMAP_2, color=AL1)) +
 umap_plot
 ```
 
-<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-7-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-6-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+## Single marker channels
+
+
+``` r
+library(png)
+library(ggplot2)
+library(grid)
+library(patchwork)
+
+# 1. Configuration
+image_path <- "D:/Repositories/2025_Kroh_et_al/Murine_ILC_niches_lung_SI_IL-33/data/MELC_data/Lung/20220316_1"
+
+# Map colors to marker names
+markers <- list(
+  Magenta = "CD31",
+  Cyan    = "CD45",
+  Yellow  = "EpCAM",
+  Blue    = "DAPI"
+)
+
+# 2. Helper function to apply false colors
+apply_false_color <- function(img_matrix, color_name) {
+  
+  rgb_array <- array(0, dim = c(nrow(img_matrix), ncol(img_matrix), 3))
+  
+  if (color_name == "Magenta") {
+    rgb_array[,,1] <- img_matrix # Red
+    rgb_array[,,3] <- img_matrix # Blue
+  } else if (color_name == "Cyan") {
+    rgb_array[,,2] <- img_matrix # Green
+    rgb_array[,,3] <- img_matrix # Blue
+  } else if (color_name == "Yellow") {
+    rgb_array[,,1] <- img_matrix # Red
+    rgb_array[,,2] <- img_matrix # Green
+  } else if (color_name == "Blue") {
+    rgb_array[,,3] <- img_matrix # Blue
+  }
+  
+  return(rgb_array)
+}
+
+# 3. Create a list to store individual ggplot objects
+plot_list <- list()
+
+# 4. Loop through and process each image
+for (color in names(markers)) {
+  marker_name <- markers[[color]]
+  file_path <- file.path(image_path, paste0(marker_name, ".png"))
+  
+  if (file.exists(file_path)) {
+    
+    img <- readPNG(file_path)
+    
+    if (length(dim(img)) == 3) {
+      img <- img[,,1]
+    }
+    
+    # Extract exact pixel dimensions
+    img_h <- nrow(img)
+    img_w <- ncol(img)
+    
+    colored_img <- apply_false_color(img, color)
+    
+    # Convert the 3D RGB array into a rasterGrob for ggplot
+    rg <- rasterGrob(colored_img, width = unit(1, "npc"), height = unit(1, "npc"), interpolate = FALSE)
+    
+    # Build the ggplot object
+    p <- ggplot() +
+      annotation_custom(rg, xmin = 0, xmax = img_w, ymin = 0, ymax = img_h) +
+      # Annotate the marker name in the upper left corner (hjust = 0, vjust = 1 anchors it correctly)
+      annotate("text", x = img_w * 0.03, y = img_h * 0.97, 
+               label = marker_name, color = color, size = 6, fontface = "bold", 
+               hjust = 0, vjust = 1) +
+      # Enforce exact aspect ratio and strip all padding
+      coord_fixed(xlim = c(0, img_w), ylim = c(0, img_h), expand = FALSE) +
+      theme_void() +
+      theme(
+        panel.background = element_rect(fill = "white", color = NA),
+        plot.background = element_rect(fill = "white", color = NA),
+        plot.margin = margin(1, 1, 1, 1) # Extremely tight margins
+      )
+    
+    plot_list[[marker_name]] <- p
+    
+  } else {
+    # Fallback ggplot if the image is missing
+    p <- ggplot() +
+      annotate("text", x = 0.5, y = 0.5, label = paste("Missing:\n", marker_name), 
+               color = "red", size = 5, fontface = "bold") +
+      coord_fixed(xlim = c(0, 1), ylim = c(0, 1), expand = FALSE) +
+      theme_void() +
+      theme(
+        panel.background = element_rect(fill = "white", color = NA),
+        plot.background = element_rect(fill = "white", color = NA),
+        plot.margin = margin(1, 1, 1, 1)
+      )
+    
+    plot_list[[marker_name]] <- p
+  }
+}
+
+# 5. Combine the individual ggplots into one cohesive object using patchwork
+combined_images_plot <- wrap_plots(plot_list, nrow = 1)
+
+# You can now print this plot, or combine it further!
+# Example: combined_images_plot / my_umap_plot 
+print(combined_images_plot)
+```
+
+<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 Combine plots for figure
 
 
 ``` r
-ggarrange(umap_plot, dot_plot, plot_ann_1, plot_if_1, ncol = 2, nrow = 2, heights = c(4.5, 6.8), labels = c("A", "", "B", "C"))+
+upper_part <- ggarrange(umap_plot, dot_plot, 
+                        ncol = 2, nrow = 1, 
+                        labels = c("A", ""))+
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
+
+upper_part
 ```
 
-<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-8-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+ggarrange(upper_part, plot_middle, combined_images_plot, ncol = 1, nrow = 3, 
+          heights = c(4.5, 4.9, 2.6), labels = c("","B", "C"), label.y = 1.05)
+```
+
+<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 
@@ -333,27 +499,27 @@ sessionInfo()
 ```
 
 ```
-## R version 4.4.2 (2024-10-31 ucrt)
+## R version 4.5.2 (2025-10-31 ucrt)
 ## Platform: x86_64-w64-mingw32/x64
-## Running under: Windows 10 x64 (build 19045)
+## Running under: Windows 11 x64 (build 26200)
 ## 
 ## Matrix products: default
-## 
+##   LAPACK version 3.12.1
 ## 
 ## locale:
-## [1] LC_COLLATE=English_Germany.utf8  LC_CTYPE=English_Germany.utf8    LC_MONETARY=English_Germany.utf8 LC_NUMERIC=C                     LC_TIME=English_Germany.utf8    
+## [1] LC_COLLATE=German_Germany.utf8  LC_CTYPE=German_Germany.utf8    LC_MONETARY=German_Germany.utf8 LC_NUMERIC=C                    LC_TIME=German_Germany.utf8    
 ## 
 ## time zone: Europe/Berlin
 ## tzcode source: internal
 ## 
 ## attached base packages:
-## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## [1] grid      stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] ggpubr_0.6.0       readr_2.1.5        ggplot2_3.5.2      dplyr_1.1.4        Seurat_5.2.1       SeuratObject_5.1.0 sp_2.2-0          
+##  [1] ggtext_0.1.2       patchwork_1.3.2    png_0.1-8          ggpubr_0.6.2       readr_2.1.6        ggplot2_4.0.1      dplyr_1.1.4        Seurat_5.3.1       SeuratObject_5.2.0 sp_2.2-0          
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] RColorBrewer_1.1-3     rstudioapi_0.17.1      jsonlite_1.9.1         magrittr_2.0.3         spatstat.utils_3.1-3   farver_2.1.2           rmarkdown_2.29         vctrs_0.6.5            ROCR_1.0-11            spatstat.explore_3.4-2 rstatix_0.7.2          htmltools_0.5.8.1      broom_1.0.8            Formula_1.2-5          sass_0.4.10            sctransform_0.4.1      parallelly_1.45.0      KernSmooth_2.23-24     bslib_0.9.0            htmlwidgets_1.6.4      ica_1.0-3              plyr_1.8.9             plotly_4.11.0          zoo_1.8-13             cachem_1.1.0           igraph_2.1.4           mime_0.13              lifecycle_1.0.4        pkgconfig_2.0.3        Matrix_1.7-1           R6_2.6.1               fastmap_1.2.0          fitdistrplus_1.2-2     future_1.58.0          shiny_1.10.0           digest_0.6.37          colorspace_2.1-1       patchwork_1.3.1        rprojroot_2.0.4        tensor_1.5.1           RSpectra_0.16-2        irlba_2.3.5.1          labeling_0.4.3         progressr_0.15.1       spatstat.sparse_3.1-0  httr_1.4.7             polyclip_1.10-7        abind_1.4-8            compiler_4.4.2         here_1.0.1             bit64_4.6.0-1         
-##  [52] withr_3.0.2            backports_1.5.0        carData_3.0-5          fastDummies_1.7.5      ggsignif_0.6.4         MASS_7.3-61            tools_4.4.2            lmtest_0.9-40          httpuv_1.6.15          future.apply_1.20.0    goftest_1.2-3          glue_1.8.0             nlme_3.1-166           promises_1.3.2         grid_4.4.2             Rtsne_0.17             cluster_2.1.6          reshape2_1.4.4         generics_0.1.4         gtable_0.3.6           spatstat.data_3.1-6    tzdb_0.4.0             tidyr_1.3.1            data.table_1.17.0      hms_1.1.3              car_3.1-3              spatstat.geom_3.3-6    RcppAnnoy_0.0.22       ggrepel_0.9.6          RANN_2.6.2             pillar_1.10.2          stringr_1.5.1          vroom_1.6.5            spam_2.11-1            RcppHNSW_0.6.0         later_1.4.1            splines_4.4.2          lattice_0.22-6         bit_4.6.0              survival_3.7-0         deldir_2.0-4           tidyselect_1.2.1       miniUI_0.1.2           pbapply_1.7-2          knitr_1.50             gridExtra_2.3          scattermore_1.2        xfun_0.51              matrixStats_1.5.0      stringi_1.8.4          lazyeval_0.2.2        
-## [103] yaml_2.3.10            evaluate_1.0.4         codetools_0.2-20       tibble_3.2.1           cli_3.6.3              uwot_0.2.3             xtable_1.8-4           reticulate_1.42.0      jquerylib_0.1.4        Rcpp_1.0.14            globals_0.18.0         spatstat.random_3.3-3  png_0.1-8              spatstat.univar_3.1-2  parallel_4.4.2         dotCall64_1.2          listenv_0.9.1          viridisLite_0.4.2      scales_1.4.0           ggridges_0.5.6         crayon_1.5.3           purrr_1.0.4            rlang_1.1.5            cowplot_1.1.3
+##   [1] RColorBrewer_1.1-3     rstudioapi_0.18.0      jsonlite_2.0.0         magrittr_2.0.4         spatstat.utils_3.2-0   farver_2.1.2           rmarkdown_2.30         vctrs_0.6.5            ROCR_1.0-12            spatstat.explore_3.5-3 rstatix_0.7.3          htmltools_0.5.8.1      broom_1.0.12           Formula_1.2-5          sass_0.4.10            sctransform_0.4.2      parallelly_1.45.1      KernSmooth_2.23-26     bslib_0.10.0           htmlwidgets_1.6.4      ica_1.0-3              plyr_1.8.9             plotly_4.12.0          zoo_1.8-14             cachem_1.1.0           commonmark_2.0.0       igraph_2.2.1           mime_0.13              lifecycle_1.0.5        pkgconfig_2.0.3        Matrix_1.7-4           R6_2.6.1               fastmap_1.2.0          fitdistrplus_1.2-6     future_1.69.0          shiny_1.13.0           digest_0.6.38          rprojroot_2.1.1        tensor_1.5.1           RSpectra_0.16-2        irlba_2.3.5.1          labeling_0.4.3         progressr_0.18.0       spatstat.sparse_3.1-0  httr_1.4.8             polyclip_1.10-7        abind_1.4-8            compiler_4.5.2         here_1.0.2             bit64_4.6.0-1          withr_3.0.2           
+##  [52] S7_0.2.0               backports_1.5.0        carData_3.0-6          fastDummies_1.7.5      ggsignif_0.6.4         MASS_7.3-65            tools_4.5.2            lmtest_0.9-40          otel_0.2.0             httpuv_1.6.16          future.apply_1.20.2    goftest_1.2-3          glue_1.8.0             nlme_3.1-168           promises_1.5.0         gridtext_0.1.6         Rtsne_0.17             cluster_2.1.8.1        reshape2_1.4.5         generics_0.1.4         gtable_0.3.6           spatstat.data_3.1-9    tzdb_0.5.0             tidyr_1.3.1            data.table_1.17.8      hms_1.1.4              xml2_1.5.2             car_3.1-5              spatstat.geom_3.6-0    RcppAnnoy_0.0.22       markdown_2.0           ggrepel_0.9.6          RANN_2.6.2             pillar_1.11.1          stringr_1.6.0          vroom_1.7.0            spam_2.11-1            RcppHNSW_0.6.0         later_1.4.4            splines_4.5.2          lattice_0.22-7         bit_4.6.0              survival_3.8-3         deldir_2.0-4           tidyselect_1.2.1       miniUI_0.1.2           pbapply_1.7-4          knitr_1.51             gridExtra_2.3          litedown_0.9           scattermore_1.2       
+## [103] xfun_0.56              matrixStats_1.5.0      stringi_1.8.7          lazyeval_0.2.2         yaml_2.3.10            evaluate_1.0.5         codetools_0.2-20       tibble_3.3.0           cli_3.6.5              uwot_0.2.4             xtable_1.8-8           reticulate_1.44.0      jquerylib_0.1.4        dichromat_2.0-0.1      Rcpp_1.1.0             globals_0.19.0         spatstat.random_3.4-2  spatstat.univar_3.1-4  parallel_4.5.2         dotCall64_1.2          listenv_0.10.0         viridisLite_0.4.2      scales_1.4.0           ggridges_0.5.7         crayon_1.5.3           purrr_1.2.0            rlang_1.1.6            cowplot_1.2.0
 ```

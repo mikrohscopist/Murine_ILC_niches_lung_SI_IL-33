@@ -142,131 +142,166 @@ dot_plot
 
 ## Comparison annotation & IF overlay
 
-Annotated cells of AL1:
+```{r, fig.width=9, fig.height=5}
+library(ggplot2)
+library(dplyr)
+library(png)
+library(grid)
+library(patchwork)
+library(ggtext) # Required for element_markdown()
 
-```{r, fig.width=4.5, fig.height=5}
+# ==============================================================================
+# PLOT 1: Cell Annotation Spatial Map
+# ==============================================================================
 
+# 1. Fetch data
 df_all_cells <- FetchData(SO.lung, 
-                        vars = c("Dataset",
-                                 "Treatment",
-                                 "AL1", 
-                                 "CellID", 
-                                 "Experiment", 
-                                 "Location_Center_X", 
-                                 "Location_Center_Y", 
-                                 "UMAP_1", "UMAP_2"))
+                          vars = c("Dataset", "Treatment", "AL1", "CellID", 
+                                   "Experiment", "Location_Center_X", 
+                                   "Location_Center_Y", "UMAP_1", "UMAP_2"))
 
-
-my_colors <- c("darkcyan", "deeppink", "gold")
-
-
+# 2. Filter and factor
 df_fov <- df_all_cells %>%
-          filter(Dataset == "D1_FOV1_20220316")
+  filter(Dataset == "D1_FOV1_20220316") %>%
+  mutate(AL1 = factor(AL1, levels = c("Immune cells", "Endothelia & stroma", "Epithelia")))
 
-df_fov$AL1 <- factor(df_fov$AL1, 
-                                       levels = c("Immune cells", "Endothelia & stroma", "Epithelia"))
-plot_ann_1 <- ggplot()+ 
-  geom_point(data = df_fov, 
-                       aes(x= Location_Center_X, y= Location_Center_Y, 
-                           color = AL1), 
-                      size = 0.5)+
-    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=3), 
-                    fill=guide_legend(ncol = 1,byrow=TRUE))+
-    theme(legend.position = "bottom", 
-          plot.margin=margin(1,0,0,0,"cm"),
-          text = element_blank(),
-           axis.ticks = element_blank(),
-         panel.grid =  element_blank(),
-          legend.ticks = element_blank(),
-         legend.title=element_blank(),
-         legend.key = element_blank(),
-        legend.text = element_text(size=14), 
-         panel.background = element_rect(fill = 'black', 
-                                         color = 'black', size = 1))+    
-    scale_colour_discrete(name  ="Annotated cell types",
-                          breaks=c("Immune cells",
-                                                  "Vessels & stroma",
-                                                  "Epithelia"),
-                          labels=c("Immune cells",
-                                                  "Vessels & stroma",
-                                                  "Epithelia")) +
-    scale_color_manual(values = my_colors)+ 
-    ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=2),
-                  fill=guide_legend(ncol = 1,byrow=TRUE))+
-  xlim(0, 2048)+
-  ylim(0, 2048) +
-  scale_y_reverse()
+# 3. Create the plot
+p_left_plot <- ggplot(df_fov, aes(x = Location_Center_X, y = Location_Center_Y, color = AL1)) + 
+  geom_point(size = 0.5) +
+  
+  # Set axes to exactly 0-2048 with ZERO expansion padding
+  scale_x_continuous(limits = c(0, 2048), expand = c(0, 0)) +
+  scale_y_reverse(limits = c(2048, 0), expand = c(0, 0)) +
+  
+  # Lock aspect ratio so it matches the image perfectly
+  coord_fixed() + 
+  
+  # Combine color logic
+  scale_color_manual(
+    name = "Annotated cell types",
+    values = c("Immune cells" = "darkcyan", 
+               "Endothelia & stroma" = "deeppink", 
+               "Epithelia" = "gold"),
+    labels = c("Immune cells", "Vessels & stroma", "Epithelia")
+  ) +
+  
+  # Format legend
+  guides(color = guide_legend(override.aes = list(size = 5), ncol = 2)) +
+  
+  # Clean theme setup
+  theme_void() + 
+  theme(
+    legend.position = "bottom", 
+    legend.text = element_text(size = 14),
+    legend.title = element_blank(),
+    plot.margin = margin(0.2, 0.1, 0.1, 0.1, "cm"),
+    panel.background = element_rect(fill = "black", color = NA),
+    plot.background = element_rect(fill = "white", color = NA)
+    )
 
-plot_ann_1 <- ggarrange(plot_ann_1,
-          nrow = 1, ncol = 1, 
-          #widths = c(4.5, 4.5), 
-          align = "v",
-          font.label=list(size=12),hjust=-0.5
-          )+    
-  ggplot2::theme(legend.position = "left")+
-  theme(plot.margin=margin(0,0,0,0,"cm"))
-plot_ann_1
-```
+# ==============================================================================
+# PLOT 2: Multichannel Image Overlay with ggtext Legend
+# ==============================================================================
 
-IF overlay:
+# 1. Configuration for Overlay
+image_path <- "D:/Repositories/2025_Kroh_et_al/Murine_ILC_niches_lung_SI_IL-33/data/MELC_data/Lung/20220316_1"
 
-```{r, fig.width=4.5, fig.height=5}
-img <- png::readPNG(
-    "C:/Users/NieHau/Desktop/Sandy/R/R_analysis_output/LUNG_MELC_data_analysis_by_treatment/CTRL_D1_D2_D3/Overlays_for_R/20220316_1_D1_mu_lung_CD45-c_CD31-m_EpCAM-y.png"
+# Map false colors to marker names
+markers <- list(
+  Magenta = "CD31",
+  Cyan    = "CD45",
+  Yellow  = "EpCAM",
+  Blue    = "DAPI"
+)
+
+# 2. Get true image dimensions
+ref_file <- file.path(image_path, paste0(markers[[1]], ".png"))
+if(file.exists(ref_file)) {
+  ref_img <- readPNG(ref_file)
+  img_h <- nrow(ref_img)
+  img_w <- ncol(ref_img)
+} else {
+  stop("Could not find the first reference image to determine dimensions.")
+}
+
+# 3. Initialize matrices
+R <- matrix(0, nrow = img_h, ncol = img_w)
+G <- matrix(0, nrow = img_h, ncol = img_w)
+B <- matrix(0, nrow = img_h, ncol = img_w)
+
+# 4. Loop and construct RGB channels
+for (color in names(markers)) {
+  marker_name <- markers[[color]]
+  file_path <- file.path(image_path, paste0(marker_name, ".png"))
+  
+  if (file.exists(file_path)) {
+    img <- readPNG(file_path)
+    if (length(dim(img)) == 3) img <- img[,,1]
+    
+    if (color == "Magenta") { R <- R + img; B <- B + img }
+    else if (color == "Cyan") { G <- G + img; B <- B + img }
+    else if (color == "Yellow") { R <- R + img; G <- G + img }
+    else if (color == "Blue") { B <- B + img }
+  } else {
+    message("⚠️ Missing image for overlay: ", marker_name)
+  }
+}
+
+# 5. Clip and Combine
+R[R > 1] <- 1; G[G > 1] <- 1; B[B > 1] <- 1
+overlay_array <- array(0, dim = c(img_h, img_w, 3))
+overlay_array[,,1] <- R; overlay_array[,,2] <- G; overlay_array[,,3] <- B
+
+rg_overlay <- rasterGrob(overlay_array, width = unit(1, "npc"), height = unit(1, "npc"), interpolate = FALSE)
+
+# Dummy Legend Data
+df_legend <- data.frame(
+  Marker = factor(unlist(markers), levels = unlist(markers)), 
+  Color = names(markers), 
+  stringsAsFactors = FALSE
+)
+
+# --- NEW: Create HTML/Markdown styled labels for ggtext ---
+# This wraps each marker name in a span tag with its specific color
+markdown_labels <- setNames(
+  paste0("<span style='color:", df_legend$Color, ";'>", 
+         df_legend$Marker, "</span>"),
+  df_legend$Marker
+)
+
+# 7. Build the ggplot object
+p_right_overlay <- ggplot() +
+  annotation_custom(rg_overlay, xmin = 0, xmax = img_w, ymin = 0, ymax = img_h) +
+  geom_point(data = df_legend, aes(x = 0, y = 0, color = Marker), alpha = 0) +
+  scale_color_manual(
+    name = "Protein Marker",
+    values = setNames(df_legend$Color, df_legend$Marker),
+    labels = markdown_labels # Inject the HTML colored text here
+  ) +
+  guides(color = guide_legend(override.aes = list(shape = NA), 
+                              nrow = 1, keywidth = 0, keyheight = 0)) +
+  
+  # Locked Aspect Ratio
+  coord_fixed(xlim = c(0, img_w), ylim = c(0, img_h), expand = FALSE) +
+  theme_void() +
+  theme(
+    panel.background = element_rect(fill = "black", color = NA),
+    plot.background = element_rect(fill = "black", color = NA),
+    plot.margin = margin(0.3, 0.2, 0.2, 0.2, "cm", color = "white"),
+    legend.position = "bottom",
+    legend.title = element_blank(),
+    # --- NEW: Use element_markdown to parse the HTML colors ---
+    legend.text = element_markdown(size = 14, face = "bold"),
+    legend.background = element_rect(fill = "black", color = NA),
+    legend.key = element_blank(),
+    legend.margin = margin(t = 10, b = 10)
   )
 
+print(p_left_plot)
+print(p_right_overlay)
+plot_middle <- ggarrange(p_left_plot, p_right_overlay, ncol = 2, nrow = 1)
 
-my_colors <- c("cyan", "magenta", "yellow")
-
-g <- grid::rasterGrob(img, interpolate=TRUE)
-
-
-
-df_fov <- df_fov %>%
-  mutate(AL1 = recode(
-    AL1, 
-    "Immune cells" = "CD45",
-    "Endothelia & stroma" = "CD31",
-    "Epithelia" = "EpCAM"
-  ))
-
-plot_if_1 <- ggplot()+ 
-  geom_point(data = df_fov, 
-                       aes(x= Location_Center_X, y= Location_Center_Y, color = AL1), 
-                       size = 1)+
-  annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf)+
-  theme(legend.title=element_blank())+ # exclude legend title
-  scale_colour_discrete(name  ="MELC IF stainings",
-                          breaks=c("CD45", "CD31", 
-                                   "EpCAM"),
-                          labels=c("CD45", "CD31", 
-                                   "EpCAM")) +
-  scale_color_manual(values = my_colors)+ 
-    theme(legend.position = "bottom", 
-          plot.margin=margin(1,0,0,0,"cm"),
-          text = element_blank(),
-           axis.ticks = element_blank(),
-         panel.grid =  element_blank(),
-          legend.ticks = element_blank(),
-         legend.title=element_blank(),
-         legend.key = element_blank(),
-        legend.text = element_text(size=14), 
-         panel.background = element_rect(fill = 'black', 
-                                         color = 'black', size = 1))+    
-  ggplot2::theme(legend.position = "bottom")+
-  ggplot2::guides(color=guide_legend(override.aes = list(size=5), ncol=2),
-                  fill=guide_legend(ncol = 1,byrow=TRUE))
-
-
-plot_if_1 <- ggarrange(plot_if_1, 
-            nrow = 1, ncol = 1, 
-          #widths = c(4.5, 4.5), 
-          align = "v",
-          font.label=list(size=12),hjust=-0.5
-          )+    
-  ggplot2::theme(legend.position = "left")
-  
-plot_if_1
+plot_middle
 ```
 
 ## UMAP AL1
@@ -304,11 +339,128 @@ umap_plot <- ggplot(df_all_cells, aes(x=UMAP_1, y=UMAP_2, color=AL1)) +
 umap_plot
 ```
 
+## Single marker channels
+
+```{r, fig.width=9, fig.height=3}
+library(png)
+library(ggplot2)
+library(grid)
+library(patchwork)
+
+# 1. Configuration
+image_path <- "D:/Repositories/2025_Kroh_et_al/Murine_ILC_niches_lung_SI_IL-33/data/MELC_data/Lung/20220316_1"
+
+# Map colors to marker names
+markers <- list(
+  Magenta = "CD31",
+  Cyan    = "CD45",
+  Yellow  = "EpCAM",
+  Blue    = "DAPI"
+)
+
+# 2. Helper function to apply false colors
+apply_false_color <- function(img_matrix, color_name) {
+  
+  rgb_array <- array(0, dim = c(nrow(img_matrix), ncol(img_matrix), 3))
+  
+  if (color_name == "Magenta") {
+    rgb_array[,,1] <- img_matrix # Red
+    rgb_array[,,3] <- img_matrix # Blue
+  } else if (color_name == "Cyan") {
+    rgb_array[,,2] <- img_matrix # Green
+    rgb_array[,,3] <- img_matrix # Blue
+  } else if (color_name == "Yellow") {
+    rgb_array[,,1] <- img_matrix # Red
+    rgb_array[,,2] <- img_matrix # Green
+  } else if (color_name == "Blue") {
+    rgb_array[,,3] <- img_matrix # Blue
+  }
+  
+  return(rgb_array)
+}
+
+# 3. Create a list to store individual ggplot objects
+plot_list <- list()
+
+# 4. Loop through and process each image
+for (color in names(markers)) {
+  marker_name <- markers[[color]]
+  file_path <- file.path(image_path, paste0(marker_name, ".png"))
+  
+  if (file.exists(file_path)) {
+    
+    img <- readPNG(file_path)
+    
+    if (length(dim(img)) == 3) {
+      img <- img[,,1]
+    }
+    
+    # Extract exact pixel dimensions
+    img_h <- nrow(img)
+    img_w <- ncol(img)
+    
+    colored_img <- apply_false_color(img, color)
+    
+    # Convert the 3D RGB array into a rasterGrob for ggplot
+    rg <- rasterGrob(colored_img, width = unit(1, "npc"), height = unit(1, "npc"), interpolate = FALSE)
+    
+    # Build the ggplot object
+    p <- ggplot() +
+      annotation_custom(rg, xmin = 0, xmax = img_w, ymin = 0, ymax = img_h) +
+      # Annotate the marker name in the upper left corner (hjust = 0, vjust = 1 anchors it correctly)
+      annotate("text", x = img_w * 0.03, y = img_h * 0.97, 
+               label = marker_name, color = color, size = 6, fontface = "bold", 
+               hjust = 0, vjust = 1) +
+      # Enforce exact aspect ratio and strip all padding
+      coord_fixed(xlim = c(0, img_w), ylim = c(0, img_h), expand = FALSE) +
+      theme_void() +
+      theme(
+        panel.background = element_rect(fill = "white", color = NA),
+        plot.background = element_rect(fill = "white", color = NA),
+        plot.margin = margin(1, 1, 1, 1) # Extremely tight margins
+      )
+    
+    plot_list[[marker_name]] <- p
+    
+  } else {
+    # Fallback ggplot if the image is missing
+    p <- ggplot() +
+      annotate("text", x = 0.5, y = 0.5, label = paste("Missing:\n", marker_name), 
+               color = "red", size = 5, fontface = "bold") +
+      coord_fixed(xlim = c(0, 1), ylim = c(0, 1), expand = FALSE) +
+      theme_void() +
+      theme(
+        panel.background = element_rect(fill = "white", color = NA),
+        plot.background = element_rect(fill = "white", color = NA),
+        plot.margin = margin(1, 1, 1, 1)
+      )
+    
+    plot_list[[marker_name]] <- p
+  }
+}
+
+# 5. Combine the individual ggplots into one cohesive object using patchwork
+combined_images_plot <- wrap_plots(plot_list, nrow = 1)
+
+# You can now print this plot, or combine it further!
+# Example: combined_images_plot / my_umap_plot 
+print(combined_images_plot)
+```
+
 Combine plots for figure
 
-```{r, fig.width=9, fig.height=9.4}
-ggarrange(umap_plot, dot_plot, plot_ann_1, plot_if_1, ncol = 2, nrow = 2, heights = c(4.5, 6.8), labels = c("A", "", "B", "C"))+
+```{r, fig.width=9, fig.height=4.5}
+upper_part <- ggarrange(umap_plot, dot_plot, 
+                        ncol = 2, nrow = 1, 
+                        labels = c("A", ""))+
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
+
+upper_part
+```
+
+```{r, fig.width=9, fig.height=12}
+ggarrange(upper_part, plot_middle, combined_images_plot, ncol = 1, nrow = 3, 
+          heights = c(4.5, 4.9, 2.6), labels = c("","B", "C"), label.y = 1.05)
 ```
 
 ## Session Information
