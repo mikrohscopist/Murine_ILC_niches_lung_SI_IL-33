@@ -1,0 +1,298 @@
+---
+title: "Features extracted with Python - Data import, merging, and tidying"
+author: "Sandy Kroh"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+    fig_caption: yes
+    keep_md: yes
+  pdf_document:
+    toc: yes
+params:
+  extraction_parameter: cells
+  mask_parameter: feature_0
+  Sample: Default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+# knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
+                      fig.align='center', 
+                      fig.width = 9, 
+                      fig.height = 6,
+                      dpi = 600, 
+                      message = FALSE, warning = FALSE)
+options(width = 1200)
+```
+
+## Libraries
+
+```{r}
+library(readr) 
+library(tidyverse) 
+library(tidyr) 
+library(dplyr) 
+library(here) 
+library(ggpubr)
+library(readxl)
+```
+
+## Parameters
+
+```{r}
+
+set.seed(8) 
+
+cols_treat <- c("darkcyan", "gold", "deeppink", "slateblue")  
+
+cols_fov <- c("slateblue1",              
+              "darkcyan",                         
+              "seagreen2")   
+
+cols_exp <- c("darkcyan", "seagreen2", "lightgreen",     
+              "gold", "yellow", "olivedrab1",            
+              "deeppink","#FF0066", "magenta",           
+              "slateblue", "blueviolet", "purple")   
+
+cols_nat <- c("darkcyan", "seagreen2", "lightgreen",              
+              "gold", "yellow", "olivedrab1",              
+              "deeppink","#FF0066", "magenta",           
+              "slateblue", "blueviolet", "purple",               
+              "cyan", "blue", "navyblue",               
+              "brown", "red", "orange", "grey")  
+```
+
+# Import data
+
+## Define directories
+
+```{r}
+
+# define path to general data main directory
+data_dir_main <- here("data")
+
+# define path to input directory
+input_dir <- here("data", "Feature_extraction_python")
+
+# define output folder for saing the environment etc. 
+output_env_dir <- here("1_revisions", "1_Data_loading_merging_tidying_files") 
+dir.create(output_env_dir)
+
+```
+
+## Load csv output files from python feature extraction
+
+Define function to automatically extract file information:
+
+```{r}
+#' get file name ----
+get_file_name = function(cells_csv){
+  cells <- read.csv(paste0(input_dir, "/", cells_csv), header=TRUE) # read the cells csv file
+  filename <- gsub(".*/", "", cells_csv) # remove anything before the last underscore; removes "cell.csv"
+  filename <- gsub("_cell_masks.csv", "", filename)
+  return(filename)
+  
+}
+```
+
+```{r}
+my_data_list <- list.files(path = input_dir, pattern = "membrane.csv") # creates a list with all the cell.csv files
+my_data_list
+file <- my_data_list[1]
+
+df_raw_mean <- data.frame()
+df_raw_median <- data.frame()
+
+filename <- gsub(".csv", "", file)
+# opens the nuclei csv file
+df_samp <- read.csv(paste0(input_dir, "/", file), header=TRUE) 
+df_samp$Experiment_ID <- gsub("_segmentation_label_cell_membrane", "", filename)
+
+# filter data for mean
+df_samp_mean <- df_samp %>%
+  # delete everything after the first dot
+  mutate(Label = gsub("Vimentin", "VIM", Label), 
+         Label = gsub("Fibronectin", "FN", Label), 
+         Label = gsub("aGFP", "GATA3eGFP", Label), 
+         Label = gsub("Emcn", "EMCN", Label), 
+         Label = gsub("\\..*", "", Label), 
+         Loc_X = X, 
+         Loc_Y = Y
+         ) %>%
+  select(Label, Mean, Loc_X, Loc_Y, Experiment_ID, Area) %>%
+  # change long format to wide format
+  pivot_wider(names_from = Label, values_from = c(Mean))
+
+# filter data for median
+df_samp_median <- df_samp %>%
+  # delete everything after the first dot
+  mutate(Label = gsub("Vimentin", "VIM", Label), 
+         Label = gsub("Fibronectin", "FN", Label), 
+         Label = gsub("aGFP", "GATA3eGFP", Label), 
+         Label = gsub("Emcn", "EMCN", Label), 
+         Label = gsub("\\..*", "", Label), 
+         Loc_X = X, 
+         Loc_Y = Y
+         ) %>%
+  select(Label, Median, Loc_X, Loc_Y, Experiment_ID, Area) %>%
+  # change long format to wide format
+  pivot_wider(names_from = Label, values_from = c(Median))
+
+df_raw_mean <- data.table::rbindlist(list(df_raw_mean, df_samp_mean), 
+                                     fill = TRUE)
+df_raw_median <- data.table::rbindlist(list(df_raw_median, df_samp_median), 
+                                       fill = TRUE)
+
+
+# # loop for loading all files and combining them
+# for (file in my_data_list) {
+#   filename <- gsub(".csv", "", file)
+#   # opens the nuclei csv file
+#   df_samp <- read.csv(paste0(input_dir, "/", file), header=TRUE) 
+#   df_samp$MELC_ID <- filename
+#   
+#   # filter data for mean
+#   df_samp_mean <- df_samp %>%
+#     # delete everything after the first dot
+#     mutate(Label = gsub("ICAM1", "ICAM", Label), 
+#            Label = gsub("ICAM", "ICAM1", Label), 
+#            Label = gsub("\\..*", "", Label), 
+#            Loc_X = X, 
+#            Loc_Y = Y
+#            ) %>%
+#     select(Label, Mean, Loc_X, Loc_Y, MELC_ID, Area) %>%
+#     # change long format to wide format
+#     pivot_wider(names_from = Label, values_from = c(Mean))
+#   
+#   # filter data for median
+#   df_samp_median <- df_samp %>%
+#     # delete everything after the first dot
+#     mutate(Label = gsub("ICAM1", "ICAM", Label), 
+#            Label = gsub("ICAM", "ICAM1", Label), 
+#            Label = gsub("\\..*", "", Label), 
+#            Loc_X = X, 
+#            Loc_Y = Y
+#            ) %>%
+#     select(Label, Median, Loc_X, Loc_Y, MELC_ID, Area) %>%
+#     # change long format to wide format
+#     pivot_wider(names_from = Label, values_from = c(Median))
+#   
+#   df_raw_mean <- data.table::rbindlist(list(df_raw_mean, df_samp_mean), 
+#                                        fill = TRUE)
+#   df_raw_median <- data.table::rbindlist(list(df_raw_median, df_samp_median), 
+#                                          fill = TRUE)
+# 
+# }
+
+```
+
+# Tidying data
+
+The data is one data frame but in a long format. Names are tidied and the format is changed to the wide format.
+
+```{r}
+# change order of columns, so that all markers first, followed by Loc_X and Loc_Y
+df_raw_mean <- df_raw_mean %>%
+  select(5:length(colnames(df_raw_mean)), 1:4)
+
+df_raw_median <- df_raw_median %>%
+  select(5:length(colnames(df_raw_median)), 1:4)
+
+# create individual cell ID
+df_raw_mean$CellID <- rownames(df_raw_mean)
+df_raw_median$CellID <- rownames(df_raw_median)
+
+
+```
+
+## Visualize data
+
+Depict nuclei in x and y:
+
+```{r, fig.width=9, fig.height=9}
+
+melced_samples <- unique(df_raw_mean$Experiment_ID)
+x_co <- 2048
+y_co <- 2048
+
+plot_list <- lapply(melced_samples, function(sample) {
+  df_samp <- df_raw_mean %>%
+    filter(Experiment_ID == sample)
+  
+  n_cells <- nrow(df_samp)
+  
+  ggplot(df_samp, aes(x = Loc_X, y = Loc_Y)) +
+    geom_point(size = 1, shape = 20, color = "white") +
+    theme_void() +
+    theme(legend.title = element_blank()) +
+    theme(panel.background = element_rect(fill = 'black', color = 'black', size = 0)) +
+    ggtitle(paste(sample, " Objects:", n_cells))
+})
+
+ggarrange(plotlist = plot_list, ncol = 2, nrow = 2)
+```
+
+## Load meta data
+
+```{r}
+df_meta <- read_excel(paste0(data_dir_main, "/GATA3eGFP_sample_list.xlsx"), 
+    sheet = "MELC experiments")
+
+df_meta <- df_meta %>%
+  mutate(Run = Run_ID, 
+         MELC_ID = paste0(Experiment_ID, "_", Condition)) %>%
+  as.data.frame()
+
+head(df_meta)
+```
+
+Combine metadata and feature data:
+
+```{r}
+df_raw_mean <- merge(df_raw_mean, df_meta, by = "Experiment_ID")
+df_raw_mean <- df_raw_mean %>%
+  select(-Experiment_ID, everything(), Experiment_ID) %>%
+  # introduce a column to store the extracted fluorescence information
+  mutate(extracted_fluorescence = "mean")
+
+df_raw_median <- merge(df_raw_median, df_meta, by = "Experiment_ID")
+df_raw_median <- df_raw_median %>%
+  select(-Experiment_ID, everything(), Experiment_ID) %>%
+  # introduce a column to store the extracted fluorescence information
+  mutate(extracted_fluorescence = "median")
+
+head(df_raw_mean)
+head(df_raw_median)
+
+length(unique(df_raw_mean$MELC_ID))
+length(unique(df_raw_median$MELC_ID))
+```
+
+# Save data
+
+```{r}
+
+# export the merged data frame for mean and median after tidying
+write.csv(df_raw_mean, file = paste0(output_env_dir, "/", 
+                        # params$extraction_parameter, "_", 
+                        # params$mask_parameter, 
+                        "df_mean_merged_raw_tidied.csv"))
+
+
+write.csv(df_raw_median, 
+          file = paste0(output_env_dir, "/", 
+                        # params$extraction_parameter, "_", 
+                        # params$mask_parameter, 
+                        "df_median_merged_raw_tidied.csv"))
+
+
+# save the environment
+save.image(paste0(output_env_dir, "/environment.RData"))
+
+sessionInfo()
+```
