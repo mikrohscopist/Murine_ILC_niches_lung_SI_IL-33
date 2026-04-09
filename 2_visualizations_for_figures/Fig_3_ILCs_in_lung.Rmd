@@ -241,6 +241,158 @@ RidgePlot(SO.ilc.ctrl,
 
 ## IF overlays
 
+```{r}
+df_all_cells <- FetchData(SO.lung, 
+                          vars = c(rownames(SO.lung), "Location_Center_X", 
+                                   "Location_Center_Y", "Dataset", "Treatment", 
+                                   "AL1", "AL2", "AL3", "CellID", 
+                                   "Experiment",  "UMAP_1", "UMAP_2"))
+
+colnames(df_all_cells) <- gsub("ation_Center", "", colnames(df_all_cells))
+
+# open file with folder info 
+df_folders <- read_csv(here::here("data/MELC_data_murine_lung_CTRL_D1_D2_D3_withfolders.csv"))
+
+df_folders <- df_folders %>%
+  select(FullInfo, Sample, FOV, CellID)
+
+# combine both dataframes by CellID
+# 1. Identify the matching columns automatically
+common_cols <- intersect(colnames(df_all_cells), colnames(df_folders))
+
+message("Joining dataframes by the following shared columns: ", paste(common_cols, collapse = ", "))
+
+# 2. Force the matching columns to be characters in BOTH dataframes to prevent type errors
+df_all_cells <- df_all_cells %>%
+  mutate(across(all_of(common_cols), as.character))
+
+df_folders <- df_folders %>%
+  mutate(across(all_of(common_cols), as.character))
+
+# 3. Merge the dataframes
+df_all_cells <- left_join(df_all_cells, df_folders, by = common_cols)
+
+df_all_cells <- df_all_cells %>%
+  mutate(
+    FullInfo = paste0("d", Treatment)) %>%
+  mutate(
+    FullInfo = gsub("dCTRL", "CTRL", FullInfo)) %>%
+  mutate(
+    FullInfo = paste0(Experiment, "_", 
+                           gsub("FOV", "", FOV), 
+                           "_lu_",
+                           tolower(FullInfo)
+                           ))
+```
+
+Export TIFF images
+
+```{r}
+library(tiff)
+library(png) 
+library(dplyr)
+
+# 1. Setup Input Directory and Base Output Directory
+image_path <- "D:/Repositories/2025_Kroh_et_al/Murine_ILC_niches_lung_SI_IL-33/data/MELC_data/Lung"
+output_dir_base <- file.path(output_dir, "annotated_celltypes_16bit_split")
+
+# 2. Define Parameters
+dot_radius <- 2 
+al_columns <- c("AL1", "AL2", "AL3")
+samples <- unique(df_all_cells$FullInfo)
+
+# 3. Loop through each Sample (Subfolder)
+for (sample in samples) {
+  
+  # Filter data for current sample
+  samp_data <- df_all_cells %>% filter(FullInfo == sample)
+  
+  # --- Step A: Determine Exact Canvas Size for this Subfolder ---
+  sample_dir <- file.path(image_path, sample)
+  img_files <- list.files(sample_dir, pattern = "\\.(png|tif|tiff)$", ignore.case = TRUE, full.names = TRUE)
+  
+  if(length(img_files) == 0) {
+    message("⚠️ Skipping ", sample, " - no images found in subfolder to extract dimensions.")
+    next
+  }
+  
+  # Read the first image to extract dimensions
+  first_img <- img_files[1]
+  if (grepl("\\.png$", first_img, ignore.case = TRUE)) {
+    img_matrix <- png::readPNG(first_img)
+  } else {
+    img_matrix <- tiff::readTIFF(first_img)
+  }
+  
+  # Extract height (rows) and width (columns)
+  img_h <- nrow(img_matrix)
+  img_w <- ncol(img_matrix)
+  
+  message("Processing ", sample, " [Canvas Size: ", img_w, "x", img_h, "]")
+  
+  # --- Step B: Loop through AL1, AL2, and AL3 ---
+  for (al_col in al_columns) {
+    
+    # Define and create the specific subfolder for this AL level
+    # Maps AL1 -> celltypes_AL, AL2 -> celltypes_AL2, AL3 -> celltypes_AL3
+    folder_name <- ifelse(al_col == "AL1", "celltypes_AL", paste0("celltypes_", al_col))
+    al_out_dir <- file.path(output_dir_base, folder_name)
+    
+    if (!dir.exists(al_out_dir)) {
+      dir.create(al_out_dir, recursive = TRUE)
+    }
+    
+    # Get unique cell types in the current AL level, ignoring NAs
+    all_celltypes <- unique(samp_data[[al_col]])
+    all_celltypes <- all_celltypes[!is.na(all_celltypes)]
+    
+    # --- Step C: Draw and Save Mask for each Cell Type ---
+    for (ctype in all_celltypes) {
+      
+      # Filter for specific cell type in the current AL column
+      ctype_data <- samp_data %>% filter(.data[[al_col]] == ctype)
+      
+      # Skip if this specific cell type is not present
+      if (nrow(ctype_data) == 0) next
+      
+      # Create an empty matrix matched EXACTLY to the image dimensions
+      mask_matrix <- matrix(0, nrow = img_h, ncol = img_w)
+      
+      # Round coordinates and filter out any points sitting outside the canvas
+      coords <- ctype_data %>%
+        mutate(ix = round(Loc_X), iy = round(Loc_Y)) %>%
+        filter(ix >= 1 & ix <= img_w & iy >= 1 & iy <= img_h)
+      
+      # Draw dots
+      for(i in seq_len(nrow(coords))) {
+        cx <- coords$ix[i]
+        cy <- coords$iy[i]
+        
+        # Define boundaries so dots near the edge don't cause 'out of bounds' errors
+        x_range <- max(1, cx - dot_radius):min(img_w, cx + dot_radius)
+        y_range <- max(1, cy - dot_radius):min(img_h, cy + dot_radius)
+        
+        mask_matrix[y_range, x_range] <- 65535
+      }
+      
+      # Define File Path and Write
+      ctype_safe <- gsub("[ /]", "_", ctype)
+      
+      # Name format: FullInfo_celltype.tif (e.g., 20220316_1_Immune_cells_16bit.tif)
+      file_name <- paste0(sample, "_", ctype_safe, "_16bit.tif")
+      output_path <- file.path(al_out_dir, file_name)
+      
+      writeTIFF(mask_matrix / 65535, 
+                where = output_path, 
+                bits.per.sample = 16, 
+                reduce = TRUE)
+    }
+  }
+}
+
+message("🎉 16-bit Export complete! Images are sorted into subfolders under: ", output_dir_base)
+```
+
 ### ILC1s/NK cells
 
 ```{r, fig.width=4.5, fig.height=3}
