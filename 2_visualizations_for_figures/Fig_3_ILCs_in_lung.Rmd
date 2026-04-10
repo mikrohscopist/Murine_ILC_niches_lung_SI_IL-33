@@ -100,11 +100,37 @@ dim(SO.lung)
 SO.lung$AL1 <- gsub("Vessels", "Stromal cells", SO.lung$AL1)
 ```
 
+Somehow TBET ended up in the metadata. We will put it back as a feature:
+
+```{r}
+
+# 1. Extract the current expression matrix from the active assay
+# Note: Using slot = "counts". If your MELC data is only stored in "data", change this.
+current_matrix <- GetAssayData(SO.lung, assay = "MELC", slot = "counts")
+
+# 2. Extract TBET from metadata and format it as a 1-row matrix
+tbet_values <- matrix(SO.lung$TBET, nrow = 1)
+rownames(tbet_values) <- "TBET"
+colnames(tbet_values) <- colnames(SO.lung) # Ensure cell names match perfectly
+
+# 3. Bind the TBET row to the bottom of the expression matrix
+new_matrix <- rbind(current_matrix, tbet_values)
+
+# 4. Overwrite the existing MELC assay with the updated matrix
+SO.lung[["MELC"]] <- CreateAssayObject(counts = new_matrix)
+
+# 5. Clean up: Remove TBET from the metadata so it doesn't cause confusion later
+SO.lung$TBET <- NULL
+
+# Verify the fix! TBET should now appear at the bottom of this list:
+rownames(SO.lung)
+```
+
 # Visualization
 
 ## Dotplot AL2
 
-```{r, fig.width=9, fig.height=3}
+```{r, fig.width=6, fig.height=5}
 
 SO.lung$AL2 <- factor(SO.lung$AL2, levels = c(
   "B cells & Plasma cells",
@@ -135,12 +161,16 @@ dot_plot <- Seurat::DotPlot(subset(SO.lung, subset = AL1 == "Immune cells"),
                   ), 
                 cols ="RdBu", assay = "MELC")+   
     RotatedAxis()+
-    # coord_flip()+
-    theme(axis.text.x=element_text(size=12, angle = 45),
-          axis.text.y=element_text(size=14), 
-          plot.margin = margin(2, 0, 0.4, 0.5, "cm"), 
-          axis.title.y = element_blank(), 
-          plot.title = element_blank())+ 
+    coord_flip()+
+  ggtitle("AL2 - Immune cells\n")+
+    theme(axis.text.x=element_text(size=10, angle = 45),
+          axis.text.y=element_text(size=10), 
+          axis.title.x = element_blank(), 
+          axis.title.y = element_text(size=11), 
+          plot.margin = margin(0.2, 2, 1, 0.2, "cm"), 
+          plot.title = element_text(size=12, face = "bold", hjust = 0.5), 
+          legend.text = element_text(size = 10),
+          legend.title = element_text(size = 10, face = "bold"))+ 
   scale_color_gradient2(midpoint = 0, low = "gold", 
                             high = "blue", space = "Lab" )
 
@@ -239,9 +269,118 @@ RidgePlot(SO.ilc.ctrl,
   theme(plot.margin = margin(0, 0, 0, 0, "cm"))
 ```
 
+Differential expression
+
+```{r, fig.height=3, fig.width=6}
+library(scater)
+library(SpatialExperiment)
+set.seed(8)
+
+SO.sub <- subset(SO.lung, subset = AL3 %in% c("NK cells/ILC1s", "ILC2s", "ILC3s", 
+                                              "T helper cells", "T cytotox cells"))
+
+counts = GetAssayData(SO.sub, layer = "counts")
+
+metadata = SO.sub@meta.data
+
+spatial_coords <- as.matrix(metadata[, c("Location_Center_X", "Location_Center_Y")])
+
+spe <- SpatialExperiment(
+  assays = list(counts = counts),
+  colData = metadata,
+  spatialCoords = spatial_coords
+)
+
+# Validate the SpatialExperiment object
+print(spe)
+
+# --- 3. Generate Aggregated Heatmap ---
+# Step A: Pseudo-bulk aggregation by cell type
+library(scuttle) # required for aggregateAcrossCells
+
+ilc_markers <- c("CD127", "CD90","GATA3eGFP", "KLRG1", "EOMES", "TBET",  
+                 "CD3", "CD8a", "CD4", "RORgt", "ICOS", 
+                 "MHCII", "CD44", "Ki67", "NKp46")
+
+pbs_annotated <- aggregateAcrossCells(spe, 
+                                      ids = spe$AL3, 
+                                      subset.row = ilc_markers, 
+                                      use.assay.type = "counts", 
+                                      statistics = "mean")
+
+# Step B: Extract matrix and Z-score (scale) the data
+library(pheatmap)
+# Transpose so rows = Cell Types, columns = Markers
+mat_annotated <- t(assay(pbs_annotated, "counts"))
+
+
+# Step C: Plot Heatmap
+pheatmap(mat = mat_annotated, 
+         scale = "column", 
+         clustering_method = "ward.D2",
+         color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+         display_numbers = TRUE, # Optional: shows Z-score values in the cells
+         main = "Aggregated Lineage Signatures (Z-scored)")
+
+```
+
+```{r, fig.height=5, fig.width=4}
+library(Seurat)
+library(ComplexHeatmap)
+library(ggplotify) # Required for as.ggplot()
+
+set.seed(8)
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO.lung, subset = AL3 %in% c("NK cells/ILC1s", "ILC2s", "ILC3s"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+
+# --- 2. Direct Pseudo-bulk Aggregation ---
+ilc_markers <- c("CD127", "CD90","GATA3eGFP", "KLRG1", "EOMES", "TBET",  
+                 "CD3", "CD4", "RORgt", "ICOS", 
+                 "MHCII", "CD44", "Ki67", "NKp46")
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "AL3")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  main = "ILC subtypes",
+  treeheight_col = 10,
+  treeheight_row = 20,
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat)))
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+print(gg_heat)
+```
+
 ## IF overlays
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 df_all_cells <- FetchData(SO.lung, 
                           vars = c(rownames(SO.lung), "Location_Center_X", 
                                    "Location_Center_Y", "Dataset", "Treatment", 
@@ -287,7 +426,7 @@ df_all_cells <- df_all_cells %>%
 
 Export TIFF images
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 library(tiff)
 library(png) 
 library(dplyr)
@@ -395,7 +534,7 @@ message("🎉 16-bit Export complete! Images are sorted into subfolders under: "
 
 ### ILC1s/NK cells
 
-```{r, fig.width=4.5, fig.height=3}
+```{r eval=FALSE, fig.height=3, fig.width=4.5, include=FALSE}
 
 # load overview overlay image
 img <- png::readPNG(
@@ -567,7 +706,7 @@ ilc2
 
 ### ILC3s
 
-```{r, fig.width=4.5, fig.height=3}
+```{r eval=FALSE, fig.height=3, fig.width=4.5, include=FALSE}
 
 # load overview overlay image
 img <- png::readPNG(
@@ -652,7 +791,7 @@ ilc3
 
 ```
 
-```{r, fig.width=9, fig.height=6.5}
+```{r eval=FALSE, fig.height=6.5, fig.width=9, include=FALSE}
 if_plots <- ggarrange(ilc2, ilc1, ilc3, ncol = 2, nrow = 2, labels = c( "C", "D", "E"))
 
 if_plots
@@ -660,10 +799,12 @@ if_plots
 
 ## Combine plots for figure
 
-```{r, fig.width=9, fig.height=16.5}
-ggarrange(dot_plot, ridge_plot, if_plots, 
-          ncol = 1, nrow = 3, heights = c(3, 7, 6.5), labels = c("A", "B", ""))+
+```{r, fig.width=9, fig.height=5}
+figure <- ggarrange(dot_plot, gg_heat, 
+          ncol = 2, nrow = 1, labels = c("A", "B"), widths = c(3, 2))+
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
+
+ggarrange(figure, "NONE", ncol = 1, nrow = 2, heights = c(5, 0.3), labels = c("", "C"))
 ```
 
 ## Session Information
