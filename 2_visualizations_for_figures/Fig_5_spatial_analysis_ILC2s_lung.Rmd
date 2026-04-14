@@ -565,7 +565,7 @@ master_heatmap <- Heatmap(
   row_title = "Interactions",
   row_title_gp = gpar(fontsize = 11#, fontface = "bold"
                       ),
-  
+
   # Aesthetics
   show_column_names = FALSE,
   column_names_rot = 45,
