@@ -20,6 +20,7 @@ editor_options:
 # knitr::opts_knit$set(root.dir = "..")
 knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
                       fig.align='center', dpi = 600, 
+                      set.seed(8),
                       message = FALSE, warning = FALSE)
 options(width = 1200)
 ```
@@ -301,9 +302,7 @@ g_master_list[[unic]] <- g_test+
 
 # Visualization
 
-## ILC2s localize close to vessels
-
-### B - IF overlays
+## IF overlays
 
 ```{r, fig.width=4.5, fig.height=5.4}
 img <- png::readPNG(
@@ -484,7 +483,120 @@ plot_if_d3 <- plot +
 plot_if_d3
 ```
 
-### A - Coenrichment plots
+## Coenrichment plots
+
+```{r, fig.height=3, fig.width=9}
+
+library(ComplexHeatmap)
+library(circlize)
+library(dplyr)
+library(tidyr)
+library(ggplotify)
+library(ggplot2)
+
+# --- 1. Data Gathering (Remains the same) ---
+all_interactions <- data.frame()
+# We'll also capture the unique cell types here to use for our loop later
+all_found_cell_types <- c() 
+
+for (vr_name in vr_list_names) {
+  cur_cell_proximities <- cell_proximities_list[[vr_name]]
+  if(is.null(cur_cell_proximities) || nrow(cur_cell_proximities) == 0) next
+  
+  vr_samp <- subset(vr_merged, samples = vr_name)
+  vr_meta <- Metadata(vr_samp)
+  condition <- paste(unique(vr_meta$Condition), collapse = ", ")
+  
+  # Capture the cell types available in this dataset
+  all_found_cell_types <- unique(c(all_found_cell_types, unique(vr_meta$CellType)))
+  
+  temp_df <- data.frame(
+    Interaction = cur_cell_proximities$unified_int,
+    Enrichment = cur_cell_proximities$enrichm,
+    FOV = vr_name,
+    Condition = condition
+  )
+  all_interactions <- rbind(all_interactions, temp_df)
+}
+
+# --- 2. Initialize Storage ---
+all_heatmaps <- list()
+target_cell_types <- sort(all_found_cell_types) # Loop through these
+
+# --- 3. START THE LOOP ---
+for (ct in target_cell_types) {
+  
+  # Filter for the current cell type in the loop
+  wide_data <- all_interactions %>%
+    filter(grepl(ct, Interaction)) %>%
+    select(Interaction, FOV, Enrichment) %>%
+    pivot_wider(names_from = FOV, values_from = Enrichment, values_fill = 0, values_fn = mean) 
+  
+  # Skip if this cell type has no interactions recorded
+  if(nrow(wide_data) == 0) {
+    message(paste("Skipping", ct, "- No interactions found."))
+    next
+  }
+
+  # Convert to matrix
+  enrichmat_global <- as.matrix(wide_data[, -1])
+  rownames(enrichmat_global) <- wide_data$Interaction
+
+  # Sync Annotations: Only keep FOVs that are present for THIS cell type
+  anno_df_sub <- unique(all_interactions[, c("FOV", "Condition")])
+  rownames(anno_df_sub) <- anno_df_sub$FOV
+  anno_df_sub <- anno_df_sub[colnames(enrichmat_global), , drop = FALSE]
+
+  # Create Annotation
+  ha_top <- HeatmapAnnotation(
+    Condition = anno_df_sub$Condition,
+    col = list(Condition = cols_treat),
+    annotation_name_side = "left"
+  )
+
+  # Create Heatmap Object
+  curr_heatmap <- Heatmap(
+    enrichmat_global,
+    col = circlize::colorRamp2(c(-1, 0, 1), cols_heat),
+    name = "Enrichment\nScore",
+    heatmap_legend_param = list(direction = "vertical"),
+    
+    column_split = anno_df_sub$Condition,
+    cluster_column_slices = FALSE, 
+    cluster_columns = FALSE,        
+    cluster_rows = TRUE,           
+    
+    row_title = "Interactions",
+    row_title_gp = gpar(fontsize = 11),
+    show_column_names = FALSE,
+    row_names_gp = gpar(fontsize = 9),
+    show_row_dend = TRUE,
+    
+    top_annotation = ha_top,
+    column_title = paste("Neighborhood Enrichment:", ct),
+    column_title_gp = gpar(fontsize = 12, fontface = "bold")
+  )
+
+  # Convert to ggplot
+  heat_grob <- grid::grid.grabExpr(
+    draw(curr_heatmap, 
+         heatmap_legend_side = "right",     
+         annotation_legend_side = "right",  
+         merge_legend = TRUE,
+         padding = unit(c(0.1, 0.1, 0.1, 0.1), "cm"))
+  )
+
+  final_plot <- as.ggplot(heat_grob) + 
+    labs(x = "FOV") + 
+    theme(
+      axis.title.x = element_text(size = 11, margin = margin(t = 10), hjust = 0.37)
+    )
+
+  # Store and Print
+  all_heatmaps[[ct]] <- final_plot
+  print(final_plot)
+}
+```
 
 ```{r, fig.height=3, fig.width=9}
 
@@ -760,7 +872,7 @@ coenrichment_fig_ann <- annotate_figure(coenrichment_fig,
 coenrichment_fig_ann
 ```
 
-### CIN analysis
+## CIN analysis
 
 ```{r, fig.height=3, fig.width=9}
 
@@ -988,7 +1100,7 @@ plot_cin <- ggarrange(cin_ilc, cin_my, cin_ly, ncol = 1, nrow = 3, labels = c("C
 plot_cin
 ```
 
-## Minimum distance 
+## Minimum distance
 
 ### Load data
 
@@ -1287,498 +1399,591 @@ plot_dist <- ggarrange(dist_lymph, final_plot, nrow = 2, ncol = 1, heights = c(4
 plot_dist
 ```
 
-Check what is the frequency of ILC2s with a minimum distance to lymphatics less than 5 µm:
+## Cellular Microenvironments (Tissue Hubs/Domains)
+
+### Data preparation
 
 ```{r}
-plot_data <- df_dist_ref %>%
-  filter(Treatment == "CTRL") %>%
-  filter(RefType == "ILC2s") %>%
-  filter(NearestType == celltype_of_interest)
 
-percentage_under_5 <- plot_data %>%
-  summarise(pct = mean(Distance < 5) * 100) %>%
-  pull(pct)
+df_all <- metadatax
 
-print(paste("Percentage of cells with Distance < 5 under healthy conditions:", round(percentage_under_5, 2), "%"))
+df_all <- df_all %>%
+  select(-c(X, ...1)) %>%
+  mutate(Dataset = FullInfo, 
+         Filename = Dataset, 
+         Condition = str_split_i(Dataset, "_", -1))
 
+# max values x and y before conversion
+max(df_all$Loc_X)
+max(df_all$Loc_Y)
 
-plot_data <- df_dist_ref %>%
-  filter(RefType == "ILC2s") %>%
-  filter(NearestType == celltype_of_interest)
+df_all <- df_all %>%
+  mutate(Loc_X = Loc_X * 0.325,
+         Loc_Y = Loc_Y * 0.325)
 
-percentage_under_5 <- plot_data %>%
-  summarise(pct = mean(Distance < 5) * 100) %>%
-  pull(pct)
+# max values x and y after conversion
+max(df_all$Loc_X)
+max(df_all$Loc_Y)
 
-print(paste("Percentage of cells with Distance < 5:", round(percentage_under_5, 2), "%"))
-
+head(df_all)
 ```
 
-### E - CIN plot
+### Niche analysis 20 µm
 
-```{r eval=FALSE, fig.height=3, fig.width=9, include=FALSE}
+This analysis clusters the tissue based on local composition to find **functional zones**. For example, it might identify an "Inflamed Immune Hub" (dense T cells + B cells + ILCs) or a "Vascular Niche" (Vessels + Fibroblasts).
 
-library(stringr)
-tissuearea <- "Lung"
-input_dir <- here::here("data", "CIN_analysis", tissuearea, "/")
+-   **The Biological Question:** Do periodontitis samples form tertiary lymphoid structures or specific immune clusters that healthy tissues lack?
 
+```{r, fig.height=6, fig.width=6}
 
-# List all radii calculated 
-list_files_rad <- list.files(path=input_dir, 
-                         pattern=NULL, all.files=FALSE,
-                         full.names=FALSE)
+set.seed(8)
 
-list_files_rad
-df_cin_lung = data.frame()
+library(dbscan)
+library(dplyr)
+library(ggplot2)
+library(ggbeeswarm)
+library(rstatix)
+library(patchwork)
+library(ggpubr)
 
-# define a dataframe to collect all data from one tissue area
-df_radius <- data.frame()
-for (defined_radius in list_files_rad) {
-  print(defined_radius)
-  list_files <- list.files(path=paste0(input_dir,
-                                   defined_radius, 
-                                   "/"), 
-                       pattern=NULL, all.files=FALSE,
-                       full.names=FALSE)
-  # define a dataframe to collect the data for all datasets of one 
-  df_cin = data.frame()
-  for (element in list_files) {
-    dir <- paste0(input_dir,
-                  defined_radius, 
-                  "/", element)
-    df_sub <- read_csv(dir, 
-      col_types = cols(...1 = col_skip()))
-    df_sub$Filename <- paste0(defined_radius, 
-                  "/", element)
-    df_cin <- rbind(df_cin, df_sub)
+# ========================================================================
+# PART 1: COMPUTE GLOBAL CELLULAR NEIGHBORHOODS
+# ========================================================================
+# Parameters
+search_radius <- 20  # Look at cells within 20 µm
+num_niches <- 4        # Number of distinct spatial environments to identify (K)
+all_cell_types <- unique(df_all$CellType)
+
+# Create a globally unique ID for every cell so we can map them back flawlessly
+df_all$Global_ID <- paste0(df_all$Filename, "_", df_all$CellID)
+cn_matrix_list <- list()
+
+print("Extracting local neighborhoods for all cells...")
+for (fov_name in unique(df_all$Filename)) {
+  
+  df_fov <- df_all %>% filter(Filename == fov_name)
+  coords <- as.matrix(df_fov[, c("Loc_X", "Loc_Y")])
+  
+  # Find all neighbors within the radius (Extremely fast using kd-trees)
+  neighbors <- dbscan::frNN(coords, eps = search_radius)$id
+  
+  # Empty matrix to store the counts (Rows = cells, Columns = cell types)
+  fov_counts <- matrix(0, nrow = nrow(df_fov), ncol = length(all_cell_types))
+  colnames(fov_counts) <- all_cell_types
+  rownames(fov_counts) <- df_fov$Global_ID
+  
+  # Tabulate neighbors for each cell
+  for (i in seq_along(neighbors)) {
+    # Include the central cell itself in its own neighborhood
+    neighbor_idx <- c(i, neighbors[[i]])
+    neighbor_types <- df_fov$CellType[neighbor_idx]
+    
+    # Factor guarantees missing cell types get recorded as 0
+    counts <- table(factor(neighbor_types, levels = all_cell_types))
+    fov_counts[i, ] <- as.numeric(counts)
   }
-
-  df_cin$Radius <- defined_radius
-  df_radius <- rbind(df_radius, df_cin)
+  
+  # Convert counts to fractions (proportions from 0 to 1)
+  fov_freqs <- fov_counts / rowSums(fov_counts)
+  cn_matrix_list[[fov_name]] <- fov_freqs
 }
 
-# collect data from current tissue area to datafram df_all_cin
-df_cin_lung <- df_radius
-df_cin_lung$Radius <- gsub("_micm", " \u03BCm", df_cin_lung$Radius)
-df_cin_lung$Experiment <- str_sub(df_cin_lung$Dataset,-8,-1)
-df_cin_lung$FOV <- str_sub(df_cin_lung$Dataset,-10,-10)  
-df_cin_lung$Treatment <- str_extract(df_cin_lung$Dataset, "[^_]+")
-df_cin_lung$ExpID <- paste0(df_cin_lung$Experiment, "_", df_cin_lung$FOV)
-colnames(df_cin_lung) <- gsub("Reference cell", "Reference", 
-                                colnames(df_cin_lung))
-
-colnames(df_cin_lung) <- gsub("NK cells & ILC1s", "NK cells/ILC1s", 
-                              colnames(df_cin_lung))
-df_cin_lung$Reference <- gsub("NK cells & ILC1s", "NK cells/ILC1s",
-                              df_cin_lung$Reference)
-head(df_cin_lung)
-colnames(df_cin_lung)
-df_cin_lung$Treatment <- gsub("D", "", df_cin_lung$Treatment)
-
-radius <- unique(df_cin_lung$Radius)[2]
-celltype_of_interest <- "ILC2s"
-
-df_sub_lung <- df_cin_lung %>%
-  filter(Reference == celltype_of_interest) %>%
-  filter(Radius == radius) %>%
-  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
-
-head(df_sub_lung)
-
-
-
-plot_data <- df_sub_lung
-
-# Create lav´bels that depict mean value 
-Labs = plot_data %>% 
-  group_by(Treatment) %>%
-  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
-              )
-
-plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
-# create plot
-plot_cin <- ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
-  geom_boxplot(fill="white")+
-  geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
-  scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(axis.text.x = element_text(#angle = 50,
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-        axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
-  NoLegend()+
-  ggtitle("Lymphatics")+
-  xlab("Treatment")+
-  ylab("Frequency in\n15 µm radius [%]")+
-  # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
-  geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
-plot_cin
-```
-
-For comparison, check the CIN of :
-
-```{r eval=FALSE, fig.height=4, fig.width=6, include=FALSE}
-
-# B cells ------------------------------------------------------------
-celltype_of_interest <- "B cells & Plasma cells"
-
-df_sub_lung <- df_cin_lung %>%
-  filter(Reference == celltype_of_interest) %>%
-  filter(Radius == radius) %>%
-  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
-
-head(df_sub_lung)
-
-
-
-plot_data <- df_sub_lung
-
-# Create lav´bels that depict mean value 
-Labs = plot_data %>% 
-  group_by(Treatment) %>%
-  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
-              )
-
-plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
-# create plot
-ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
-  geom_boxplot(fill="white")+
-  geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
-  scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(axis.text.x = element_text(#angle = 50,
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-        axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
-  NoLegend()+
-  ggtitle("B cells & Plasma cells - LYVE1 CD90 Lymphatics")+
-  xlab("Treatment")+
-  ylab("Frequency in 15 µm radius [%]")+
-  # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
-  geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
-
-# T cells ---------------------------------------------------------------
-celltype_of_interest <- "T helper cells"
-
-df_sub_lung <- df_cin_lung %>%
-  filter(Reference == celltype_of_interest) %>%
-  filter(Radius == radius) %>%
-  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
-
-head(df_sub_lung)
-
-
-
-plot_data <- df_sub_lung
-
-# Create lav´bels that depict mean value 
-Labs = plot_data %>% 
-  group_by(Treatment) %>%
-  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
-              )
-
-plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
-# create plot
-ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
-  geom_boxplot(fill="white")+
-  geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
-  scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(axis.text.x = element_text(#angle = 50,
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-        axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
-  NoLegend()+
-  ggtitle("T helper cells - LYVE1 CD90 Lymphatics")+
-  xlab("Treatment")+
-  ylab("Frequency in 15 µm radius [%]")+
-  # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
-  geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
-
-# T cells ---------------------------------------------------------------
-celltype_of_interest <- "Myeloid cells"
-
-df_sub_lung <- df_cin_lung %>%
-  filter(Reference == celltype_of_interest) %>%
-  filter(Radius == radius) %>%
-  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
-
-head(df_sub_lung)
-
-
-
-plot_data <- df_sub_lung
-
-# Create lav´bels that depict mean value 
-Labs = plot_data %>% 
-  group_by(Treatment) %>%
-  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
-              )
-
-plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
-# create plot
-ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
-  geom_boxplot(fill="white")+
-  geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
-  scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(axis.text.x = element_text(#angle = 50,
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-        axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
-  NoLegend()+
-  ggtitle("Myeloid cells - LYVE1 CD90 Lymphatics")+
-  xlab("Treatment")+
-  ylab("Frequency in 15 µm radius [%]")+
-  # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
-  geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
-
-# T cells ---------------------------------------------------------------
-celltype_of_interest <- "T cytotox cells"
-
-df_sub_lung <- df_cin_lung %>%
-  filter(Reference == celltype_of_interest) %>%
-  filter(Radius == radius) %>%
-  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
-
-head(df_sub_lung)
-
-
-
-plot_data <- df_sub_lung
-
-# Create lav´bels that depict mean value 
-Labs = plot_data %>% 
-  group_by(Treatment) %>%
-  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
-              )
-
-plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
-# create plot
-ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
-  geom_boxplot(fill="white")+
-  geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
-  scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(axis.text.x = element_text(#angle = 50,
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-        axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
-  NoLegend()+
-  ggtitle("T cytotox cells - LYVE1 CD90 Lymphatics")+
-  xlab("Treatment")+
-  ylab("Frequency in 15 µm radius [%]")+
-  # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
-  geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
-
-
-# Epithelia ---------------------------------------------------------------
-celltype_of_interest <- "Epithelia"
-
-df_sub_lung <- df_cin_lung %>%
-  filter(Reference == celltype_of_interest) %>%
-  filter(Radius == radius) %>%
-  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
-
-head(df_sub_lung)
-
-
-
-plot_data <- df_sub_lung
-
-# Create lav´bels that depict mean value 
-Labs = plot_data %>% 
-  group_by(Treatment) %>%
-  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
-              )
-
-plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
-# create plot
-ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
-  geom_boxplot(fill="white")+
-  geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
-  scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(axis.text.x = element_text(#angle = 50,
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-        axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
-  NoLegend()+
-  ggtitle("Epithelia - LYVE1 CD90 Lymphatics")+
-  xlab("Treatment")+
-  ylab("Frequency in 15 µm radius [%]")+
-  # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
-  geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
-
-
-# EMCN CD31 Blood vessels ---------------------------------------------------------------
-celltype_of_interest <- "EMCN CD31 Blood vessels"
-
-df_sub_lung <- df_cin_lung %>%
-  filter(Reference == celltype_of_interest) %>%
-  filter(Radius == radius) %>%
-  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
-
-head(df_sub_lung)
-
-
-
-plot_data <- df_sub_lung
-
-# Create lav´bels that depict mean value 
-Labs = plot_data %>% 
-  group_by(Treatment) %>%
-  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
-              )
-
-plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
-# create plot
-ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
-  geom_boxplot(fill="white")+
-  geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
-  scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(axis.text.x = element_text(#angle = 50,
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-        axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
-  NoLegend()+
-  ggtitle("EMCN CD31 Blood vessels - LYVE1 CD90 Lymphatics")+
-  xlab("Treatment")+
-  ylab("Frequency in 15 µm radius [%]")+
-  # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
-  geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
-
-
-
-
-# NK cells/ILC1s ---------------------------------------------------------------
-celltype_of_interest <- "NK cells/ILC1s"
-
-df_sub_lung <- df_cin_lung %>%
-  filter(Reference == celltype_of_interest) %>%
-  filter(Radius == radius) %>%
-  select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
-
-head(df_sub_lung)
-
-
-
-plot_data <- df_sub_lung
-
-# Create lav´bels that depict mean value 
-Labs = plot_data %>% 
-  group_by(Treatment) %>%
-  summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
-              )
-
-plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
-# create plot
-ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
-  geom_boxplot(fill="white")+
-  geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
-  scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(axis.text.x = element_text(#angle = 50,
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-        axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
-  NoLegend()+
-  ggtitle("NK cells/ILC1s - LYVE1 CD90 Lymphatics")+
-  xlab("Treatment")+
-  ylab("Frequency in 15 µm radius [%]")+
-  # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
-  geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
-
-
-
-
-# # ILC3s ---------------------------------------------------------------
-# celltype_of_interest <- "ILC3s"
-# 
-# df_sub_lung <- df_cin_lung %>%
-#   filter(Reference == celltype_of_interest) %>%
-#   filter(Radius == radius) %>%
-#   select(Reference, Radius, Treatment, Dataset, `LYVE1 CD90 Lymphatics`, Tissue.area)
-# 
-# head(df_sub_lung)
-# 
-# 
-# 
-# plot_data <- df_sub_lung
-# 
-# # Create lav´bels that depict mean value 
-# Labs = plot_data %>% 
-#   group_by(Treatment) %>%
-#   summarise(lab_text = paste0(round(median(`LYVE1 CD90 Lymphatics`), 0), " %"), lab_pos = quantile(`LYVE1 CD90 Lymphatics`)[3]+2
-#               )
-# 
-# plot_data$Treatment <- factor(plot_data$Treatment, levels = c("CTRL", "1", "2", "3"))
-# # create plot
-# ggplot(plot_data, aes(x = Treatment, y = `LYVE1 CD90 Lymphatics`, fill = "Treatment"))+
-#   geom_boxplot(fill="white")+
-#   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
-#   scale_color_manual(values = cols_treat)+
-#   theme_classic2()+
-#   theme(axis.text.x = element_text(#angle = 50,
-#                                    vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-#         axis.text.y = element_text(hjust = 0.5, size = 12),
-#         axis.title.x = element_text(size = 12),
-#         axis.title.y = element_text(size = 12),
-#         plot.title = element_text(size =14, hjust = 0.5),
-#         plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-#         legend.title = element_text(size =14),
-#         legend.text = element_text(size =12))+
-#   NoLegend()+
-#   ggtitle("ILC3s - LYVE1 CD90 Lymphatics")+
-#   xlab("Treatment")+
-#   ylab("Frequency in 15 µm radius [%]")+
-#   # scale_y_continuous(expand = c(0, 0), limits = c(10,40))+
-#   geom_text(aes(y = lab_pos, label = lab_text, vjust = -0.5), data = Labs,size=3)
+# Combine all images into one master matrix
+master_cn_matrix <- do.call(rbind, cn_matrix_list)
+
+print("Clustering microenvironments using K-means...")
+set.seed(8) # Lock seed for reproducibility
+kmeans_res <- kmeans(master_cn_matrix, centers = num_niches, nstart = 25)
+
+# Add the raw cluster assignments temporarily
+df_all$Raw_Niche <- paste0("Niche ", kmeans_res$cluster[df_all$Global_ID])
+
+# Map raw clusters to your specific biological names
+# NOTE: The order of K-means clusters (1-5) can shift if the data changes slightly.
+# Assuming Niche 1 = Epithelial, Niche 2 = B cell, etc. based on your prompt.
+niche_names <- c(
+  "Niche 1" = "Lymphatic/Myeloid niche",
+  "Niche 2" = "B cell/BEC niche",
+  "Niche 3" = "Epithelial niche",
+  "Niche 4" = "Blood endothelial niche"
+)
+
+df_all$Tissue_Niche <- unname(niche_names[df_all$Raw_Niche])
+df_all$Tissue_Niche <- factor(df_all$Tissue_Niche, levels = c(
+  "B cell/BEC niche",        
+  "Lymphatic/Myeloid niche", 
+  "Blood endothelial niche",
+  "Epithelial niche"       
+))
+
+# ========================================================================
+# PART 2: WHAT IS IN EACH NICHE? (Composition Profiling)
+# ========================================================================
+niche_composition <- df_all %>%
+  group_by(Tissue_Niche, CellType) %>%
+  summarise(Count = n(), .groups = "drop") %>%
+  group_by(Tissue_Niche) %>%
+  mutate(Fraction = Count / sum(Count))
+
+plot_comp_al3 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, fill = CellType)) +
+  geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.2) +
+  scale_fill_manual(values = ColorsCellType) +
+  theme_classic() +
+  labs(title = "Cellular Microenvironments",
+       x = "Identified Tissue Niches", y = "Average Proportion of Cell Types", fill = "Cell Type") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, face = "bold"),
+        plot.title = element_text(face = "bold", hjust = 0, size = 12))
+
+print(plot_comp_al3)
+
+
+niche_composition <- df_all %>%
+  group_by(Tissue_Niche, AL1) %>%
+  summarise(Count = n(), .groups = "drop") %>%
+  group_by(Tissue_Niche) %>%
+  mutate(Fraction = Count / sum(Count))
+
+plot_comp_al1 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, fill = AL1)) +
+  geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.2) +
+  scale_fill_manual(values = c("yellow", "darkcyan", "deeppink")) +
+  theme_classic() +
+  labs(title = "Cellular Microenvironments",
+       x = "Identified Tissue Niches", y = "Average Proportion of Cell Types", fill = "Cell Type") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, face = "bold"),
+        plot.title = element_text(face = "bold", hjust = 0, size = 12))
+
+print(plot_comp_al1)
 
 ```
 
-## Combine plots for figure
+```{r, fig.height=3, fig.width=9}
+# ========================================================================
+# PART 3: COMPARING CONDITIONS
+# ========================================================================
+
+# 1. Calculate the frequency of each niche per FOV
+niche_abundance <- df_all %>%
+  group_by(Filename, Condition, Tissue_Niche) %>%
+  summarise(Cells_in_Niche = n(), .groups = "drop") %>%
+  group_by(Filename) %>%
+  mutate(Total_Cells = sum(Cells_in_Niche),
+         Frequency = (Cells_in_Niche / Total_Cells) * 100) %>%
+  ungroup()
+
+# --- 1. SETTINGS & PREPARATION ---
+# Ensure your Conditions are in the correct order for the x-axis
+# Adjust levels to match your actual data (e.g., "CTRL", "D1", "D3")
+target_conditions <- c("CTRL", "D1", "D2", "D3") 
+niche_abundance$Condition <- factor(niche_abundance$Condition, levels = target_conditions)
+
+all_niches <- unique(niche_abundance$Tissue_Niche)
+niche_plot_list <- list()
+
+# --- 2. LOOP THROUGH EACH NICHE ---
+for (target_niche in all_niches) {
+  
+  # Step A: Filter data for this specific niche
+  stats_df <- niche_abundance %>%
+    filter(Tissue_Niche == target_niche)
+  
+  if (nrow(stats_df) == 0) next
+  
+  # Step B: Statistical Testing (Pairwise Wilcoxon)
+  # This compares all conditions against each other
+  stat.test <- tryCatch({
+    stats_df %>%
+      wilcox_test(Frequency ~ Condition) %>%
+      add_significance() %>%
+      add_xy_position(x = "Condition", step.increase = 0.1)
+  }, error = function(e) NULL)
+  
+  # Step C: Calculate n labels (Number of FOVs per Condition)
+  global_max <- max(stats_df$Frequency, na.rm = TRUE)
+  
+  n_df <- stats_df %>%
+    group_by(Condition) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    mutate(
+      Label = paste0("n=", n),
+      # Position labels at the very top of the plot
+      Y_pos = global_max * 1.1 
+    )
+  
+  # Step D: Build the Plot
+  p <- ggplot(stats_df, aes(x = Condition, y = Frequency)) +
+    geom_boxplot(outlier.colour = NA, alpha = 0.5, fill = "white") +
+    geom_beeswarm(aes(color = Condition), size = 1.5, cex = 2) + 
+    # Add n= labels
+    geom_text(data = n_df, aes(x = Condition, y = 95, label = Label), 
+              size = 3, fontface = "italic", inherit.aes = FALSE) +
+    ggtitle(target_niche) +
+    # Expand Y-axis for significance brackets
+    scale_y_continuous(expand = c(0, 0.5), limits = c(0,100))+
+    theme_classic() + 
+    theme(axis.text.x = element_text(size = 9, face = "bold", angle = 45, hjust = 1),
+          axis.text.y = element_text(size = 9),
+          axis.title.x = element_blank(), 
+          axis.title.y = element_text(size = 9), 
+          plot.title = element_text(size = 11, hjust = 0.5, face = "bold"),
+          legend.position = "none") +
+    ylab("% of Total Cells per FOV") +
+    scale_color_manual(values = cols_treat)
+
+  # Step E: Add Stat Brackets
+  if (!is.null(stat.test) && nrow(stat.test) > 0) {
+    # Dynamically pick significance column
+    sig_label <- ifelse("p.adj.signif" %in% colnames(stat.test), "p.adj.signif", "p.signif")
+    
+    p <- p + stat_pvalue_manual(stat.test, 
+                                label = sig_label, 
+                                hide.ns = TRUE, 
+                                tip.length = 0.01,
+                                step.increase = 0.05)
+  }
+  
+  # Save to list
+  niche_plot_list[[as.character(target_niche)]] <- p
+}
+
+# --- 3. COMBINE INTO GRID ---
+if (length(niche_plot_list) > 0) {
+  final_niche_grid <- wrap_plots(niche_plot_list, ncol = 4) +
+    plot_annotation(
+      title = "Cellular Niche Abundance across Conditions",
+      subtitle = "Each point represents one FOV; Stats: Pairwise Wilcoxon Test",
+      theme = theme(
+        plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+        plot.subtitle = element_text(size = 12, hjust = 0.5)
+      )
+    )
+  
+  print(final_niche_grid)
+}
+```
+
+```{r, fig.height=6, fig.width=6}
+# --- 3. COMBINE INTO GRID ---
+if (length(niche_plot_list) > 0) {
+  final_niche_grid <- wrap_plots(niche_plot_list, ncol = 2) +
+    plot_annotation(
+      title = "Cellular Niche Abundance\nacross Conditions",
+      theme = theme(
+        plot.title = element_text(size = 12, face = "bold", hjust = 0.5)
+        )
+    )
+  
+  print(final_niche_grid)
+}
+```
+
+```{r, fig.height=5, fig.width=9}
+upper_fig <- ggarrange(plot_comp_al3, final_niche_grid, ncol = 2, nrow = 1, 
+          widths = c(3.5, 4) , labels = c("A", "B"))
+
+upper_fig
+```
+
+```{r, fig.height=6, fig.width=9}
+
+# Calculate the frequency of each CellType within each Tissue_Niche per FOV
+niche_composition <- df_all %>%
+  group_by(Filename, Condition, Tissue_Niche, CellType) %>%
+  summarise(Cell_Count = n(), .groups = "drop") %>%
+  # Ensure all cell types are represented in every niche/FOV, even if count is 0
+  complete(nesting(Filename, Condition, Tissue_Niche), CellType, fill = list(Cell_Count = 0)) %>%
+  group_by(Filename, Tissue_Niche) %>%
+  mutate(
+    Total_Niche_Cells = sum(Cell_Count),
+    Frequency = (Cell_Count / Total_Niche_Cells) * 100
+  ) %>%
+  ungroup() %>%
+  # Remove NaNs if a niche had 0 cells total in an FOV
+  filter(!is.na(Frequency))
+
+niche_composition$Condition <- factor(niche_composition$Condition, levels = c("CTRL", "D1", "D2", "D3"))
+
+
+all_niches <- unique(niche_composition$Tissue_Niche)
+all_cell_types <- unique(niche_composition$CellType)
+niche_plots_all <- list()
+
+for (current_niche in all_niches) {
+  
+  message("Processing Niche: ", current_niche)
+  niche_plots <- list()
+  
+  # Filter data for the specific niche
+  niche_data <- niche_composition %>% filter(Tissue_Niche == current_niche)
+  
+  for (current_cell in all_cell_types) {
+    
+    stats_df <- niche_data %>% filter(CellType == current_cell)
+    
+    # Skip if there's no data at all for this cell type in this niche
+    if(nrow(stats_df) == 0 || sum(stats_df$Frequency) == 0) next
+    
+    # Statistical Testing (Pairwise)
+    stat.test <- tryCatch({
+      stats_df %>%
+        wilcox_test(Frequency ~ Condition) %>%
+        add_significance() %>%
+        add_xy_position(x = "Condition")
+    }, error = function(e) NULL)
+    
+    # Calculate Max for Labeling
+    y_max <- max(stats_df$Frequency, na.rm = TRUE)
+    
+    # Build the individual plot
+    p <- ggplot(stats_df, aes(x = Condition, y = Frequency)) +
+      geom_boxplot(outlier.colour = NA, fill = "white", alpha = 0.5) +
+      geom_beeswarm(aes(color = Condition), size = 1, cex = 1.5, alpha = 0.6) +
+      ggtitle(current_cell) +
+      scale_y_continuous(expand = expansion(mult = c(0.1, 0.4))) +
+      scale_color_manual(values = cols_treat) +
+      theme_classic() +
+      theme(
+        axis.text.x = element_text(size = 8, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 8),
+        axis.title = element_blank(),
+        plot.title = element_text(size = 10, face = "bold", hjust = 0.5)
+      )+
+      NoLegend()
+    
+    # Add Stats
+    if (!is.null(stat.test) && nrow(stat.test) > 0) {
+      sig_col <- if("p.adj.signif" %in% colnames(stat.test)) "p.adj.signif" else "p.signif"
+      p <- p + stat_pvalue_manual(stat.test, label = sig_col, hide.ns = TRUE, 
+                                  tip.length = 0.01, step.increase = 0.1)
+    }
+    
+    niche_plots[[current_cell]] <- p
+    
+    plot_name <- paste0(current_niche, "_", current_cell)
+    niche_plots_all[[plot_name]] <- p
+  }
+  
+  # Assemble the Grid for this Niche
+  if (length(niche_plots) > 0) {
+    combined_grid <- wrap_plots(niche_plots, ncol = 4) +
+      plot_annotation(
+        title = paste("Niche Composition:", current_niche),
+        subtitle = "Y-axis: % of total cells within this specific niche; Stats: Pairwise Wilcoxon",
+        theme = theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
+      )
+    
+    print(combined_grid)
+  }
+}
+```
+
+```{r, fig.height=2, fig.width=9}
+middle_fig <- ggarrange(niche_plots_all[["Lymphatic/Myeloid niche_ILC2s"]],
+          niche_plots_all[["Lymphatic/Myeloid niche_Myeloid cells"]],
+          niche_plots_all[["Lymphatic/Myeloid niche_LYVE1 CD90 Lymphatics"]], 
+          ncol = 3, nrow = 1, labels = c("C"))
+
+middle_fig
+```
+
+```{r, fig.height=7, fig.width=9}
+ggarrange(upper_fig, "NONE", middle_fig, nrow = 3, ncol = 1, 
+          heights = c(5, 0.1, 2))
+```
+
+Spatial distribution
+
+```{r fig.height=10, fig.width=20, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+library(patchwork)
+
+# ========================================================================
+# PART 4: SPATIAL MAPPING (36 Plot Grid Assembly)
+# ========================================================================
+
+# 1. Define the Niche colors (Matches your specific clusters)
+niche_colors <- c(
+  "Epithelial niche" = "#117733", 
+  "Lymphatic/Myeloid niche" = "#DDCC77", 
+  "Blood endothelial niche" = "#882255", 
+  "B cell/BEC niche" = "#332288"
+)
+
+# 2. Grab and Sort exactly 35 FOVs by Condition
+example_fovs_raw <- unique(df_all$Filename)[1:35] 
+
+fov_order_df <- df_all %>%
+  dplyr::filter(Filename %in% example_fovs_raw) %>%
+  dplyr::select(Filename, Condition) %>%
+  dplyr::distinct() %>%
+  dplyr::arrange(factor(Condition, levels = c("CTRL", "D1", "D2", "D3")), Filename)
+
+example_fovs <- fov_order_df$Filename
+spatial_niche_plots <- list()
+
+# 3. LOOP: Generate individual FOV maps
+for(fov in example_fovs) {
+  plot_data <- df_all %>% filter(Filename == fov)
+  cond_label <- unique(plot_data$Condition)
+  plot_title <- fov
+  
+  p <- ggplot(plot_data, aes(x = Loc_X, y = Loc_Y, color = Tissue_Niche)) +
+    geom_point(size = 1, alpha = 0.5, shape = 19) + # Smaller points for high-density grid
+    scale_color_manual(values = niche_colors) +
+    scale_y_reverse() + # Standard spatial orientation
+    coord_fixed() +
+    theme_void() +
+    theme(
+      panel.background = element_rect(fill = "black", color = NA),
+      plot.background = element_rect(fill = "black", color = NA),
+      plot.title = element_text(color = "white", hjust = 0.5, face = "bold", size = 7),
+      legend.position = "none"
+    ) +
+    labs(title = plot_title)
+  
+  spatial_niche_plots[[fov]] <- p
+}
+
+# 4. THE LEGEND PLOT (The 36th Plot)
+n_niches <- length(niche_colors)
+text_legend_df <- data.frame(
+  Niche = names(niche_colors),
+  Y_pos = seq(n_niches, 1),
+  X_pos = rep(0, n_niches)
+)
+
+legend_plot <- ggplot(text_legend_df, aes(x = X_pos, y = Y_pos)) +
+  geom_point(aes(color = Niche), size = 5, shape = 15) + 
+  geom_text(aes(label = Niche), color = "white", hjust = 0, nudge_x = 0.1, size = 4, fontface = "bold") +
+  scale_color_manual(values = niche_colors) +
+  xlim(-0.1, 1.5) + 
+  ylim(0, n_niches + 1) +
+  theme_void() +
+  theme(
+    panel.background = element_rect(fill = "black", color = NA),
+    plot.background = element_rect(fill = "black", color = NA),
+    legend.position = "none"
+  )
+
+# 5. ASSEMBLE THE 6x6 GRID
+# Combine the 35 FOV plots + 1 legend plot
+final_plot_list <- c(spatial_niche_plots, list(legend = legend_plot))
+
+niche_map_grid <- wrap_plots(final_plot_list, ncol = 9) +
+  plot_annotation(
+    title = "Spatial Niche Atlas: Tissue Organization across Timepoints",
+    theme = theme(
+      plot.background = element_rect(fill = "black", color = NA),
+      plot.title = element_text(color = "white", size = 20, face = "bold", hjust = 0.5),
+      plot.subtitle = element_text(color = "gray70", size = 14, hjust = 0.5),
+      plot.margin = margin(1, 1, 1, 1)
+    )
+  )
+
+# Render the atlas
+print(niche_map_grid)
+```
+
+```{r fig.height=6, fig.width=9, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+library(patchwork)
+
+# ========================================================================
+# PART 4: SPATIAL MAPPING (3x3 CTRL vs 3x3 D3)
+# ========================================================================
+
+# 1. Define the Niche colors
+niche_colors <- c(
+  "Epithelial niche" = "#117733", 
+  "Lymphatic/Myeloid niche" = "#DDCC77", 
+  "Blood endothelial niche" = "#882255", 
+  "B cell/BEC niche" = "#332288"
+)
+
+# 2. Function to generate a list of 9 plots for a specific condition
+get_niche_plots <- function(data, target_condition, n_fovs = 9) {
+  fovs <- data %>%
+    filter(Condition == target_condition) %>%
+    pull(Filename) %>%
+    unique() %>%
+    head(n_fovs)
+  
+  plot_list <- list()
+  
+  for(fov in fovs) {
+    plot_data <- data %>% filter(Filename == fov)
+    
+    p <- ggplot(plot_data, aes(x = Loc_X, y = Loc_Y, color = Tissue_Niche)) +
+      geom_point(size = 0.5, alpha = 0.6, shape = 19) + 
+      scale_color_manual(values = niche_colors) +
+      scale_y_reverse() + 
+      coord_fixed() +
+      theme_void() +
+      theme(
+        panel.background = element_rect(fill = "black", color = NA),
+        plot.background = element_rect(fill = "black", color = NA),
+        plot.title = element_text(color = "white", hjust = 0.5, size = 7),
+        legend.position = "none"
+      ) +
+      labs(title = fov)
+    
+    plot_list[[fov]] <- p
+  }
+  return(plot_list)
+}
+
+# 3. Generate the plot lists
+ctrl_plots <- get_niche_plots(df_all, "CTRL")
+d3_plots   <- get_niche_plots(df_all, "D3")
+
+# 4. Create the Legend Plot (HORIZONTAL 1 ROW, 4 COLUMNS)
+# We spread the X coordinates out (1, 4, 7, 10) to give the text labels room
+legend_df <- data.frame(
+  Niche = names(niche_colors),
+  Y = 1,
+  X = c(1, 4, 7, 10) 
+)
+
+legend_plot <- ggplot(legend_df, aes(X, Y)) +
+  geom_point(aes(color = Niche), size = 6, shape = 15) + 
+  geom_text(aes(label = Niche), 
+            color = "white", 
+            hjust = 0, 
+            nudge_x = 0.3, 
+            size = 9/.pt, # Matches theme size 12pt
+            fontface = "bold") +
+  scale_color_manual(values = niche_colors) +
+  # Expand limits so the last text label isn't cut off
+  xlim(0.5, 13) + 
+  theme_void() +
+  theme(
+    plot.background = element_rect(fill = "black", color = NA), 
+    legend.position = "none",
+    plot.margin = margin(t = 2, b = 2)
+  )
+
+# 5. Assemble the Grids
+grid_ctrl <- wrap_plots(ctrl_plots, ncol = 3) + 
+  plot_annotation(title = "Condition: CTRL", 
+                  theme = theme(plot.background = element_rect(fill = "black", color = NA),
+                                plot.title = element_text(color = "white", size = 20, face = "bold", hjust = 0.5)))
+
+grid_d3 <- wrap_plots(d3_plots, ncol = 3) + 
+  plot_annotation(title = "Condition: D3", 
+                  theme = theme(plot.background = element_rect(fill = "black", color = NA),
+                                plot.title = element_text(color = "white", size = 20, face = "bold", hjust = 0.5)))
+
+# Combine both side-by-side with the horizontal legend at the bottom
+final_atlas <- (grid_ctrl | grid_d3) / legend_plot + 
+  plot_layout(heights = c(10, 1)) & 
+  theme(plot.background = element_rect(fill = "black", color = NA))
+  
+
+print(final_atlas)
+```
+
+# Combine plots for figure
 
 ```{r, fig.width=9, fig.height=6.5}
 coenrichment <- ggarrange(final_plot_ILC2s, "NONE", coenrichment_fig_ann,  

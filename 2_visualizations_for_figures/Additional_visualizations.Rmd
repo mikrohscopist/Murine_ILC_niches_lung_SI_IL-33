@@ -1,5 +1,5 @@
 ---
-title: "Additional_visualizations"
+title: "Additional visualizations"
 author: "Sandy Kroh"
 date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
@@ -27,30 +27,39 @@ options(width = 1200)
 ## Libraries
 
 ```{r}
-library(Seurat)
 library(SeuratObject)
 library(dplyr)
+library(rstatix)
+
+# remove.packages("rlang")
+# remove.packages("dplyr")
+# install.packages("rlang")
+# install.packages("dplyr")
+library(rlang)
+library(dplyr)
+
+if (!requireNamespace("Giotto", quietly = TRUE))
+  devtools::install_github("drieslab/Giotto@suite")
+if (!requireNamespace("VoltRon", quietly = TRUE))
+#  devtools::install_github("Artur-man/VoltRon")
+  devtools::install_github("BIMSBbioinfo/VoltRon@dev")
+
+if (!requireNamespace("Seurat", quietly = TRUE))
+  install.packages("Seurat")
+library(Giotto)
+library(Seurat)
+library(VoltRon)
 library(ggplot2)
-# library(stringr)
-# library(glue)
-# library(here)
-library(readr)
-# library(lubridate)
-# library(data.table)
-# library(clustree)
-# library(magrittr)
 library(ggpubr)
-# library(ggrepel)
-# library(readxl)
-# library(openxlsx)
+library(readr)
+library(ggbeeswarm)
+library(stringr)
 ```
 
 ## Parameters
 
 ```{r}
 set.seed(123)
-
-input_dir <- here::here("1_data_tidying", "Lung_SI_all_cells_all_ALs_files")
 
 output_dir <- here::here("2_visualizations_for_figures", "Additional_visualizations_files")
 dir.create(output_dir)
@@ -62,6 +71,7 @@ main_markers <- c(
   "EpCAM", "EMCN", "LYVE1", "PDPN", "PDGFRa", "CD8a", "CD4",
   "CD45", "CD3", "IRF4", "Kappa", "CD11c", "CD127", "GATA3eGFP", "RORgt"
 )
+
 
 immune_markers <- c(
  "CD3", "CD4", "CD8a", "Kappa", "IRF4", "CD11c",
@@ -87,327 +97,622 @@ cols_nat <- c("magenta", "cyan", "blue", "purple", "green",
 
 colfunc <- colorRampPalette(c("darkcyan", "green", "yellow", "magenta", "purple"))
 
+cols_ilcs_lung <- c("darkcyan", "seagreen2", "deeppink4")
+
+cols_treat <- c("CTRL"  = "darkcyan", 
+              "1"  = "gold",
+              "2"  = "deeppink", 
+              "3"  = "slateblue", 
+              "D1"  = "gold",
+              "D2"  = "deeppink", 
+              "D3"  = "slateblue")
+
+
+# colorblind-friendly palette for conditions
+cols_con <- cols_treat
+ColorsCellType_conditions <- cols_con
+
+cols_heat <- c(
+               "#648FFF", "white", "#FFB000")
+
 ```
 
 # Load data
 
-## Lung
+Load spatial objects of Giotto and VoltRon for AL2:
 
 ```{r, fig.width=9, fig.height=6}
+set.seed(8)
 
-SO.lung <- readRDS(paste0(input_dir, "/lung_all_cells_all_ALs.rds"))
-dim(SO.lung)
+# from import_Giotto.Rmd
+gio_list <- readRDS("D:/Repositories/2025_Kroh_et_al/Murine_ILC_niches_lung_SI_IL-33/1_spatial_setup/import_Giotto_Lung_AL2_files/Giotto_data_lung_AL2.rds")
 
-SO.lung$AL1 <- gsub("Vessels", "Stromal cells", SO.lung$AL1)
+# from import_VoltRon.Rmd
+vr_list <- readRDS("D:/Repositories/2025_Kroh_et_al/Murine_ILC_niches_lung_SI_IL-33/1_spatial_setup/import_VoltRon_Lung_AL2_files/VoltRon_data_lung_AL2.rds")
+
+# original data - CellTypes are AL2
+metadatax <- read_csv(here::here("data", "MELC_data_murine_lung_CTRL_D1_D2_D3_withfolders.csv"))
+metadatax <- metadatax %>%
+  mutate(CellType = AL2)  %>%
+  filter(Sample != "20210906_3_lu_d3")
+
+unique(metadatax$CellType)
+
+vr_list_names <- unique(metadatax$Sample)
+
+
+cell_proximities_list <- list()
+for(samp in vr_list_names){
+  print(samp)
+  cell_proximities_list[[samp]] <-cellProximityEnrichment(
+    gobject = gio_list[[samp]],
+    cluster_column = 'CellType',
+    spatial_network_name = 'Delaunay_network',
+    adjust_method = 'fdr',
+    number_of_simulations = 1000)
+  cell_proximities_list[[samp]] <- cell_proximities_list[[samp]]$enrichm_res
+}
+
+vr_merged <- merge(vr_list[[1]], vr_list[-1])
+vrImageNames(vr_merged)
+unique(vr_merged$CellType)
+
 ```
 
-## SI
+Calculate co-enrichment scores and plot them:
 
-```{r, fig.width=9, fig.height=6}
+```{r, fig.height=4, fig.width=9}
+set.seed(8)
 
-SO.si <- readRDS(paste0(input_dir, "/si_all_cells_all_ALs.rds"))
-dim(SO.si)
+# FOVs for representative overview images
+fovs <- vr_list_names
 
-SO.si$AL1 <- gsub("Epithelia & stroma", "Epithelia", SO.si$AL1)
-colnames(SO.si@meta.data)
+set_alpha <- 0.35
+set_ptsize <- 2
+set_nrows <- 1
+set_ncols <- 3
+cell_shape <- 20
+
+
+cols_con <- c("darkcyan", "gold", "deeppink", 
+                "slateblue")
+
+cols_fov <- c("darkcyan", "gold", "deeppink", 
+                "slateblue")
+
+ColorsCellType <-  list(
+  #`NK cells/ILC1s/ILC3s` = "cyan", 
+  `ILC2s` = "magenta",
+  #`ILC3s` = "magenta", 
+  `EMCN CD31 Blood vessels` = "green")
+
+uni_celltypes <- unique(vr_merged$CellType)
+backgroundlist <- list("EpCAM","CD31","LYVE1","LYVE1","CD11c","B220","CD45", "CD8a", "CD4")
+names(backgroundlist) <- uni_celltypes
+uni_celltypes <- uni_celltypes[!uni_celltypes %in% "ILCs"]
+
+g_master_list <- list()
+for(unic in uni_celltypes){
+  
+    ### selected cell groups ####
+  selected_celltypes <- c("ILCs", unic)
+  # interactions <- c("EMCN CD31 Blood vessels--ILC2s")
+  interactions <- unique(cell_proximities_list[[vr_list_names[30]]]$unified_int)
+  interactions <- interactions[grepl("ILCs", interactions) & grepl(unic, interactions)]
+  background_image <- backgroundlist[[unic]]
+  if(length(interactions) > 0){
+     ### get interaction results ####
+    interaction_celltypes <- NULL
+    for(samp in vr_list_names){
+      cur_cell_proximities <- cell_proximities_list[[samp]]
+      cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,]
+      sample <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+      if(nrow(cur_cell_proximities) > 0 & sample != "20210906_FOV3_D3"){
+        interaction_celltypes <- rbind(interaction_celltypes,
+                                       data.frame(cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,], 
+                                                  experiment = strsplit(sample, split = "_")[[1]][1], fov = strsplit(sample, split = "_")[[1]][2], condition = strsplit(sample, split = "_")[[1]][3]))
+      }
+    }
+    interaction_celltypes$p.adj <- ifelse(interaction_celltypes$enrichm > 0, interaction_celltypes$p.adj_higher, interaction_celltypes$p.adj_lower)
+
+
+    
+    sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("*"), ""))
+
+    g_test <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = condition)) +
+      geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single")) +
+      facet_grid(.~condition, scales = "free_x") +
+      geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), angle = 90, hjust = -0.02, size = 4) +
+      ylim(-2,3.5)+
+      NoLegend()+
+      theme_classic2()+
+      scale_fill_manual(values = cols_fov, name = "") +
+      theme(axis.text.x = element_text(#angle = 50,
+                                       vjust = 1, size = 12, hjust = 0.5, face = "bold"
+                                       ),
+            axis.text.y = element_text(hjust = 0.5, size = 12),
+            axis.title.x = element_blank(),
+            axis.title.y = element_text(size = 12),
+            plot.title = element_text(size =14, hjust = 0.5),
+            plot.margin = margin(0, 0.5, 0.5, 0.5, "cm"),
+            legend.position = "none",
+            strip.background=element_blank(),
+            strip.background.x= element_blank(),
+            strip.text.x = element_text(size = 1, color = "white"),
+            panel.grid.major.y = element_line())+
+      NoLegend()+  
+      ggtitle(gsub("LYVE1 CD90 ", "", interactions)) +
+      ylab("Enrichment")
+    
+    
+    g_master_list[[unic]] <- g_test+
+        theme(plot.margin = margin(0, 0.5, 0, 0.5, "cm"))
+  }
+}
+
+# ILC2s around ILC2s -----------------------------------------
+interactions <- c("ILCs--ILCs")
+unic <- "ILCs"
+background_image <- backgroundlist[["ILCs"]]
+interaction_celltypes <- NULL
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,]
+    sample <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+    if(nrow(cur_cell_proximities) > 0 & sample != "20210906_FOV3_D3"){
+      interaction_celltypes <- rbind(interaction_celltypes,
+                                     data.frame(cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,], 
+                                                experiment = strsplit(sample, split = "_")[[1]][1], fov = strsplit(sample, split = "_")[[1]][2], condition = strsplit(sample, split = "_")[[1]][3]))
+    }
+  }
+interaction_celltypes$p.adj <- ifelse(interaction_celltypes$enrichm > 0, interaction_celltypes$p.adj_higher, interaction_celltypes$p.adj_lower)
+  # plot test results
+  # sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("p=",round(interaction_celltypes$p.adj,3)), ""))
+  sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("*"), ""))
+    # print(sig_label)
+g_test <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = condition)) +
+  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single")) +
+  facet_grid(.~condition, scales = "free_x") +
+  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), angle = 90, hjust = -0.02, size = 4) +
+  ylim(-2,3.5)+
+  NoLegend()+
+  theme_classic2()+
+  scale_fill_manual(values = cols_fov, name = "") +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        plot.margin = margin(0, 0.5, 0.5, 0.5, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())+
+  NoLegend()+  
+  ggtitle(interactions) +
+  ylab("Enrichment")
+
+
+g_master_list[[unic]] <- g_test+
+    theme(plot.margin = margin(0, 0.5, 0, 0.5, "cm"))
+
 ```
 
 # Visualization
 
-Show ridge plot of NK cells/ILC1s/ILC3s
+## Coenrichment plots
 
-```{r, fig.width=2, fig.height=3}
+```{r, fig.height=3, fig.width=9}
 
-SO.lung.sub <- subset(SO.lung, subset = AL3 == c("NK cells/ILC1s"))
+library(ComplexHeatmap)
+library(circlize)
+library(dplyr)
+library(tidyr)
+library(ggplotify)
+library(ggplot2)
+
+# --- 1. Data Gathering (Remains the same) ---
+all_interactions <- data.frame()
+# We'll also capture the unique cell types here to use for our loop later
+all_found_cell_types <- c() 
+
+for (vr_name in vr_list_names) {
+  cur_cell_proximities <- cell_proximities_list[[vr_name]]
+  if(is.null(cur_cell_proximities) || nrow(cur_cell_proximities) == 0) next
+  
+  vr_samp <- subset(vr_merged, samples = vr_name)
+  vr_meta <- Metadata(vr_samp)
+  condition <- paste(unique(vr_meta$Condition), collapse = ", ")
+  
+  # Capture the cell types available in this dataset
+  all_found_cell_types <- unique(c(all_found_cell_types, unique(vr_meta$CellType)))
+  
+  temp_df <- data.frame(
+    Interaction = cur_cell_proximities$unified_int,
+    Enrichment = cur_cell_proximities$enrichm,
+    FOV = vr_name,
+    Condition = condition
+  )
+  all_interactions <- rbind(all_interactions, temp_df)
+}
+
+# --- 2. Initialize Storage ---
+all_heatmaps <- list()
+target_cell_types <- sort(all_found_cell_types) # Loop through these
+
+# --- 3. START THE LOOP ---
+for (ct in target_cell_types) {
+  
+  # Filter for the current cell type in the loop
+  wide_data <- all_interactions %>%
+    filter(grepl(ct, Interaction)) %>%
+    select(Interaction, FOV, Enrichment) %>%
+    pivot_wider(names_from = FOV, values_from = Enrichment, values_fill = 0, values_fn = mean) 
+  
+  # Skip if this cell type has no interactions recorded
+  if(nrow(wide_data) == 0) {
+    message(paste("Skipping", ct, "- No interactions found."))
+    next
+  }
+
+  # Convert to matrix
+  enrichmat_global <- as.matrix(wide_data[, -1])
+  rownames(enrichmat_global) <- wide_data$Interaction
+
+  # Sync Annotations: Only keep FOVs that are present for THIS cell type
+  anno_df_sub <- unique(all_interactions[, c("FOV", "Condition")])
+  rownames(anno_df_sub) <- anno_df_sub$FOV
+  anno_df_sub <- anno_df_sub[colnames(enrichmat_global), , drop = FALSE]
+
+  # Create Annotation
+  ha_top <- HeatmapAnnotation(
+    Condition = anno_df_sub$Condition,
+    col = list(Condition = cols_treat),
+    annotation_name_side = "left"
+  )
+
+  # Create Heatmap Object
+  curr_heatmap <- Heatmap(
+    enrichmat_global,
+    col = circlize::colorRamp2(c(-1, 0, 1), cols_heat),
+    name = "Enrichment\nScore",
+    heatmap_legend_param = list(direction = "vertical"),
+    
+    column_split = anno_df_sub$Condition,
+    cluster_column_slices = FALSE, 
+    cluster_columns = FALSE,        
+    cluster_rows = TRUE,           
+    
+    row_title = "Interactions",
+    row_title_gp = gpar(fontsize = 11),
+    show_column_names = FALSE,
+    row_names_gp = gpar(fontsize = 9),
+    show_row_dend = TRUE,
+    
+    top_annotation = ha_top,
+    column_title = paste("Neighborhood Enrichment:", ct),
+    column_title_gp = gpar(fontsize = 12, fontface = "bold")
+  )
+
+  # Convert to ggplot
+  heat_grob <- grid::grid.grabExpr(
+    draw(curr_heatmap, 
+         heatmap_legend_side = "right",     
+         annotation_legend_side = "right",  
+         merge_legend = TRUE,
+         padding = unit(c(0.1, 0.1, 0.1, 0.1), "cm"))
+  )
+
+  final_plot <- as.ggplot(heat_grob) + 
+    labs(x = "FOV") + 
+    theme(
+      axis.title.x = element_text(size = 11, margin = margin(t = 10), hjust = 0.37)
+    )
+
+  # Store and Print
+  all_heatmaps[[ct]] <- final_plot
+  print(final_plot)
+}
+```
+
+```{r, fig.height=3, fig.width=9}
+
+# fine tune the co-enrichment plot
+# ILC2s around lymphatics -----------------------------------------
+interactions <- c("ILCs--LYVE1 CD90 Lymphatics")
+unic <- "LYVE1 CD90 Lymphatics"
+background_image <- backgroundlist[["LYVE1 CD90 Lymphatics"]]
+interaction_celltypes <- NULL
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,]
+    sample <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+    if(nrow(cur_cell_proximities) > 0 & sample != "20210906_FOV3_D3"){
+      interaction_celltypes <- rbind(interaction_celltypes,
+                                     data.frame(cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,], 
+                                                experiment = strsplit(sample, split = "_")[[1]][1], fov = strsplit(sample, split = "_")[[1]][2], condition = strsplit(sample, split = "_")[[1]][3]))
+    }
+  }
+interaction_celltypes$p.adj <- ifelse(interaction_celltypes$enrichm > 0, interaction_celltypes$p.adj_higher, interaction_celltypes$p.adj_lower)
+  # plot test results
+  # sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("p=",round(interaction_celltypes$p.adj,3)), ""))
+  sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("*"), ""))
+    # print(sig_label)
+plot_coenrichment_lymp <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = condition)) +
+  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single")) +
+  facet_grid(.~condition, scales = "free_x") +
+  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), angle = 90, hjust = -0.02, size = 4) +
+  ylim(-1.6,3.6)+
+  NoLegend()+
+  theme_classic2()+
+  scale_fill_manual(values = cols_fov, name = "") +
+  ggtitle(gsub("LYVE1 CD90 ", "", interactions)) +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 9, hjust = 0.5
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 9),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_text(size =12, hjust = 0.5, face = "bold"),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())+
+  NoLegend()+  
+  ylab("Enrichment")
 
 
-colfunc <- colorRampPalette(c("darkcyan", "green", "yellow", "magenta", "purple"))
+# fine tune the co-enrichment plot
+# ILC2s around ILC2s -----------------------------------------
+interactions <- c("ILCs--ILCs")
+unic <- "ILCs"
+background_image <- backgroundlist[["ILCs"]]
+interaction_celltypes <- NULL
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,]
+    sample <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+    if(nrow(cur_cell_proximities) > 0 & sample != "20210906_FOV3_D3"){
+      interaction_celltypes <- rbind(interaction_celltypes,
+                                     data.frame(cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,], 
+                                                experiment = strsplit(sample, split = "_")[[1]][1], fov = strsplit(sample, split = "_")[[1]][2], condition = strsplit(sample, split = "_")[[1]][3]))
+    }
+  }
+interaction_celltypes$p.adj <- ifelse(interaction_celltypes$enrichm > 0, interaction_celltypes$p.adj_higher, interaction_celltypes$p.adj_lower)
+  # plot test results
+  # sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("p=",round(interaction_celltypes$p.adj,3)), ""))
+  sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("*"), ""))
+    # print(sig_label)
+plot_coenrichment_ilc2 <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = condition)) +
+  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single")) +
+  facet_grid(.~condition, scales = "free_x") +
+  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), angle = 90, hjust = -0.02, size = 4) +
+  ylim(-1.6,3.6)+
+  NoLegend()+
+  theme_classic2()+
+  scale_fill_manual(values = cols_fov, name = "") +
+  ggtitle(gsub("LYVE1 CD90 ", "", interactions)) +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 9, hjust = 0.5
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 9),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_text(size =12, hjust = 0.5, face = "bold"),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())+
+  NoLegend()+  
+  ylab("Enrichment")
 
 
-fetched_data <- FetchData(SO.lung.sub, 
-                        vars = c("Dataset",
-                                 "AL2",
-                                 "AL3",
-                                 "Location_Center_X", 
-                                 "Location_Center_Y", 
-                                 "UMAP_1", 
-                                 "UMAP_2",
-                                 "Treatment",
-                                 "CellID", 
-                                 "Experiment", 
-                                 rownames(SO.lung.sub)))
+# fine tune the co-enrichment plot
+# ILC2s around Myeloid cells -----------------------------------------
+interactions <- c("ILCs--Myeloid cells")
+unic <- "Myeloid cells"
+background_image <- backgroundlist[["Myeloid cells"]]
+interaction_celltypes <- NULL
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,]
+    sample <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+    if(nrow(cur_cell_proximities) > 0 & sample != "20210906_FOV3_D3"){
+      interaction_celltypes <- rbind(interaction_celltypes,
+                                     data.frame(cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,], 
+                                                experiment = strsplit(sample, split = "_")[[1]][1], fov = strsplit(sample, split = "_")[[1]][2], condition = strsplit(sample, split = "_")[[1]][3]))
+    }
+  }
+interaction_celltypes$p.adj <- ifelse(interaction_celltypes$enrichm > 0, interaction_celltypes$p.adj_higher, interaction_celltypes$p.adj_lower)
+  # plot test results
+  # sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("p=",round(interaction_celltypes$p.adj,3)), ""))
+  sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("*"), ""))
+    # print(sig_label)
+plot_coenrichment_my <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = condition)) +
+  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single")) +
+  facet_grid(.~condition, scales = "free_x") +
+  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), angle = 90, hjust = -0.02, size = 4) +
+  ylim(-1.6,3.6)+
+  NoLegend()+
+  theme_classic2()+
+  scale_fill_manual(values = cols_fov, name = "") +
+  ggtitle(gsub("LYVE1 CD90 ", "", interactions)) +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 9, hjust = 0.5
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 9),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_text(size =12, hjust = 0.5, face = "bold"),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())+
+  NoLegend()+  
+  ylab("Enrichment")
 
-fetched_data <- as.data.frame(fetched_data)
+coenrichment_fig <- ggarrange(plot_coenrichment_ilc2, plot_coenrichment_my, plot_coenrichment_lymp, ncol = 3, nrow = 1)
 
-marker2 <- "EOMES"
-marker1 <- "TBET"
+coenrichment_fig_ann <- annotate_figure(coenrichment_fig, 
+                left = text_grob("Coenrichment score", color = "black", rot = 90, 
+                                 size = 11))
 
-plot1 <- ggplot(fetched_data, aes(x = get(marker1), y = get(marker2))) +
-  geom_point(size = 0.5, color = "white") +
-  stat_density_2d(aes(fill = ..level..), geom = "polygon", color = FALSE) +
-  scale_fill_gradientn(colours = colfunc(400)) +
-  labs(y = paste0("MFI ", marker2), x = paste0("MFI ", marker1)) +
-  theme_bw() +
-  theme(
-    plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-    plot.title = element_text(hjust = 0.5),
-    legend.title = element_text(size = 8),
-    panel.background = element_rect(fill = "white"),
-    plot.background = element_rect(fill = "white"),
-    strip.background = element_rect(fill = "white"),
-    legend.position = "bottom",
-    panel.grid = element_blank()  # Remove grey grid lines
-  )  +
-  ggtitle("ILCs & T cells")+
-  annotate("rect", xmin = -1, xmax = 7.5, ymin = 3, ymax = 9,
-  alpha = 0, color = "red"#, fill = "magenta"
-  )+
-  annotate("text", 
-           x = 2, 
-           y = 4, 
-           label = "CD3+ cells", 
-           color = "red")+
-  annotate("rect", xmin = -1, xmax = 7.5, ymin = -2, ymax = 2.9,
-  alpha = 0, color = "green"#, fill = "magenta"
-  )+
-  annotate("text", 
-           x = 2, 
-           y = 1.5, 
-           label = "CD3- cells", 
-           color = "green")
-plot1
+coenrichment_fig_ann
+```
+
+## Combine plots for figure
+
+```{r, fig.width=9, fig.height=6.5}
+coenrichment <- ggarrange(final_plot_ILC2s, "NONE", coenrichment_fig_ann,  
+          ncol = 1, nrow = 3, heights = c(1, 0.1, 0.9),
+          labels = c("A", "", "B"))
+
+coenrichment
+
+plot_cin
+# spiat <- ggarrange(dist_lymph, plot_cin,
+#           ncol = 1, nrow = 2, heights = c(3, 1),
+#           labels = c("", "E", "F", "G", "H", "I"))+
+#   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
+# 
+# ggarrange(coenrichment, spiat, 
+#           ncol = 2, nrow = 1, widths = c(5.5, 3.5)
+#           # labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I")
+#           )+
+#   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
+```
+
+```{r, fig.width=9, fig.height=12.5}
+ggarrange(coenrichment, "NONE", plot_cin,  
+          ncol = 1, nrow = 3, heights = c(5, 0.5, 6),
+          labels = c("", "", ""))
+
+
+
 
 ```
 
-## AL2 immune & non-immune cells
-
-### Dot plot
-
-```{r, fig.width=7, fig.height=3}
-
-SO.si$AL3 <- factor(SO.si$AL3, levels = c("ILC2s",
-                                          "NK cells/ILC1s/ILC3s",
-                                          "CD8+ CD3- IEL",
-                                          "T helper cells",
-                                          "T cytotox. cells",
-                                          "Myeloid cells",
-                                          "B cells",
-                                          "Plasma cells",
-                                          "Blood vessels",
-                                          "Fibroblasts",
-                                          "Lymphatics",
-                                          "Epithelia I",
-                                          "Epithelia II"))
-
-SO.si.sub <- subset(SO.si, subset = AL3 ==c(
-                                          "Myeloid cells",
-                                          "B cells",
-                                          "Plasma cells",
-                                          "Blood vessels",
-                                          "Fibroblasts",
-                                          "Lymphatics",
-                                          "Epithelia I",
-                                          "Epithelia II"))
-
-dot_plot_al2 <- Seurat::DotPlot(SO.si.sub, 
-                group.by = "AL3",
-                  features = c(
-                    "CD11c", 
-                    "MHCII", 
-                    "CD45", 
-                    "IRF4", 
-                    "EMCN",
-                    "CD117", 
-                    "CD44", 
-                    "Sca1",
-                    "CD90", 
-                    "CD31", 
-                    "LYVE1", 
-                    "PDPN",
-                    "CD127", 
-                    "EpCAM", 
-                    "Ki67"
-                  ), 
-                cols ="RdBu", assay = "MELC")+   
-    RotatedAxis()+
-    # coord_flip()+
-    theme(axis.text.x=element_text(size=12, angle = 45),
-          axis.text.y=element_text(size=12), 
-          plot.margin = margin(1, 0.5, 0.5, 0.5, "cm"), 
-          axis.title.x = element_blank(), 
-          axis.title.y = element_blank(), 
-          plot.title = element_blank(), 
-          legend.text = element_text(size=8), 
-          legend.title = element_text(size=8))+ 
-  scale_color_gradient2(midpoint = 0, low = "gold", 
-                            high = "blue", space = "Lab" )
-
-dot_plot_al2
-```
-
-## AL3 T cells and ILC subtypes
-
-### Gating strategy
-
-```{r, fig.width=2, fig.height=3}
-
-SO.si.sub <- subset(SO.si, subset = AL2 == c("ILCs",  
-                                             "CD8+ CD3- IEL",  
-                                             "T helper cells", 
-                                             "T cytotox. cells"))
-SO.si.sub$AL3 <- factor(SO.si.sub$AL3, levels = c("NK cells/ILC1s/ILC3s","ILC2s", "CD8+ CD3- IEL",    "T helper cells",   "T cytotox. cells"))
-
-
-colfunc <- colorRampPalette(c("darkcyan", "green", "yellow", "magenta", "purple"))
-
-
-fetched_data <- FetchData(SO.si.sub, 
-                        vars = c("Dataset",
-                                 "AL2",
-                                 "AL3",
-                                 "Location_Center_X", 
-                                 "Location_Center_Y", 
-                                 "UMAP_1", 
-                                 "UMAP_2",
-                                 "Treatment",
-                                 "CellID", 
-                                 "Experiment", 
-                                 rownames(SO.si.sub)))
-
-fetched_data <- as.data.frame(fetched_data)
-
-marker2 <- "CD3"
-marker1 <- "CD127"
-
-plot1 <- ggplot(fetched_data, aes(x = get(marker1), y = get(marker2))) +
-  geom_point(size = 0.5, color = "white") +
-  stat_density_2d(aes(fill = ..level..), geom = "polygon", color = FALSE) +
-  scale_fill_gradientn(colours = colfunc(400)) +
-  labs(y = paste0("MFI ", marker2), x = paste0("MFI ", marker1)) +
-  theme_bw() +
-  theme(
-    plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-    plot.title = element_text(hjust = 0.5),
-    legend.title = element_text(size = 8),
-    panel.background = element_rect(fill = "white"),
-    plot.background = element_rect(fill = "white"),
-    strip.background = element_rect(fill = "white"),
-    legend.position = "bottom",
-    panel.grid = element_blank()  # Remove grey grid lines
-  )  +
-  ggtitle("ILCs & T cells")+
-  annotate("rect", xmin = -1, xmax = 7.5, ymin = 3, ymax = 9,
-  alpha = 0, color = "red"#, fill = "magenta"
-  )+
-  annotate("text", 
-           x = 2, 
-           y = 4, 
-           label = "CD3+ cells", 
-           color = "red")+
-  annotate("rect", xmin = -1, xmax = 7.5, ymin = -2, ymax = 2.9,
-  alpha = 0, color = "green"#, fill = "magenta"
-  )+
-  annotate("text", 
-           x = 2, 
-           y = 1.5, 
-           label = "CD3- cells", 
-           color = "green")
-plot1
-
-```
-
-### Ridge plot profiles of T cell and ILC subtypes
-
-```{r, fig.width=9, fig.height=9}
-
-plot_ridge <- RidgePlot(SO.si.sub, 
-          features = c("CD127", "CD90","CD3", "CD4",  "RORgt", "GATA3eGFP", "CD8a", "EOMES"), same.y.lims = TRUE,log = TRUE,
-          cols = alpha(c(
-            "darkmagenta", 
-            "seagreen2",
-            "navy", 
-            "gold",
-            "deeppink",
-            "slateblue"
-          ), 0.5), combine = FALSE)
-
-plot_ridge_ilctcells <- ggarrange(plotlist =  plot_ridge, common.legend = TRUE, legend = "none", ncol = 2, nrow = 4) +
-  theme(plot.margin = margin(1, 0.5, 0, 0.5, "cm"))
-
-plot_ridge_ilctcells
-```
-
-# Combine plots
-
-```{r, fig.width=9, fig.height=12}
-
-plot_combined <- ggarrange(dot_plot_al2, plot1, labels = c("A", "B"), ncol = 2, nrow = 1, widths = c(8, 3))
-
-ggarrange( plot_combined, plot_ridge_ilctcells, labels = c("", "C"), ncol = 1, nrow = 2, heights = c(3, 9))
-```
-
-## Additional information:
+Additional plots
 
 ```{r}
-df_fetched <- FetchData(SO.si.sub, 
-                        c(colnames(SO.si.sub@meta.data), rownames(SO.si.sub)))
 
-df_fetched <- df_fetched %>%
-  filter(AL3 == "NK cells/ILC1s/ILC3s")
+# fine tune the co-enrichment plot
+#  -----------------------------------------
+interactions <- c("LYVE1 CD90 Lymphatics--T cytotox cells")
+unic <- "LYVE1 CD90 Lymphatics"
+background_image <- backgroundlist[["LYVE1 CD90 Lymphatics"]]
+interaction_celltypes <- NULL
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,]
+    sample <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+    if(nrow(cur_cell_proximities) > 0 & sample != "20210906_FOV3_D3"){
+      interaction_celltypes <- rbind(interaction_celltypes,
+                                     data.frame(cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,], 
+                                                experiment = strsplit(sample, split = "_")[[1]][1], fov = strsplit(sample, split = "_")[[1]][2], condition = strsplit(sample, split = "_")[[1]][3]))
+    }
+  }
+interaction_celltypes$p.adj <- ifelse(interaction_celltypes$enrichm > 0, interaction_celltypes$p.adj_higher, interaction_celltypes$p.adj_lower)
+  # plot test results
+  # sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("p=",round(interaction_celltypes$p.adj,3)), ""))
+  sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("*"), ""))
+    # print(sig_label)
+plot_coenrichment <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = condition)) +
+  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single")) +
+  facet_grid(.~condition, scales = "free_x") +
+  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), angle = 90, hjust = -0.02, size = 4) +
+  ylim(-2,2.1)+
+  NoLegend()+
+  theme_classic2()+
+  scale_fill_manual(values = cols_fov, name = "") +
+  ggtitle(gsub("LYVE1 CD90 ", "", interactions)) +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())+
+  NoLegend()+  
+  ylab("Enrichment")
+
+plot_coenrichment
 
 
-df_fetched_filtered <- df_fetched %>%
-  filter(EOMES > 2) 
-nrow(df_fetched_filtered)/nrow(df_fetched)*100
+# fine tune the co-enrichment plot
+#  -----------------------------------------
+interactions <- c("LYVE1 CD90 Lymphatics--Myeloid cells")
+unic <- "LYVE1 CD90 Lymphatics"
+background_image <- backgroundlist[["LYVE1 CD90 Lymphatics"]]
+interaction_celltypes <- NULL
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,]
+    sample <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+    if(nrow(cur_cell_proximities) > 0 & sample != "20210906_FOV3_D3"){
+      interaction_celltypes <- rbind(interaction_celltypes,
+                                     data.frame(cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,], 
+                                                experiment = strsplit(sample, split = "_")[[1]][1], fov = strsplit(sample, split = "_")[[1]][2], condition = strsplit(sample, split = "_")[[1]][3]))
+    }
+  }
+interaction_celltypes$p.adj <- ifelse(interaction_celltypes$enrichm > 0, interaction_celltypes$p.adj_higher, interaction_celltypes$p.adj_lower)
+  # plot test results
+  # sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("p=",round(interaction_celltypes$p.adj,3)), ""))
+  sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("*"), ""))
+    # print(sig_label)
+plot_coenrichment <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = condition)) +
+  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single")) +
+  facet_grid(.~condition, scales = "free_x") +
+  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), angle = 90, hjust = -0.02, size = 4) +
+  ylim(-2,2.1)+
+  NoLegend()+
+  theme_classic2()+
+  scale_fill_manual(values = cols_fov, name = "") +
+  ggtitle(gsub("LYVE1 CD90 ", "", interactions)) +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 12),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(size = 12),
+        plot.title = element_text(size =14, hjust = 0.5),
+        plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())+
+  NoLegend()+  
+  ylab("Enrichment")
 
-df_fetched_filtered <- df_fetched %>%
-  filter(CD127 > 2)
-nrow(df_fetched_filtered)/nrow(df_fetched)*100
-
-df_fetched_filtered <- df_fetched %>%
-  filter(CD90 > 2)
-nrow(df_fetched_filtered)/nrow(df_fetched)*100
-
-df_fetched_filtered <- df_fetched %>%
-  filter(CD4 > 2)
-nrow(df_fetched_filtered)/nrow(df_fetched)*100
-
-df_fetched_filtered <- df_fetched %>%
-  filter(RORgt > 2)
-nrow(df_fetched_filtered)/nrow(df_fetched)*100
-
+plot_coenrichment
 ```
 
+Frequency of cell types per FOV/condition:
+
 ```{r}
-df_fetched <- FetchData(SO.si.sub, 
-                        c(colnames(SO.si.sub@meta.data), rownames(SO.si.sub)))
 
-df_fetched <- df_fetched %>%
-  filter(AL3 == "ILC2s")
-
-
-df_fetched_filtered <- df_fetched %>%
-  filter(GATA3eGFP > 2) 
-nrow(df_fetched_filtered)/nrow(df_fetched)*100
-
-df_fetched_filtered <- df_fetched %>%
-  filter(CD127 > 2)
-nrow(df_fetched_filtered)/nrow(df_fetched)*100
-
-df_fetched_filtered <- df_fetched %>%
-  filter(CD90 > 2)
-nrow(df_fetched_filtered)/nrow(df_fetched)*100
-
-df_fetched_filtered <- df_fetched %>%
-  filter(KLRG1 > 2)
-nrow(df_fetched_filtered)/nrow(df_fetched)*100
-
-df_fetched_filtered <- df_fetched %>%
-  filter(GATA3eGFP > 2) %>%
-  filter(CD90 > 2) %>%
-  filter(CD127 > 2)
-nrow(df_fetched_filtered)/nrow(df_fetched)*100
-
+df_freq_cells <- metadatax %>%
+  select(Condition, CellType, FullInfo) %>%
+  janitor::tabyl(Condition, CellType) %>%
+  janitor::adorn_percentages() %>%
+  janitor::adorn_totals(c('row', 'col')) %>%
+  janitor::adorn_pct_formatting(2)
 
 ```
 
