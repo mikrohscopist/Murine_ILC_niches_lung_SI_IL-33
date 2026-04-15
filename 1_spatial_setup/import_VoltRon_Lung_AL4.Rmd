@@ -1,0 +1,229 @@
+---
+title: "import VoltRon Lung - AL4 GATA3+ Th cells"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+    fig_caption: yes
+    keep_md: yes
+  pdf_document:
+    toc: yes
+params:
+  Sample: Default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
+                      fig.align='center', dpi = 300)
+```
+
+## Libraries
+
+```{r}
+if (!requireNamespace("Seurat", quietly = TRUE))
+  install.packages("Seurat")
+if (!requireNamespace("VoltRon", quietly = TRUE))
+  devtools::install_github("BIMSBbioinfo/VoltRon@dev")#  devtools::install_github("Artur-man/VoltRon")
+if (!requireNamespace("magick", quietly = TRUE))
+  install.packages("magick")
+library(Seurat)
+library(VoltRon)
+library(magick)
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+```
+
+## Directories
+
+```{r}
+output_dir <- here::here("1_spatial_setup", "import_VoltRon_Lung_AL4_files")
+dir.create(output_dir)
+
+```
+
+# Import Data
+
+```{r}
+datax <- read.csv(paste0(here::here(), "/data/MELC_data_murine_lung_CTRL_D1_D2_D3_withfolders.csv"))
+
+
+```
+
+Data prep
+
+```{r fig.width=12, fig.height=4}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggridges)
+
+# 1. Define the target cell types and markers
+target_types <- c("T helper cells", "T cytotox cells", "ILC2s", "ILC3s", "NK cells/ILC1s")
+target_markers <- c("EOMES", "TBET", "GATA3eGFP", "RORgt", "CD4", "CD8a", "CD3")
+
+# 2. Process the data
+plot_data <- datax %>%
+  # Filter for the specific cell types in AL3
+  filter(AL3 %in% target_types) %>%
+  # Select only the metadata and the markers of interest
+  select(AL3, all_of(target_markers)) %>%
+  # Pivot to long format: this puts all marker names in one column 
+  # and all expression values in another, which is required for ridgeplots
+  pivot_longer(cols = all_of(target_markers), 
+               names_to = "Marker", 
+               values_to = "Expression")
+
+# 3. Create the Ridgeplot
+ggplot(plot_data, aes(x = Expression, y = Marker, fill = AL3)) +
+  geom_density_ridges(alpha = 0.7, scale = 1.5, rel_min_height = 0.01) +
+  # You can facet by Marker or by Cell Type depending on how you want to compare
+  facet_wrap(~ AL3, ncol = 5) + 
+  theme_ridges() +
+  theme(
+    legend.position = "none",
+    strip.text = element_text(face = "bold", size = 10),
+    axis.title.x = element_text(hjust = 0.5),
+    axis.title.y = element_text(hjust = 0.5)
+  ) +
+  labs(
+    title = "Marker Expression Profiles by Cell Type (AL3)",
+    x = "Expression Intensity",
+    y = "Protein Marker"
+  ) +
+  # Optional: use a nice color palette
+  scale_fill_viridis_d(option = "D")
+```
+
+```{r}
+library(dplyr)
+
+datax <- datax %>%
+  mutate(AL4 = case_when(
+    # --- T Helper Cell Logic ---
+    AL3 == "T helper cells" & GATA3eGFP > 1.5 ~ "Th2",
+    AL3 == "T helper cells" & RORgt > 1.5     ~ "Th17",
+    AL3 == "T helper cells" & TBET > 1      ~ "Th1",
+    AL3 == "T helper cells"                  ~ "Other Th",
+    
+    # --- T Cytotox Cell Logic ---
+    AL3 == "T cytotox cells" & GATA3eGFP > 1.5 ~ "Tc2",
+    AL3 == "T cytotox cells"                   ~ "Other Tc",
+    
+    # --- All other cells (Retain original AL3 label) ---
+    TRUE ~ as.character(AL3)
+  ))
+
+# define AL2 as Celltypes and inspect cell types
+datax$CellType <- datax$AL4
+
+datax$CellType <- gsub("EMCN CD31 |LYVE1 CD90 |lasma", "", datax$CellType)
+unique(datax$CellType)
+
+# write.csv(datax, paste0(output_dir, "/MELC_data_murine_lung_CTRL_D1_D2_D3_withfolders_AL4.csv"))
+```
+
+# VoltRon objects
+
+The main loop to go over each FOV and create VoltRon assays
+
+```{r}
+
+image_folders_path <- paste0(here::here(), "/data/MELC_data/Lung/")
+
+samples <- unique(datax$Sample)
+
+# do this for all samples
+vr_list <- NULL
+for(samp in samples[-35]){
+  # current data fram cur_datax
+  cur_datax <- datax[datax$Sample == samp,]
+  rownames(cur_datax) <- cur_datax$CellID
+  
+  # current feature data frame
+  cur_data <- cur_datax[,2:34]
+  rownames(cur_data) <- cur_datax$CellID
+
+  # sample and image folder
+  image_folder <- unique(cur_datax$Sample)
+  print(image_folder)
+
+  # metadata
+  cur_metadata <- cur_datax[,38:46]
+  rownames(cur_metadata) <- cur_datax$CellID
+
+  # coordinates
+  cur_coords <- as.matrix(cur_datax[,c("Loc_X", "Loc_Y")])
+  rownames(cur_coords) <- cur_datax$CellID
+
+  # make voltron objects
+  file_names <- list.files(paste0(image_folders_path, image_folder))
+  file_names <- gsub(".png", "", file_names)
+  image_names <- file_names
+  image_list <- list()
+  for(img in image_names){
+    try({
+      image_list[[img]] <- magick::image_read(paste0(image_folders_path,  image_folder, "/", img, ".png"))
+    })
+  }
+  vr_list[[image_folder]] <- formVoltRon(t(cur_data), metadata = cur_metadata, image = image_list, coords = cur_coords, main.assay = "MELC", sample_name = image_folder)
+  
+  # flip and resize images
+  vr_list[[image_folder]] <- flipCoordinates(vr_list[[image_folder]])
+  vr_list[[image_folder]] <- resizeImage(vr_list[[image_folder]], size = 1000)
+}
+
+```
+
+## Manipulate VoltRon list
+
+Here, we merge all VoltRon objects into one object
+
+```{r}
+vr_merged <- merge(vr_list[[1]], vr_list[-1])
+```
+
+Getting a full list of all images available in VoltRon
+
+```{r}
+vrImageNames(vr_merged)
+```
+
+Getting all FOVs
+
+```{r}
+SampleMetadata(vr_merged)
+```
+
+# Visualization
+
+Different visualization scripts.
+
+```{r, fig.width=9, fig.height=37}
+# visualize all FOVs, default image is DAPI
+vrSpatialPlot(vr_merged, group.by = "CellType", alpha = 0.2, ncol = 3, 
+                  legend.loc = "bottom", legend.text.size = 11,legend.pt.size = 3, pt.size = 1) +
+    theme(plot.margin = margin(0.1,0.1,0.1,0.1, "cm"), 
+          title =element_text(size=4), 
+          axis.title = element_blank(), 
+          axis.ticks = element_blank(), 
+          axis.text = element_blank(),
+          legend.text = element_text(size = 8), 
+          legend.title = element_blank())
+
+```
+
+# Save data
+
+## Session info
+
+```{r}
+saveRDS(vr_list, file = paste0(output_dir, "/VoltRon_data_lung_AL4.rds"))
+save.image(paste0(output_dir, "/environment.RData"))
+sessionInfo()
+```
