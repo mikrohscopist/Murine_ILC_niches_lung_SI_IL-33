@@ -1,7 +1,7 @@
 ---
 title: "Figure 5: ILC2s localize"
 author: "Sandy Kroh"
-date: "April 15, 2026"
+date: "April 16, 2026"
 output:
   html_document:
     toc: yes
@@ -112,6 +112,22 @@ ColorsCellType_conditions <- cols_con
 
 cols_heat <- c(
                "#648FFF", "white", "#FFB000")
+
+
+order_al3 <- c(
+      "NK cells/ILC1s",
+    "ILC2s",
+    "ILC3s",
+    "T cytotox cells",
+    "T helper cells",
+    "B cells & Plasma cells",
+    "Myeloid cells",
+    "LYVE1 CD31 vessels",
+    "LYVE1 CD90 Lymphatics",
+    "EMCN CD31 Blood vessels",
+    "Epithelia"
+
+)
 ```
 
 # Load data
@@ -1240,7 +1256,7 @@ ColorsCellType <-  list(`NK cells/ILC1s` = "darkcyan",
                         `ILC3s` = "darkmagenta", 
                         `T helper cells` = "deeppink",
                         `T cytotox cells` = "slateblue", 
-                        `Myeloid cells` = "gold", 
+                        `Myeloid cells` = "burlywood", 
                         `B cells & Plasma cells` = "indianred1",
                         `LYVE1 CD31 vessels` = "darkgreen", 
                         `LYVE1 CD90 Lymphatics` = "yellow", 
@@ -1266,7 +1282,7 @@ ColorsCellType
 ## [1] "slateblue"
 ## 
 ## $`Myeloid cells`
-## [1] "gold"
+## [1] "burlywood"
 ## 
 ## $`B cells & Plasma cells`
 ## [1] "indianred1"
@@ -1742,37 +1758,71 @@ df_all$Raw_Niche <- paste0("Niche ", kmeans_res$cluster[df_all$Global_ID])
 # NOTE: The order of K-means clusters (1-5) can shift if the data changes slightly.
 # Assuming Niche 1 = Epithelial, Niche 2 = B cell, etc. based on your prompt.
 niche_names <- c(
-  "Niche 1" = "Lymphatic/Myeloid niche",
-  "Niche 2" = "B cell/BEC niche",
+  "Niche 1" = "Mixed Myeloid/LEC niche",
+  "Niche 2" = "Mixed BPC/BEC",
   "Niche 3" = "Epithelial niche",
   "Niche 4" = "Blood endothelial niche"
 )
 
 df_all$Tissue_Niche <- unname(niche_names[df_all$Raw_Niche])
 df_all$Tissue_Niche <- factor(df_all$Tissue_Niche, levels = c(
-  "B cell/BEC niche",        
-  "Lymphatic/Myeloid niche", 
-  "Blood endothelial niche",
-  "Epithelial niche"       
+  "Mixed BPC/BEC",        
+  "Mixed Myeloid/LEC niche",
+  "Epithelial niche", 
+  "Blood endothelial niche"       
 ))
+
+niche_colors <- c(
+  "Epithelial niche" = "#117733", 
+  "Mixed Myeloid/LEC niche" = "#DDCC77", 
+  "Blood endothelial niche" = "#882255", 
+  "Mixed BPC/BEC" = "#332288"
+)
+
 
 # ========================================================================
 # PART 2: WHAT IS IN EACH NICHE? (Composition Profiling)
 # ========================================================================
 niche_composition <- df_all %>%
+  mutate(CellType = factor(CellType, levels = c(
+    "NK cells/ILC1s",
+    "ILC2s",
+    "ILC3s",
+    "T cytotox cells",
+    "T helper cells",
+    "B cells & Plasma cells",
+    "Myeloid cells",
+    "LYVE1 CD31 vessels",
+    "LYVE1 CD90 Lymphatics",
+    "EMCN CD31 Blood vessels",
+    "Epithelia"
+  ))) %>%
   group_by(Tissue_Niche, CellType) %>%
   summarise(Count = n(), .groups = "drop") %>%
   group_by(Tissue_Niche) %>%
   mutate(Fraction = Count / sum(Count))
 
+table_plot_al3 <- ggtexttable(niche_composition, 
+                          rows = NULL
+                          )
+
 plot_comp_al3 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, fill = CellType)) +
-  geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.2) +
+  geom_bar(stat = "identity", position = "stack", color = "black", 
+           linewidth = 0.05) +
   scale_fill_manual(values = ColorsCellType) +
   theme_classic() +
   labs(title = "Cellular Microenvironments",
        x = "Identified Tissue Niches", y = "Average Proportion of Cell Types", fill = "Cell Type") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, face = "bold"),
-        plot.title = element_text(face = "bold", hjust = 0, size = 12))
+  theme(
+    axis.text.x = element_text(angle = 45, face = "bold", size = 9 , 
+                                   hjust = 1),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 9),
+    axis.title.y = element_text(size = 9),
+    legend.title = element_text(size = 9, face = "bold"),
+    legend.text = element_text(size = 9),
+    plot.title = element_text(face = "bold", hjust = -1, size = 12), 
+    plot.margin = margin(0.2, 0, 0.5, 0, "cm"))
 
 print(plot_comp_al3)
 ```
@@ -1786,19 +1836,251 @@ niche_composition <- df_all %>%
   group_by(Tissue_Niche) %>%
   mutate(Fraction = Count / sum(Count))
 
+
+table_plot_al1 <- ggtexttable(niche_composition, 
+                          rows = NULL
+                          )
+
 plot_comp_al1 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, fill = AL1)) +
-  geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.2) +
-  scale_fill_manual(values = c("yellow", "darkcyan", "deeppink")) +
+  geom_bar(stat = "identity", position = "stack", color = "black", 
+           linewidth = 0.05) +
+  scale_fill_manual(values = c("yellow", "aquamarine3", "deeppink")) +
   theme_classic() +
-  labs(title = "Cellular Microenvironments",
-       x = "Identified Tissue Niches", y = "Average Proportion of Cell Types", fill = "Cell Type") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, face = "bold"),
-        plot.title = element_text(face = "bold", hjust = 0, size = 12))
+  labs(title = "AL1 - Cellular Microenvironments",
+       x = "Identified Tissue Niches", 
+       y = "Average Proportion of Cell Types", 
+       fill = "AL1 cell types") +
+  theme(
+    axis.text.x = element_text(angle = 45, size = 9, face = "bold" , 
+                                   hjust = 1),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 9),
+    axis.title.y = element_text(size = 9),
+    legend.title = element_text(size = 9, face = "bold"),
+    legend.text = element_text(size = 9),
+    plot.title = element_blank())
 
 print(plot_comp_al1)
 ```
 
 <img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-20-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+# ========================================================================
+# PART 2: WHAT IS IN EACH NICHE? (Composition Profiling)
+# ========================================================================
+niche_composition <- df_all %>%
+  filter(AL2 == "ILCs") %>%
+  mutate(CellType = factor(CellType, levels = c(
+    "NK cells/ILC1s",
+    "ILC2s",
+    "ILC3s",
+    "T cytotox cells",
+    "T helper cells",
+    "B cells & Plasma cells",
+    "Myeloid cells",
+    "LYVE1 CD31 vessels",
+    "LYVE1 CD90 Lymphatics",
+    "EMCN CD31 Blood vessels",
+    "Epithelia"
+  ))) %>%
+  group_by(Tissue_Niche, CellType) %>%
+  summarise(Count = n(), .groups = "drop") %>%
+  group_by(Tissue_Niche) %>%
+  mutate(Fraction = Count / sum(Count))
+
+table_plot_ilc <- ggtexttable(niche_composition, 
+                          rows = NULL
+                          )
+
+plot_comp_ilc <- ggplot(niche_composition, 
+                        aes(x = Tissue_Niche, y = Fraction, fill = CellType)) +
+  geom_bar(stat = "identity", position = "stack", color = "black", 
+           linewidth = 0.05) +
+  scale_fill_manual(values = ColorsCellType) +
+  theme_classic() +
+  labs(title = "AL3 ILC-subtypes - Cellular Microenvironments",
+       x = "Identified Tissue Niches", 
+       y = "Average Proportion of Cell Types", 
+       # CHANGED legend title here
+       fill = "AL3 ILC subtypes") + 
+  theme(
+    axis.text.x = element_text(angle = 45, face = "bold", size = 9, 
+                                   hjust = 1),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 9),
+    axis.title.y = element_text(size = 9),
+    legend.title = element_text(size = 9, face = "bold"),
+    legend.text = element_text(size = 9),
+    plot.title = element_blank())
+
+print(plot_comp_ilc)
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+upper_supp_plot <- ggarrange(plot_comp_al1, "NONE", plot_comp_ilc, ncol = 3, nrow = 1, 
+          widths = c(10, 1, 10), labels = c("A", "B", ""))
+
+upper_supp_plot
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+print(table_plot_al1)
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+``` r
+print(table_plot_al3)
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-23-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+``` r
+print(table_plot_ilc)
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-23-3.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+# --- 1. Calculate Niche Composition per FOV ---
+fov_composition <- df_all %>%
+  group_by(FullInfo, Condition, Tissue_Niche) %>%
+  summarise(Count = n(), .groups = "drop") %>%
+  group_by(FullInfo) %>%
+  mutate(Fraction = Count / sum(Count)) %>%
+  ungroup()
+
+# Ensure the Condition order is preserved for the X-axis sorting
+# This keeps CTRL, D1, D2, D3 grouped together in the bar plot
+fov_composition <- fov_composition %>%
+  arrange(factor(Condition, levels = c("CTRL", "D1", "D2", "D3")), FullInfo) %>%
+  mutate(FullInfo = factor(FullInfo, levels = unique(FullInfo)))
+
+# --- Optional: Facet by Condition ---
+# If you have 35+ FOVs, it is often better to facet them so they are readable
+lower_supp_plot <- ggplot(fov_composition, aes(x = FullInfo, y = Fraction, fill = Tissue_Niche)) +
+  geom_bar(stat = "identity", position = "stack", color = "black", 
+           linewidth = 0.05) +
+  facet_grid(~Condition, scales = "free_x", space = "free_x") +
+  ggtitle("Cellular niches across acquired tissue regions") +
+  scale_fill_manual(values = niche_colors) +
+  theme_classic() +
+  scale_y_continuous(labels = scales::percent, expand = c(0, 0)) +
+  theme_classic() +
+  labs(title = "Niche Composition across Conditions",
+       y = "Proportion of Niche Area", 
+       fill = "Tissue Niche") +
+  theme(
+    # --- REMOVE THE BOX ON TOP ---
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    
+    # Cleaning up the X-axis
+    axis.text.x = element_blank(), 
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank(),
+    
+    # General Aesthetics
+    legend.title = element_text(size = 9, face = "bold"),
+    legend.text = element_text(size = 9),
+    axis.text.y = element_text(size = 9),
+    axis.title.y = element_text(size = 10, face = "bold"),
+    legend.position = "right",
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  )
+
+lower_supp_plot
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+ggarrange(upper_supp_plot, "NONE", lower_supp_plot, ncol = 1, nrow = 3, labels = c("", "", "C"), heights = c(10, 1, 10))
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-25-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+# --- 1. Calculate CellType Proportions per Niche per FOV ---
+cell_comp_per_niche <- df_all %>%
+  mutate(CellType = factor(CellType, levels = c(
+        "NK cells/ILC1s",
+    "ILC2s",
+    "ILC3s",
+    "T cytotox cells",
+    "T helper cells",
+    "B cells & Plasma cells",
+    "Myeloid cells",
+    "LYVE1 CD31 vessels",
+    "LYVE1 CD90 Lymphatics",
+    "EMCN CD31 Blood vessels",
+    "Epithelia"
+  ))) %>%
+  # Group by FOV, its Condition, the Niche, and the CellType
+  group_by(FullInfo, Condition, Tissue_Niche, CellType) %>%
+  summarise(Count = n(), .groups = "drop") %>%
+  # Now group by FOV and Niche to calculate the internal percentage
+  group_by(FullInfo, Tissue_Niche) %>%
+  mutate(Fraction = Count / sum(Count)) %>%
+  ungroup()
+
+# 2. Ensure ordering for the X-axis (Grouping by Condition)
+cell_comp_per_niche <- cell_comp_per_niche %>%
+  arrange(factor(Condition, levels = c("CTRL", "D1", "D2", "D3")), FullInfo) %>%
+  mutate(FullInfo = factor(FullInfo, levels = unique(FullInfo)))
+
+# --- 3. Create the Multi-Faceted Stacked Bar Plot ---
+ggplot(cell_comp_per_niche, aes(x = FullInfo, y = Fraction, fill = CellType)) +
+  geom_bar(stat = "identity", position = "stack", color = "black", 
+           linewidth = 0.05) +
+  # Rows = Niches, Columns = Conditions
+  facet_grid(Tissue_Niche ~ Condition, scales = "free_x", space = "fixed", 
+             switch = "y") +
+  scale_fill_manual(values = ColorsCellType) +
+  scale_y_continuous(labels = scales::percent, expand = c(0, 0)) +
+  theme_classic() +
+  labs(title = "Cell Type Composition per Tissue Niche",
+       subtitle = "Each bar represents one FOV partitioned by cell type percentages",
+       y = "Cell Type Proportion (%)", 
+       x = "FOVs",
+       fill = "AL3 cell types") +
+  theme(
+    # --- Clean up Facet Labels (No Boxes) ---
+    strip.background = element_blank(),
+    strip.text.x = element_text(face = "bold", size = 12),
+    strip.text.y = element_text(face = "bold", size = 10, angle = 0), # Horizontal niche labels
+    
+    # Cleaning up the X-axis (FOVs)
+    axis.text.x = element_blank(), 
+    axis.ticks.x = element_blank(),
+
+    # General Aesthetics
+    axis.text.y = element_text(size = 9),
+    axis.title.y = element_text(size = 11, face = "bold"),
+    axis.title.x = element_text(size = 11, face = "bold"),
+    legend.position = "bottom",
+    legend.title = element_text(size = 10, face = "bold"),
+    legend.text = element_text(size = 10),
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 14),
+    plot.subtitle = element_text(hjust = 0.5, size = 10, color = "gray30"),
+    panel.spacing.y = unit(1, "lines") # Add a bit of space between niche rows
+  )
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-26-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+### Niche abundance
 
 
 ``` r
@@ -1859,18 +2141,23 @@ for (target_niche in all_niches) {
     geom_boxplot(outlier.colour = NA, alpha = 0.5, fill = "white") +
     geom_beeswarm(aes(color = Condition), size = 1.5, cex = 2) + 
     # Add n= labels
-    geom_text(data = n_df, aes(x = Condition, y = 95, label = Label), 
-              size = 3, fontface = "italic", inherit.aes = FALSE) +
+    # geom_text(data = n_df, aes(x = Condition, y = 95, label = Label), 
+    #           size = 3, fontface = "italic", inherit.aes = FALSE) +
     ggtitle(target_niche) +
     # Expand Y-axis for significance brackets
-    scale_y_continuous(expand = c(0, 0.5), limits = c(0,100))+
+    scale_y_continuous(expand = c(0, 0.5), limits = c(0,90))+
     theme_classic() + 
-    theme(axis.text.x = element_text(size = 9, face = "bold", angle = 45, hjust = 1),
-          axis.text.y = element_text(size = 9),
-          axis.title.x = element_blank(), 
-          axis.title.y = element_text(size = 9), 
-          plot.title = element_text(size = 11, hjust = 0.5, face = "bold"),
-          legend.position = "none") +
+    theme(
+      axis.text.x = element_text(angle = 45, size = 9, face = "bold" , 
+                                     hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 9),
+      axis.title.y = element_text(size = 9),
+      legend.title = element_text(size = 9, face = "bold"),
+      legend.text = element_text(size = 9),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none") +
     ylab("% of Total Cells per FOV") +
     scale_color_manual(values = cols_treat)
 
@@ -1906,7 +2193,7 @@ if (length(niche_plot_list) > 0) {
 }
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-27-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1914,7 +2201,7 @@ if (length(niche_plot_list) > 0) {
 if (length(niche_plot_list) > 0) {
   final_niche_grid <- wrap_plots(niche_plot_list, ncol = 2) +
     plot_annotation(
-      title = "Cellular Niche Abundance\nacross Conditions",
+      title = "Cellular Niche Abundance\nacross Conditions\n",
       theme = theme(
         plot.title = element_text(size = 12, face = "bold", hjust = 0.5)
         )
@@ -1924,7 +2211,7 @@ if (length(niche_plot_list) > 0) {
 }
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-28-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1934,7 +2221,7 @@ upper_fig <- ggarrange(plot_comp_al3, final_niche_grid, ncol = 2, nrow = 1,
 upper_fig
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-29-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1990,16 +2277,21 @@ for (current_niche in all_niches) {
     p <- ggplot(stats_df, aes(x = Condition, y = Frequency)) +
       geom_boxplot(outlier.colour = NA, fill = "white", alpha = 0.5) +
       geom_beeswarm(aes(color = Condition), size = 1, cex = 1.5, alpha = 0.6) +
-      ggtitle(current_cell) +
+      ggtitle(gsub("LYVE1 CD90 ", "", current_cell)) +
       scale_y_continuous(expand = expansion(mult = c(0.1, 0.4))) +
       scale_color_manual(values = cols_treat) +
       theme_classic() +
-      theme(
-        axis.text.x = element_text(size = 8, angle = 45, hjust = 1),
-        axis.text.y = element_text(size = 8),
-        axis.title = element_blank(),
-        plot.title = element_text(size = 10, face = "bold", hjust = 0.5)
-      )+
+    theme(
+      axis.text.x = element_text(angle = 45, size = 9, face = "bold" , 
+                                     hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 9),
+      axis.title.y = element_text(size = 9),
+      legend.title = element_text(size = 9, face = "bold"),
+      legend.text = element_text(size = 9),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none") +
       NoLegend()
     
     # Add Stats
@@ -2019,7 +2311,7 @@ for (current_niche in all_niches) {
   if (length(niche_plots) > 0) {
     combined_grid <- wrap_plots(niche_plots, ncol = 4) +
       plot_annotation(
-        title = paste("Niche Composition:", current_niche),
+        title = paste("Niche Composition:", gsub("LYVE1 CD90 ", "", current_niche)),
         subtitle = "Y-axis: % of total cells within this specific niche; Stats: Pairwise Wilcoxon",
         theme = theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
       )
@@ -2029,29 +2321,37 @@ for (current_niche in all_niches) {
 }
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-24-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-24-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-24-4.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-30-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-30-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-30-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-30-4.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
-middle_fig <- ggarrange(niche_plots_all[["Lymphatic/Myeloid niche_ILC2s"]],
-          niche_plots_all[["Lymphatic/Myeloid niche_Myeloid cells"]],
-          niche_plots_all[["Lymphatic/Myeloid niche_LYVE1 CD90 Lymphatics"]], 
-          ncol = 3, nrow = 1, labels = c("C"))
+middle_fig <- ggarrange(niche_plots_all[["Mixed Myeloid/LEC niche_ILC2s"]],
+          niche_plots_all[["Mixed Myeloid/LEC niche_Myeloid cells"]],
+          niche_plots_all[["Mixed Myeloid/LEC niche_LYVE1 CD90 Lymphatics"]], 
+          ncol = 3, nrow = 1)
+
+middle_fig <- annotate_figure(middle_fig, 
+                              top = text_grob("Cellular abundance in Mixed Myeloid/LEC niche\n", 
+                                              color = "black", face = "bold", 
+                                              size = 12)
+                              )
 
 middle_fig
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-25-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-31-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
-ggarrange(upper_fig, "NONE", middle_fig, nrow = 3, ncol = 1, 
-          heights = c(5, 0.1, 2))
+top_figure <- ggarrange(upper_fig, middle_fig, nrow = 2, ncol = 1, 
+          heights = c(4, 2), labels = c("", "C"))
+
+top_figure
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-26-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-32-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
-Spatial distribution
+### Spatial distribution of identified niches
 
 
 ``` r
@@ -2066,9 +2366,9 @@ library(patchwork)
 # 1. Define the Niche colors (Matches your specific clusters)
 niche_colors <- c(
   "Epithelial niche" = "#117733", 
-  "Lymphatic/Myeloid niche" = "#DDCC77", 
+  "Mixed Myeloid/LEC niche" = "#DDCC77", 
   "Blood endothelial niche" = "#882255", 
-  "B cell/BEC niche" = "#332288"
+  "Mixed BPC/BEC" = "#332288"
 )
 
 # 2. Grab and Sort exactly 35 FOVs by Condition
@@ -2146,7 +2446,7 @@ niche_map_grid <- wrap_plots(final_plot_list, ncol = 9) +
 print(niche_map_grid)
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-27-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-33-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2157,14 +2457,6 @@ library(patchwork)
 # ========================================================================
 # PART 4: SPATIAL MAPPING (3x3 CTRL vs 3x3 D3)
 # ========================================================================
-
-# 1. Define the Niche colors
-niche_colors <- c(
-  "Epithelial niche" = "#117733", 
-  "Lymphatic/Myeloid niche" = "#DDCC77", 
-  "Blood endothelial niche" = "#882255", 
-  "B cell/BEC niche" = "#332288"
-)
 
 # 2. Function to generate a list of 9 plots for a specific condition
 get_niche_plots <- function(data, target_condition, n_fovs = 9) {
@@ -2225,32 +2517,266 @@ legend_plot <- ggplot(legend_df, aes(X, Y)) +
   theme(
     plot.background = element_rect(fill = "black", color = NA), 
     legend.position = "none",
-    plot.margin = margin(t = 2, b = 2)
+    plot.margin = margin(t = 1, b = 1)
   )
 
-# 5. Assemble the Grids
-grid_ctrl <- wrap_plots(ctrl_plots, ncol = 3) + 
-  plot_annotation(title = "Condition: CTRL", 
-                  theme = theme(plot.background = element_rect(fill = "black", color = NA),
-                                plot.title = element_text(color = "white", size = 20, face = "bold", hjust = 0.5)))
 
-grid_d3 <- wrap_plots(d3_plots, ncol = 3) + 
-  plot_annotation(title = "Condition: D3", 
-                  theme = theme(plot.background = element_rect(fill = "black", color = NA),
-                                plot.title = element_text(color = "white", size = 20, face = "bold", hjust = 0.5)))
+# ========================================================================
+# PART 4: SPATIAL MAPPING (Fixed Nested Titles)
+# ========================================================================
 
-# Combine both side-by-side with the horizontal legend at the bottom
+# [Niche colors and get_niche_plots function remain the same as your code]
+
+# 5. Assemble the Grids using wrap_elements to protect nested titles
+grid_ctrl <- wrap_elements(full = (
+  wrap_plots(ctrl_plots, ncol = 3) + 
+    plot_annotation(
+      title = "________________________  CTRL  ________________________",
+      theme = theme(
+        plot.background = element_rect(fill = "black", color = NA),
+        plot.title = element_text(color = "white", size = 10, hjust = 0.5, margin = margin(b = 1))
+      )
+    ) & theme(plot.background = element_rect(fill = "black", color = NA))
+))
+
+grid_d3 <- wrap_elements(full = (
+  wrap_plots(d3_plots, ncol = 3) + 
+    plot_annotation(
+      title = "______________________  IL-33 day 3  ______________________",
+      theme = theme(
+        plot.background = element_rect(fill = "black", color = NA),
+        plot.title = element_text(color = "white", size = 10, hjust = 0.5, margin = margin(b = 1))
+      )
+    ) & theme(plot.background = element_rect(fill = "black", color = NA))
+))
+
+# 6. Assemble the Final Atlas
+# The heights c(10, 1) usually works better to keep the legend readable
 final_atlas <- (grid_ctrl | grid_d3) / legend_plot + 
-  plot_layout(heights = c(10, 1)) & 
-  theme(plot.background = element_rect(fill = "black", color = NA))
-  
+  plot_layout(heights = c(10, 0.2)) +
+  plot_annotation(
+    title = "Spatial distribution of tissue niches",
+    theme = theme(
+      plot.background = element_rect(fill = "black", color = NA),
+      plot.title = element_text(color = "white", size = 12, face = "bold", hjust = 0.5, margin = margin(t = 1, b = 1))
+    )
+  ) & theme(plot.background = element_rect(fill = "black", color = NA))
 
 print(final_atlas)
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-28-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-34-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+Proliferation
+
+
+``` r
+library(dplyr)
+library(ggplot2)
+library(ggbeeswarm)
+library(rstatix)
+library(patchwork)
+library(ggpubr)
+
+# --- 1. DATA PREPARATION ---
+# Filter for target cells and calculate Mean Ki67 per FOV
+ki67_df <- df_all %>%
+  filter(CellType %in% c("NK cells/ILC1s", "ILC2s", "ILC3s")) %>%
+  group_by(Filename, Condition, CellType) %>%
+  summarise(Mean_Ki67 = mean(Ki67, na.rm = TRUE), .groups = "drop")
+
+# Ensure Condition order
+ki67_df$Condition <- factor(ki67_df$Condition, levels = c("CTRL", "D1", "D2", "D3"))
+
+# --- 2. STATISTICAL TESTING ---
+# Pairwise comparisons between conditions for each cell type
+stat.test <- ki67_df %>%
+  group_by(CellType) %>%
+  wilcox_test(Mean_Ki67 ~ Condition) %>%
+  add_significance() %>%
+  add_xy_position(x = "Condition", dodge = 0.8)
+
+# --- 3. PLOTTING LOOP ---
+ki67_plots <- list()
+target_cells <- c("NK cells/ILC1s", "ILC2s", "ILC3s")
+
+for (ct in target_cells) {
+  
+  # Filter data for specific cell type
+  stats_df <- ki67_df %>% filter(CellType == ct)
+  
+  # Filter stats for specific cell type
+  curr_stat <- stat.test %>% filter(CellType == ct)
+  
+  # Detect correct p-value label
+  sig_label <- if("p.adj.signif" %in% colnames(curr_stat)) "p.adj.signif" else "p.signif"
+  
+  # Build Plot
+  p <- ggplot(stats_df, aes(x = Condition, y = Mean_Ki67)) +
+    geom_boxplot(outlier.colour = NA, fill = "white", alpha = 0.5) +
+    geom_beeswarm(aes(color = Condition), size = 1.5, cex = 2, alpha = 0.7) +
+    
+    # Add stats
+    stat_pvalue_manual(curr_stat, 
+                       label = sig_label, 
+                       hide.ns = TRUE, 
+                       step.increase = 0.1, 
+                       size = 4) +
+    
+    # Aesthetic settings
+    scale_y_continuous(expand = expansion(mult = c(0.1, 0.4))) +
+    scale_color_manual(values = cols_treat) +
+    ggtitle(ct) +
+    theme_classic() +
+    theme(
+      axis.text.x = element_text(angle = 45, size = 9, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 9),
+      axis.title.y = element_text(size = 9),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
+    ylab("Mean Ki67 Intensity per FOV")
+
+  ki67_plots[[ct]] <- p
+}
+
+# --- 4. ASSEMBLE ---
+final_ki67_plot <- wrap_plots(ki67_plots, ncol = 3) +
+  plot_annotation(
+    title = "Ki67 Expression Proliferation Analysis",
+    subtitle = "Points represent mean intensity per FOV; Wilcoxon pairwise test",
+    theme = theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+                  plot.subtitle = element_text(hjust = 0.5))
+  )
+
+print(final_ki67_plot)
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-35-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggbeeswarm)
+library(rstatix)
+library(patchwork)
+library(ggpubr)
+
+# --- 1. SETTINGS & PARAMETERS ---
+target_markers <- c("Ki67", "GATA3eGFP", "EOMES", "TBET", "MHCII", "KLRG1")
+target_cells   <- c("NK cells/ILC1s", "ILC2s", "ILC3s", "T helper cells", "T cytotox cells")
+
+# --- 2. DATA AGGREGATION ---
+# Calculate mean intensity for each marker per cell type per niche per FOV
+niche_marker_data <- df_all %>%
+  filter(CellType %in% target_cells) %>%
+  group_by(Filename, Condition, Tissue_Niche, CellType) %>%
+  summarise(across(all_of(target_markers), \(x) mean(x, na.rm = TRUE)), .groups = "drop") %>%
+  # Pivot markers to long format for easier looping
+  pivot_longer(cols = all_of(target_markers), names_to = "Marker", values_to = "Intensity")
+
+niche_marker_data$Condition <- factor(niche_marker_data$Condition, levels = c("CTRL", "D1", "D2", "D3"))
+all_niches <- unique(niche_marker_data$Tissue_Niche)
+
+# --- 3. PLOTTING LOOP ---
+for (current_niche in all_niches) {
+  
+  message("Processing Niche: ", current_niche)
+  
+  # Filter for the current niche
+  niche_sub <- niche_marker_data %>% filter(Tissue_Niche == current_niche)
+  
+  # This list will hold plots in the order: Row 1 (all cells), Row 2 (all cells), etc.
+  grid_plots <- list()
+  
+  for (marker in target_markers) {
+    for (cell in target_cells) {
+      
+      # Subset data for this specific panel
+      stats_df <- niche_sub %>% filter(Marker == marker, CellType == cell)
+      
+      # Check if we have enough data to plot
+      if(nrow(stats_df) < 2 || all(is.na(stats_df$Intensity))) {
+        # Create an empty placeholder plot to maintain grid alignment
+        p <- ggplot() + theme_void() 
+      } else {
+        
+        # Statistical Testing (Pairwise Wilcoxon)
+        stat.test <- tryCatch({
+          stats_df %>%
+            wilcox_test(Intensity ~ Condition) %>%
+            add_significance() %>%
+            add_xy_position(x = "Condition")
+        }, error = function(e) NULL)
+        
+        # Build Panel
+        p <- ggplot(stats_df, aes(x = Condition, y = Intensity)) +
+          geom_boxplot(outlier.colour = NA, fill = "white", alpha = 0.5) +
+          geom_beeswarm(aes(color = Condition), size = 0.8, cex = 1.2, alpha = 0.6) +
+          scale_y_continuous(expand = expansion(mult = c(0.1, 0.4))) +
+          scale_color_manual(values = cols_treat) +
+          # Title logic: Only show CellType on top row and Marker on left column (optional)
+          # Here we keep both for clarity in large grids
+          labs(title = marker, subtitle = cell, 
+               y = "Mean Intensity") +
+          theme_classic() +
+          theme(
+            axis.text.x = element_text(angle = 45, size = 7, face = "bold", hjust = 1),
+            axis.title.x = element_blank(),
+            axis.text.y = element_text(size = 7),
+            axis.title.y = element_text(size = 7),
+            plot.title = element_text(hjust = 0.5, size = 10, face = "bold"), 
+            plot.subtitle = element_text(hjust = 0.5, size = 8),
+            plot.margin = margin(2, 2, 2, 2, "pt"),
+            legend.position = "none"
+          )
+        
+        # Add Stats
+        if (!is.null(stat.test) && nrow(stat.test) > 0) {
+          sig_col <- if("p.adj.signif" %in% colnames(stat.test)) "p.adj.signif" else "p.signif"
+          p <- p + stat_pvalue_manual(stat.test, label = sig_col, hide.ns = TRUE, 
+                                      tip.length = 0.01, step.increase = 0.1, size = 2.5)
+        }
+      }
+      grid_plots[[paste(marker, cell)]] <- p
+    }
+  }
+  
+  # --- 4. ASSEMBLE NICHE GRID ---
+  # ncol = number of cell types (columns)
+  if (length(grid_plots) > 0) {
+    combined_grid <- wrap_plots(grid_plots, ncol = length(target_cells)) +
+      plot_annotation(
+        title = paste("Niche Protein Profile:", current_niche),
+        subtitle = "Rows: Markers | Columns: Cell Types | Stats: Wilcoxon vs CTRL",
+        theme = theme(
+          plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+          plot.subtitle = element_text(size = 11, hjust = 0.5)
+        )
+      )
+    
+    # Recommend saving as a large PDF or printing
+    # {r fig.height=12, fig.width=15}
+    print(combined_grid)
+  }
+}
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-36-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-36-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-36-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-36-4.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Combine plots for figure
+
+
+``` r
+ggarrange(top_figure, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(6.5, 0.1, 5.2), 
+          labels = c("", "", "D"), label.y = 1.06)
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-37-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2261,13 +2787,13 @@ coenrichment <- ggarrange(final_plot_ILC2s, "NONE", coenrichment_fig_ann,
 coenrichment
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-29-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-38-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
 plot_cin
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-29-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-38-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
 # spiat <- ggarrange(dist_lymph, plot_cin,
@@ -2289,7 +2815,7 @@ ggarrange(coenrichment, "NONE", plot_cin,
           labels = c("", "", ""))
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-30-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-39-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 Additional plots
 
@@ -2344,7 +2870,7 @@ plot_coenrichment <- ggplot(interaction_celltypes, aes(x = condition, y = enrich
 plot_coenrichment
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-31-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-40-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
 # fine tune the co-enrichment plot
@@ -2396,7 +2922,7 @@ plot_coenrichment <- ggplot(interaction_celltypes, aes(x = condition, y = enrich
 plot_coenrichment
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-31-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-40-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 Frequency of cell types per FOV/condition:
 
