@@ -707,7 +707,7 @@ final_plot_ILC2s <- gg_heat +
 print(final_plot_ILC2s)
 ```
 
-## Coenrichment barplots 
+## Coenrichment barplots
 
 ```{r, fig.height=3, fig.width=9}
 
