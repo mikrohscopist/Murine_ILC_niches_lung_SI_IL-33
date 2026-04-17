@@ -1,7 +1,7 @@
 ---
 title: "Figure 5: ILC2s localize"
 author: "Sandy Kroh"
-date: "April 16, 2026"
+date: "April 17, 2026"
 output:
   html_document:
     toc: yes
@@ -49,6 +49,9 @@ library(ggpubr)
 library(readr)
 library(ggbeeswarm)
 library(stringr)
+library(tidyr)
+library(patchwork)
+library(rstatix) 
 ```
 
 ## Parameters
@@ -127,6 +130,32 @@ order_al3 <- c(
     "EMCN CD31 Blood vessels",
     "Epithelia"
 
+)
+
+ColorsCellType <-  list(`NK cells/ILC1s` = "darkcyan", 
+                        `ILC2s` = "seagreen2", 
+                        `ILC3s` = "darkmagenta", 
+                        `T helper cells` = "deeppink",
+                        `T cytotox cells` = "slateblue", 
+                        `Myeloid cells` = "burlywood", 
+                        `B cells & Plasma cells` = "indianred1",
+                        `LYVE1 CD31 vessels` = "darkgreen", 
+                        `LYVE1 CD90 Lymphatics` = "yellow", 
+                        `EMCN CD31 Blood vessels` = "red", 
+                        `Epithelia` = "green")
+
+celltypes <- c(
+  "NK cells/ILC1s", 
+  "ILC2s", 
+  "ILC3s", 
+  "T helper cells", 
+  "T cytotox cells", 
+  "Myeloid cells", 
+  "B cells & Plasma cells", 
+  "LYVE1 CD31 vessels", 
+  "LYVE1 CD90 Lymphatics", 
+  "EMCN CD31 Blood vessels", 
+  "Epithelia"
 )
 ```
 
@@ -245,7 +274,7 @@ cols_con <- c("darkcyan", "gold", "deeppink",
 cols_fov <- c("darkcyan", "gold", "deeppink", 
                 "slateblue")
 
-ColorsCellType <-  list(
+ColorsCellTypeSingle <-  list(
   #`NK cells/ILC1s/ILC3s` = "cyan", 
   `ILC2s` = "magenta",
   #`ILC3s` = "magenta", 
@@ -954,7 +983,6 @@ coenrichment_fig_ann
 
 
 ``` r
-library(stringr)
 tissuearea <- "Lung"
 input_dir <- here::here("data", "CIN_analysis", tissuearea, "/")
 
@@ -1061,14 +1089,6 @@ df_cin_lung$Treatment <- gsub("D", "", df_cin_lung$Treatment)
 
 
 ``` r
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(ggbeeswarm)
-library(ggpubr)
-library(patchwork)
-library(rstatix) 
-
 # 1. Target cells, References, and Radii
 target_cells <- c("Epithelia", "EMCN CD31 Blood vessels", "LYVE1 CD31 vessels", 
                   "LYVE1 CD90 Lymphatics", "Myeloid cells", "B cells & Plasma cells", 
@@ -1238,84 +1258,6 @@ plot_cin
 set.seed(8)
 radius <- 10
 
-cols_nat <- c("magenta", "cyan", "blue", "purple", "green", 
-                       "red", "yellow", "olivedrab1", "slateblue1", 
-                       "darkcyan", "seagreen", "deeppink", 
-                       "orange", "brown", "violet",
-                       "deeppink4", "pink", 
-                       "grey", "black", "lightgreen", 
-                       "#FF0066", "gold", 
-                       "lightblue", "#FFCC99", "#CC00FF", 
-                       "blueviolet",  "goldenrod4", 
-                       "indianred1", "navy", "olivedrab", "lightcyan", "seagreen2", "darkviolet", "lightpink", "slateblue4", "olivedrab2")
-                
-
-
-ColorsCellType <-  list(`NK cells/ILC1s` = "darkcyan", 
-                        `ILC2s` = "seagreen2", 
-                        `ILC3s` = "darkmagenta", 
-                        `T helper cells` = "deeppink",
-                        `T cytotox cells` = "slateblue", 
-                        `Myeloid cells` = "burlywood", 
-                        `B cells & Plasma cells` = "indianred1",
-                        `LYVE1 CD31 vessels` = "darkgreen", 
-                        `LYVE1 CD90 Lymphatics` = "yellow", 
-                        `EMCN CD31 Blood vessels` = "red", 
-                        `Epithelia` = "green")
-ColorsCellType 
-```
-
-```
-## $`NK cells/ILC1s`
-## [1] "darkcyan"
-## 
-## $ILC2s
-## [1] "seagreen2"
-## 
-## $ILC3s
-## [1] "darkmagenta"
-## 
-## $`T helper cells`
-## [1] "deeppink"
-## 
-## $`T cytotox cells`
-## [1] "slateblue"
-## 
-## $`Myeloid cells`
-## [1] "burlywood"
-## 
-## $`B cells & Plasma cells`
-## [1] "indianred1"
-## 
-## $`LYVE1 CD31 vessels`
-## [1] "darkgreen"
-## 
-## $`LYVE1 CD90 Lymphatics`
-## [1] "yellow"
-## 
-## $`EMCN CD31 Blood vessels`
-## [1] "red"
-## 
-## $Epithelia
-## [1] "green"
-```
-
-``` r
-cols_treat <- c("darkcyan", "gold", "deeppink", "slateblue")
-
-celltypes <- c(
-  "NK cells/ILC1s", 
-  "ILC2s", 
-  "ILC3s", 
-  "T helper cells", 
-  "T cytotox cells", 
-  "Myeloid cells", 
-  "B cells & Plasma cells", 
-  "LYVE1 CD31 vessels", 
-  "LYVE1 CD90 Lymphatics", 
-  "EMCN CD31 Blood vessels", 
-  "Epithelia"
-)
 
 df_dist_all <- read_csv(here::here("data", "SPIAT_min_dist_all_lung.csv"), 
     col_types = cols(...1 = col_skip()))
@@ -1466,14 +1408,6 @@ dist_lymph
 
 
 ``` r
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(ggbeeswarm)
-library(ggpubr)
-library(patchwork)
-library(rstatix)
-
 # --- 1. SETTINGS ---
 celltype_of_interest <- "LYVE1 CD90 Lymphatics"
 ref_cell_types <- unique(df_dist_ref$RefType)
@@ -1759,14 +1693,14 @@ df_all$Raw_Niche <- paste0("Niche ", kmeans_res$cluster[df_all$Global_ID])
 # Assuming Niche 1 = Epithelial, Niche 2 = B cell, etc. based on your prompt.
 niche_names <- c(
   "Niche 1" = "Mixed Myeloid/LEC niche",
-  "Niche 2" = "Mixed BPC/BEC",
+  "Niche 2" = "Mixed BPC/BEC niche",
   "Niche 3" = "Epithelial niche",
   "Niche 4" = "Blood endothelial niche"
 )
 
 df_all$Tissue_Niche <- unname(niche_names[df_all$Raw_Niche])
 df_all$Tissue_Niche <- factor(df_all$Tissue_Niche, levels = c(
-  "Mixed BPC/BEC",        
+  "Mixed BPC/BEC niche",        
   "Mixed Myeloid/LEC niche",
   "Epithelial niche", 
   "Blood endothelial niche"       
@@ -1776,7 +1710,7 @@ niche_colors <- c(
   "Epithelial niche" = "#117733", 
   "Mixed Myeloid/LEC niche" = "#DDCC77", 
   "Blood endothelial niche" = "#882255", 
-  "Mixed BPC/BEC" = "#332288"
+  "Mixed BPC/BEC niche" = "#332288"
 )
 
 
@@ -1821,8 +1755,8 @@ plot_comp_al3 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, f
     axis.title.y = element_text(size = 9),
     legend.title = element_text(size = 9, face = "bold"),
     legend.text = element_text(size = 9),
-    plot.title = element_text(face = "bold", hjust = -1, size = 12), 
-    plot.margin = margin(0.2, 0, 0.5, 0, "cm"))
+    plot.title = element_text(face = "bold", hjust = -0.25, size = 12), 
+    plot.margin = margin(0.2, 0, 0.5, 1, "cm"))
 
 print(plot_comp_al3)
 ```
@@ -1858,7 +1792,8 @@ plot_comp_al1 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, f
     axis.title.y = element_text(size = 9),
     legend.title = element_text(size = 9, face = "bold"),
     legend.text = element_text(size = 9),
-    plot.title = element_blank())
+    plot.title = element_blank(), 
+    plot.margin = margin(0, 0, 0, 0.5, "cm"))
 
 print(plot_comp_al1)
 ```
@@ -1913,7 +1848,9 @@ plot_comp_ilc <- ggplot(niche_composition,
     axis.title.y = element_text(size = 9),
     legend.title = element_text(size = 9, face = "bold"),
     legend.text = element_text(size = 9),
-    plot.title = element_blank())
+    plot.title = element_blank(), 
+    plot.margin = margin(0, 0, 0, 0.5, "cm"))
+
 
 print(plot_comp_ilc)
 ```
@@ -1932,18 +1869,93 @@ upper_supp_plot
 
 
 ``` r
-print(table_plot_al1)
+# ========================================================================
+# PART 2: WHAT IS IN EACH NICHE? (Composition Profiling)
+# ========================================================================
+
+# AL3 ---------------------------------------------------------------------------
+niche_composition_al3 <- df_all %>%
+  mutate(CellType = factor(CellType, levels = c(
+    "NK cells/ILC1s",
+    "ILC2s",
+    "ILC3s",
+    "T cytotox cells",
+    "T helper cells",
+    "B cells & Plasma cells",
+    "Myeloid cells",
+    "LYVE1 CD31 vessels",
+    "LYVE1 CD90 Lymphatics",
+    "EMCN CD31 Blood vessels",
+    "Epithelia"
+  ))) %>%
+  group_by(Tissue_Niche, CellType) %>%
+  summarise(Count = n(), .groups = "drop") %>%
+  group_by(Tissue_Niche) %>%
+  # Calculate percentage and round to 1 decimal place
+  mutate(`Percentage [%]` = round((Count / sum(Count)) * 100, 3)) %>%
+  ungroup() %>%
+  # Selecting columns to keep the table clean for the plot
+  select(Tissue_Niche, CellType, `Percentage [%]`)
+
+# Create the table plot
+table_plot_al3 <- ggtexttable(niche_composition_al3, 
+                              rows = NULL) # Optional: added a blue theme for readability
+print(table_plot_al3)
 ```
 
 <img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
-print(table_plot_al3)
+# AL1 ---------------------------------------------------------------------------
+niche_composition_al1 <- df_all %>%
+  group_by(Tissue_Niche, AL1) %>%
+  summarise(Count = n(), .groups = "drop") %>%
+  group_by(Tissue_Niche) %>%
+  # Calculate percentage and round to 1 decimal place
+  mutate(`Percentage [%]` = round((Count / sum(Count)) * 100, 1)) %>%
+  ungroup() %>%
+  # Selecting columns to keep the table clean for the plot
+  select(Tissue_Niche, AL1, `Percentage [%]`)
+
+# Create the table plot
+table_plot_al1 <- ggtexttable(niche_composition_al1, 
+                              rows = NULL) # Optional: added a blue theme for readability
+
+print(table_plot_al1)
 ```
 
 <img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-23-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
+# AL3 ILCs ---------------------------------------------------------------------------
+niche_composition_ilc <- df_all %>%
+  filter(AL2 == "ILCs") %>%
+  mutate(CellType = factor(CellType, levels = c(
+    "NK cells/ILC1s",
+    "ILC2s",
+    "ILC3s",
+    "T cytotox cells",
+    "T helper cells",
+    "B cells & Plasma cells",
+    "Myeloid cells",
+    "LYVE1 CD31 vessels",
+    "LYVE1 CD90 Lymphatics",
+    "EMCN CD31 Blood vessels",
+    "Epithelia"
+  ))) %>%
+  group_by(Tissue_Niche, CellType) %>%
+  summarise(Count = n(), .groups = "drop") %>%
+  group_by(Tissue_Niche) %>%
+  # Calculate percentage and round to 1 decimal place
+  mutate(`Percentage [%]` = round((Count / sum(Count)) * 100, 1)) %>%
+  ungroup() %>%
+  # Selecting columns to keep the table clean for the plot
+  select(Tissue_Niche, CellType, `Percentage [%]`)
+
+# Create the table plot
+table_plot_ilc <- ggtexttable(niche_composition_ilc, 
+                              rows = NULL) # Optional: added a blue theme for readability
+
 print(table_plot_ilc)
 ```
 
@@ -2289,7 +2301,7 @@ for (current_niche in all_niches) {
       axis.title.y = element_text(size = 9),
       legend.title = element_text(size = 9, face = "bold"),
       legend.text = element_text(size = 9),
-      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.title = element_text(hjust = 0.5, size = 11), 
       plot.margin = margin(0, 0.2, 0.3, 0.2, "cm"),
       legend.position = "none") +
       NoLegend()
@@ -2325,6 +2337,215 @@ for (current_niche in all_niches) {
 
 
 ``` r
+plot_bpcbec <- ggarrange(
+  niche_plots_all[["Mixed BPC/BEC niche_NK cells/ILC1s"]],
+  niche_plots_all[["Mixed BPC/BEC niche_ILC2s"]],
+  niche_plots_all[["Mixed BPC/BEC niche_ILC3s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0.25, "cm"))
+
+plot_bpcbec <- annotate_figure(
+  plot_bpcbec, 
+  top = text_grob("Mixed BPC/BEC niche\n", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5)
+  )
+
+
+
+plot_myly <- ggarrange(
+  niche_plots_all[["Mixed Myeloid/LEC niche_NK cells/ILC1s"]],
+  niche_plots_all[["Mixed Myeloid/LEC niche_ILC2s"]],
+  niche_plots_all[["Mixed Myeloid/LEC niche_ILC3s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0.25, "cm"))
+
+plot_myly <- annotate_figure(
+  plot_myly, 
+  top = text_grob("Mixed Myeloid/LEC niche\n", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5)
+  )
+
+
+
+plot_epi <- ggarrange(
+  niche_plots_all[["Epithelial niche_NK cells/ILC1s"]],
+  niche_plots_all[["Epithelial niche_ILC2s"]],
+  niche_plots_all[["Epithelial niche_ILC3s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0.25, "cm"))
+
+plot_epi <- annotate_figure(
+  plot_epi, 
+  top = text_grob("Epithelial niche\n", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5)
+  )
+
+
+
+plot_endo <- ggarrange(
+  niche_plots_all[["Blood endothelial niche_NK cells/ILC1s"]],
+  niche_plots_all[["Blood endothelial niche_ILC2s"]],
+  niche_plots_all[["Blood endothelial niche_ILC3s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0.25, "cm"))
+
+plot_endo <- annotate_figure(
+  plot_endo, 
+  top = text_grob("Blood endothelial niche\n", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5)
+  )
+
+
+
+plot_ilcs_niches <- ggarrange(
+  plot_bpcbec, plot_myly, plot_epi, plot_endo, 
+  ncol = 4, nrow = 1)
+
+annotate_figure(
+  plot_ilcs_niches, 
+  top = text_grob("ILC composition across niches\n", color = "black", 
+                  face = "bold", size = 12)
+  )
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-31-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+plot_bpcbec <- ggarrange(
+  niche_plots_all[["Mixed BPC/BEC niche_NK cells/ILC1s"]],
+  niche_plots_all[["Mixed BPC/BEC niche_ILC2s"]],
+  niche_plots_all[["Mixed BPC/BEC niche_ILC3s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0.25, "cm"))
+
+plot_bpcbec <- annotate_figure(
+  plot_bpcbec, 
+  top = text_grob("Mixed BPC/BEC niche\n", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5)
+  )
+
+
+
+plot_myly <- ggarrange(
+  niche_plots_all[["Mixed Myeloid/LEC niche_NK cells/ILC1s"]],
+  niche_plots_all[["Mixed Myeloid/LEC niche_ILC2s"]],
+  niche_plots_all[["Mixed Myeloid/LEC niche_ILC3s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0.25, "cm"))
+
+plot_myly <- annotate_figure(
+  plot_myly, 
+  top = text_grob("Mixed Myeloid/LEC niche\n", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5)
+  )
+
+
+
+plot_epi <- ggarrange(
+  niche_plots_all[["Epithelial niche_NK cells/ILC1s"]],
+  niche_plots_all[["Epithelial niche_ILC2s"]],
+  niche_plots_all[["Epithelial niche_ILC3s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0.25, "cm"))
+
+plot_epi <- annotate_figure(
+  plot_epi, 
+  top = text_grob("Epithelial niche\n", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5)
+  )
+
+
+
+plot_endo <- ggarrange(
+  niche_plots_all[["Blood endothelial niche_NK cells/ILC1s"]],
+  niche_plots_all[["Blood endothelial niche_ILC2s"]],
+  niche_plots_all[["Blood endothelial niche_ILC3s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0.25, "cm"))
+
+plot_endo <- annotate_figure(
+  plot_endo, 
+  top = text_grob("Blood endothelial niche\n", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5)
+  )
+
+
+
+plot_stru_niches <- ggarrange(
+  plot_bpcbec, plot_myly, plot_epi, plot_endo, 
+  ncol = 4, nrow = 1)
+
+annotate_figure(
+  plot_stru_niches, 
+  top = text_grob("ILC composition across niches\n", color = "black", 
+                  face = "bold", size = 12)
+  )
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-32-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+# 1. Define the lists based on your data
+target_niches <- c("Mixed BPC/BEC niche", "Mixed Myeloid/LEC niche", 
+                   "Epithelial niche", "Blood endothelial niche")
+
+all_cell_types <- c("NK cells/ILC1s", "ILC2s", "ILC3s", "T helper cells", 
+                    "T cytotox cells", "Myeloid cells", "B cells & Plasma cells", 
+                    "LYVE1 CD31 vessels", "LYVE1 CD90 Lymphatics", 
+                    "EMCN CD31 Blood vessels", "Epithelia")
+
+# 2. Loop through each niche to create the columns
+niche_columns <- list()
+
+for (niche in target_niches) {
+  
+  # Collect all 11 plots for the current niche from your niche_plots_all list
+  # We use mget or a loop to grab them safely
+  current_niche_plots <- lapply(all_cell_types, function(cell) {
+    plot_key <- paste0(niche, "_", cell)
+    return(niche_plots_all[[plot_key]])
+  })
+  
+  # Remove any NULLs in case a specific cell/niche combo didn't exist
+  current_niche_plots <- current_niche_plots[!sapply(current_niche_plots, is.null)]
+  
+  # Arrange vertically (1 column, 11 rows)
+  col_plot <- ggarrange(
+    plotlist = current_niche_plots,
+    ncol = 1, 
+    nrow = length(current_niche_plots)
+  ) +
+  theme(plot.margin = margin(0, 0.5, 0, 0.5, "cm"))
+  
+  # Add the Niche title at the top of the column
+  niche_columns[[niche]] <- annotate_figure(
+    col_plot, 
+    top = text_grob(paste0(niche, "\n"), color = "black", 
+                    face = "bold", size = 11, hjust = 0.5)
+  )
+}
+
+# 3. Final Assembly: Combine the 4 Niche Columns
+plot_stru_niches_all <- ggarrange(
+  plotlist = niche_columns, 
+  ncol = 4, 
+  nrow = 1
+)
+
+# 4. Add the Global Title
+annotate_figure(
+  plot_stru_niches_all, 
+  top = text_grob("Cellular composition across niches\n", color = "black", 
+                  face = "bold", size = 14)
+)
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-33-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
 middle_fig <- ggarrange(niche_plots_all[["Mixed Myeloid/LEC niche_ILC2s"]],
           niche_plots_all[["Mixed Myeloid/LEC niche_Myeloid cells"]],
           niche_plots_all[["Mixed Myeloid/LEC niche_LYVE1 CD90 Lymphatics"]], 
@@ -2339,7 +2560,7 @@ middle_fig <- annotate_figure(middle_fig,
 middle_fig
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-31-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-34-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2349,7 +2570,7 @@ top_figure <- ggarrange(upper_fig, middle_fig, nrow = 2, ncol = 1,
 top_figure
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-32-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-35-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### Spatial distribution of identified niches
 
@@ -2368,7 +2589,7 @@ niche_colors <- c(
   "Epithelial niche" = "#117733", 
   "Mixed Myeloid/LEC niche" = "#DDCC77", 
   "Blood endothelial niche" = "#882255", 
-  "Mixed BPC/BEC" = "#332288"
+  "Mixed BPC/BEC niche" = "#332288"
 )
 
 # 2. Grab and Sort exactly 35 FOVs by Condition
@@ -2446,7 +2667,7 @@ niche_map_grid <- wrap_plots(final_plot_list, ncol = 9) +
 print(niche_map_grid)
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-33-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-36-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2565,7 +2786,7 @@ final_atlas <- (grid_ctrl | grid_d3) / legend_plot +
 print(final_atlas)
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-34-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-37-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 Proliferation
 
@@ -2654,7 +2875,7 @@ final_ki67_plot <- wrap_plots(ki67_plots, ncol = 3) +
 print(final_ki67_plot)
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-35-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-38-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2766,7 +2987,7 @@ for (current_niche in all_niches) {
 }
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-36-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-36-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-36-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-36-4.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-39-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-39-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-39-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-39-4.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Combine plots for figure
 
@@ -2776,7 +2997,15 @@ ggarrange(top_figure, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(6.5, 
           labels = c("", "", "D"), label.y = 1.06)
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-37-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-40-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+ggarrange(upper_fig, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(5, 0.5, 6), 
+          labels = c("", "", "C"), label.y = 1.06)
+```
+
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-41-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2787,13 +3016,13 @@ coenrichment <- ggarrange(final_plot_ILC2s, "NONE", coenrichment_fig_ann,
 coenrichment
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-38-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-42-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
 plot_cin
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-38-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-42-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
 # spiat <- ggarrange(dist_lymph, plot_cin,
@@ -2815,7 +3044,7 @@ ggarrange(coenrichment, "NONE", plot_cin,
           labels = c("", "", ""))
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-39-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-43-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 Additional plots
 
@@ -2870,7 +3099,7 @@ plot_coenrichment <- ggplot(interaction_celltypes, aes(x = condition, y = enrich
 plot_coenrichment
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-40-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-44-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
 # fine tune the co-enrichment plot
@@ -2922,7 +3151,7 @@ plot_coenrichment <- ggplot(interaction_celltypes, aes(x = condition, y = enrich
 plot_coenrichment
 ```
 
-<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-40-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-44-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 Frequency of cell types per FOV/condition:
 
@@ -2962,7 +3191,7 @@ sessionInfo()
 ## [1] grid      stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-##  [1] dbscan_1.2.3          patchwork_1.3.2       ggplotify_0.1.3       tidyr_1.3.1           circlize_0.4.17       ComplexHeatmap_2.26.1 stringr_1.6.0         ggbeeswarm_0.7.3      readr_2.1.6           ggpubr_0.6.2          ggplot2_4.0.1         VoltRon_0.2.3         Seurat_5.3.1          Giotto_4.2.2          GiottoClass_0.4.10    rlang_1.1.6           rstatix_0.7.3         dplyr_1.1.4           SeuratObject_5.2.0    sp_2.2-0             
+##  [1] dbscan_1.2.3          ggplotify_0.1.3       circlize_0.4.17       ComplexHeatmap_2.26.1 patchwork_1.3.2       tidyr_1.3.1           stringr_1.6.0         ggbeeswarm_0.7.3      readr_2.1.6           ggpubr_0.6.2          ggplot2_4.0.1         VoltRon_0.2.3         Seurat_5.3.1          Giotto_4.2.2          GiottoClass_0.4.10    rlang_1.1.6           rstatix_0.7.3         dplyr_1.1.4           SeuratObject_5.2.0    sp_2.2-0             
 ## 
 ## loaded via a namespace (and not attached):
 ##   [1] fs_1.6.6                    matrixStats_1.5.0           spatstat.sparse_3.1-0       bitops_1.0-9                lubridate_1.9.4             EBImage_4.52.0              doParallel_1.0.17           httr_1.4.8                  RColorBrewer_1.1-3          tools_4.5.2                 sctransform_0.4.2           backports_1.5.0             utf8_1.2.6                  R6_2.6.1                    lazyeval_0.2.2              uwot_0.2.4                  GetoptLong_1.1.0            withr_3.0.2                 gridExtra_2.3               GiottoUtils_0.2.5           progressr_0.18.0            cli_3.6.5                   Biobase_2.70.0              Cairo_1.7-0                 spatstat.explore_3.5-3      fastDummies_1.7.5           shinyjs_2.1.1               labeling_0.4.3              sass_0.4.10                 S7_0.2.0                    spatstat.data_3.1-9         ggridges_0.5.7              pbapply_1.7-4               yulab.utils_0.2.4           dichromat_2.0-0.1           parallelly_1.45.1           rstudioapi_0.18.0           gridGraphics_0.5-1          shape_1.4.6.1               generics_0.1.4              vroom_1.7.0                 gtools_3.9.5               

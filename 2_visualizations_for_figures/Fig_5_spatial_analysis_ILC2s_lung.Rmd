@@ -55,6 +55,10 @@ library(ggpubr)
 library(readr)
 library(ggbeeswarm)
 library(stringr)
+library(tidyr)
+library(patchwork)
+library(rstatix) 
+
 ```
 
 ## Parameters
@@ -133,6 +137,33 @@ order_al3 <- c(
     "Epithelia"
 
 )
+
+ColorsCellType <-  list(`NK cells/ILC1s` = "darkcyan", 
+                        `ILC2s` = "seagreen2", 
+                        `ILC3s` = "darkmagenta", 
+                        `T helper cells` = "deeppink",
+                        `T cytotox cells` = "slateblue", 
+                        `Myeloid cells` = "burlywood", 
+                        `B cells & Plasma cells` = "indianred1",
+                        `LYVE1 CD31 vessels` = "darkgreen", 
+                        `LYVE1 CD90 Lymphatics` = "yellow", 
+                        `EMCN CD31 Blood vessels` = "red", 
+                        `Epithelia` = "green")
+
+celltypes <- c(
+  "NK cells/ILC1s", 
+  "ILC2s", 
+  "ILC3s", 
+  "T helper cells", 
+  "T cytotox cells", 
+  "Myeloid cells", 
+  "B cells & Plasma cells", 
+  "LYVE1 CD31 vessels", 
+  "LYVE1 CD90 Lymphatics", 
+  "EMCN CD31 Blood vessels", 
+  "Epithelia"
+)
+
 ```
 
 # Load data
@@ -194,7 +225,7 @@ cols_con <- c("darkcyan", "gold", "deeppink",
 cols_fov <- c("darkcyan", "gold", "deeppink", 
                 "slateblue")
 
-ColorsCellType <-  list(
+ColorsCellTypeSingle <-  list(
   #`NK cells/ILC1s/ILC3s` = "cyan", 
   `ILC2s` = "magenta",
   #`ILC3s` = "magenta", 
@@ -891,7 +922,6 @@ coenrichment_fig_ann
 
 ```{r, fig.height=3, fig.width=9}
 
-library(stringr)
 tissuearea <- "Lung"
 input_dir <- here::here("data", "CIN_analysis", tissuearea, "/")
 
@@ -952,13 +982,6 @@ df_cin_lung$Treatment <- gsub("D", "", df_cin_lung$Treatment)
 ```
 
 ```{r fig.height=6, fig.width=9, warning=FALSE}
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(ggbeeswarm)
-library(ggpubr)
-library(patchwork)
-library(rstatix) 
 
 # 1. Target cells, References, and Radii
 target_cells <- c("Epithelia", "EMCN CD31 Blood vessels", "LYVE1 CD31 vessels", 
@@ -1123,47 +1146,6 @@ plot_cin
 set.seed(8)
 radius <- 10
 
-cols_nat <- c("magenta", "cyan", "blue", "purple", "green", 
-                       "red", "yellow", "olivedrab1", "slateblue1", 
-                       "darkcyan", "seagreen", "deeppink", 
-                       "orange", "brown", "violet",
-                       "deeppink4", "pink", 
-                       "grey", "black", "lightgreen", 
-                       "#FF0066", "gold", 
-                       "lightblue", "#FFCC99", "#CC00FF", 
-                       "blueviolet",  "goldenrod4", 
-                       "indianred1", "navy", "olivedrab", "lightcyan", "seagreen2", "darkviolet", "lightpink", "slateblue4", "olivedrab2")
-                
-
-
-ColorsCellType <-  list(`NK cells/ILC1s` = "darkcyan", 
-                        `ILC2s` = "seagreen2", 
-                        `ILC3s` = "darkmagenta", 
-                        `T helper cells` = "deeppink",
-                        `T cytotox cells` = "slateblue", 
-                        `Myeloid cells` = "burlywood", 
-                        `B cells & Plasma cells` = "indianred1",
-                        `LYVE1 CD31 vessels` = "darkgreen", 
-                        `LYVE1 CD90 Lymphatics` = "yellow", 
-                        `EMCN CD31 Blood vessels` = "red", 
-                        `Epithelia` = "green")
-ColorsCellType 
-
-cols_treat <- c("darkcyan", "gold", "deeppink", "slateblue")
-
-celltypes <- c(
-  "NK cells/ILC1s", 
-  "ILC2s", 
-  "ILC3s", 
-  "T helper cells", 
-  "T cytotox cells", 
-  "Myeloid cells", 
-  "B cells & Plasma cells", 
-  "LYVE1 CD31 vessels", 
-  "LYVE1 CD90 Lymphatics", 
-  "EMCN CD31 Blood vessels", 
-  "Epithelia"
-)
 
 df_dist_all <- read_csv(here::here("data", "SPIAT_min_dist_all_lung.csv"), 
     col_types = cols(...1 = col_skip()))
@@ -1284,13 +1266,6 @@ dist_lymph
 ```
 
 ```{r fig.height=4, fig.width=9, warning=FALSE}
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(ggbeeswarm)
-library(ggpubr)
-library(patchwork)
-library(rstatix)
 
 # --- 1. SETTINGS ---
 celltype_of_interest <- "LYVE1 CD90 Lymphatics"
@@ -1518,14 +1493,14 @@ df_all$Raw_Niche <- paste0("Niche ", kmeans_res$cluster[df_all$Global_ID])
 # Assuming Niche 1 = Epithelial, Niche 2 = B cell, etc. based on your prompt.
 niche_names <- c(
   "Niche 1" = "Mixed Myeloid/LEC niche",
-  "Niche 2" = "Mixed BPC/BEC",
+  "Niche 2" = "Mixed BPC/BEC niche",
   "Niche 3" = "Epithelial niche",
   "Niche 4" = "Blood endothelial niche"
 )
 
 df_all$Tissue_Niche <- unname(niche_names[df_all$Raw_Niche])
 df_all$Tissue_Niche <- factor(df_all$Tissue_Niche, levels = c(
-  "Mixed BPC/BEC",        
+  "Mixed BPC/BEC niche",        
   "Mixed Myeloid/LEC niche",
   "Epithelial niche", 
   "Blood endothelial niche"       
@@ -1535,7 +1510,7 @@ niche_colors <- c(
   "Epithelial niche" = "#117733", 
   "Mixed Myeloid/LEC niche" = "#DDCC77", 
   "Blood endothelial niche" = "#882255", 
-  "Mixed BPC/BEC" = "#332288"
+  "Mixed BPC/BEC niche" = "#332288"
 )
 
 
@@ -1580,8 +1555,8 @@ plot_comp_al3 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, f
     axis.title.y = element_text(size = 9),
     legend.title = element_text(size = 9, face = "bold"),
     legend.text = element_text(size = 9),
-    plot.title = element_text(face = "bold", hjust = -1, size = 12), 
-    plot.margin = margin(0.2, 0, 0.5, 0, "cm"))
+    plot.title = element_text(face = "bold", hjust = -0.25, size = 12), 
+    plot.margin = margin(0.2, 0, 0.5, 1, "cm"))
 
 print(plot_comp_al3)
 
@@ -1614,7 +1589,8 @@ plot_comp_al1 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, f
     axis.title.y = element_text(size = 9),
     legend.title = element_text(size = 9, face = "bold"),
     legend.text = element_text(size = 9),
-    plot.title = element_blank())
+    plot.title = element_blank(), 
+    plot.margin = margin(0, 0, 0, 0.5, "cm"))
 
 print(plot_comp_al1)
 
@@ -1667,7 +1643,9 @@ plot_comp_ilc <- ggplot(niche_composition,
     axis.title.y = element_text(size = 9),
     legend.title = element_text(size = 9, face = "bold"),
     legend.text = element_text(size = 9),
-    plot.title = element_blank())
+    plot.title = element_blank(), 
+    plot.margin = margin(0, 0, 0, 0.5, "cm"))
+
 
 print(plot_comp_ilc)
 
@@ -1681,9 +1659,91 @@ upper_supp_plot
 ```
 
 ```{r, fig.height=13, fig.width=9}
-print(table_plot_al1)
+# ========================================================================
+# PART 2: WHAT IS IN EACH NICHE? (Composition Profiling)
+# ========================================================================
+
+# AL3 ---------------------------------------------------------------------------
+niche_composition_al3 <- df_all %>%
+  mutate(CellType = factor(CellType, levels = c(
+    "NK cells/ILC1s",
+    "ILC2s",
+    "ILC3s",
+    "T cytotox cells",
+    "T helper cells",
+    "B cells & Plasma cells",
+    "Myeloid cells",
+    "LYVE1 CD31 vessels",
+    "LYVE1 CD90 Lymphatics",
+    "EMCN CD31 Blood vessels",
+    "Epithelia"
+  ))) %>%
+  group_by(Tissue_Niche, CellType) %>%
+  summarise(Count = n(), .groups = "drop") %>%
+  group_by(Tissue_Niche) %>%
+  # Calculate percentage and round to 1 decimal place
+  mutate(`Percentage [%]` = round((Count / sum(Count)) * 100, 3)) %>%
+  ungroup() %>%
+  # Selecting columns to keep the table clean for the plot
+  select(Tissue_Niche, CellType, `Percentage [%]`)
+
+# Create the table plot
+table_plot_al3 <- ggtexttable(niche_composition_al3, 
+                              rows = NULL) # Optional: added a blue theme for readability
 print(table_plot_al3)
+
+
+# AL1 ---------------------------------------------------------------------------
+niche_composition_al1 <- df_all %>%
+  group_by(Tissue_Niche, AL1) %>%
+  summarise(Count = n(), .groups = "drop") %>%
+  group_by(Tissue_Niche) %>%
+  # Calculate percentage and round to 1 decimal place
+  mutate(`Percentage [%]` = round((Count / sum(Count)) * 100, 1)) %>%
+  ungroup() %>%
+  # Selecting columns to keep the table clean for the plot
+  select(Tissue_Niche, AL1, `Percentage [%]`)
+
+# Create the table plot
+table_plot_al1 <- ggtexttable(niche_composition_al1, 
+                              rows = NULL) # Optional: added a blue theme for readability
+
+print(table_plot_al1)
+
+
+
+
+# AL3 ILCs ---------------------------------------------------------------------------
+niche_composition_ilc <- df_all %>%
+  filter(AL2 == "ILCs") %>%
+  mutate(CellType = factor(CellType, levels = c(
+    "NK cells/ILC1s",
+    "ILC2s",
+    "ILC3s",
+    "T cytotox cells",
+    "T helper cells",
+    "B cells & Plasma cells",
+    "Myeloid cells",
+    "LYVE1 CD31 vessels",
+    "LYVE1 CD90 Lymphatics",
+    "EMCN CD31 Blood vessels",
+    "Epithelia"
+  ))) %>%
+  group_by(Tissue_Niche, CellType) %>%
+  summarise(Count = n(), .groups = "drop") %>%
+  group_by(Tissue_Niche) %>%
+  # Calculate percentage and round to 1 decimal place
+  mutate(`Percentage [%]` = round((Count / sum(Count)) * 100, 1)) %>%
+  ungroup() %>%
+  # Selecting columns to keep the table clean for the plot
+  select(Tissue_Niche, CellType, `Percentage [%]`)
+
+# Create the table plot
+table_plot_ilc <- ggtexttable(niche_composition_ilc, 
+                              rows = NULL) # Optional: added a blue theme for readability
+
 print(table_plot_ilc)
+
 
 ```
 
@@ -2011,7 +2071,7 @@ for (current_niche in all_niches) {
       axis.title.y = element_text(size = 9),
       legend.title = element_text(size = 9, face = "bold"),
       legend.text = element_text(size = 9),
-      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.title = element_text(hjust = 0.5, size = 11), 
       plot.margin = margin(0, 0.2, 0.3, 0.2, "cm"),
       legend.position = "none") +
       NoLegend()
@@ -2041,6 +2101,277 @@ for (current_niche in all_niches) {
     print(combined_grid)
   }
 }
+```
+
+```{r, fig.height=5, fig.width=9}
+
+plot_bpcbec <- ggarrange(
+  niche_plots_all[["Mixed BPC/BEC niche_NK cells/ILC1s"]],
+  niche_plots_all[["Mixed BPC/BEC niche_ILC2s"]],
+  niche_plots_all[["Mixed BPC/BEC niche_ILC3s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0.25, "cm"))
+
+plot_bpcbec <- annotate_figure(
+  plot_bpcbec, 
+  top = text_grob("Mixed BPC/BEC niche\n", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5)
+  )
+
+
+
+plot_myly <- ggarrange(
+  niche_plots_all[["Mixed Myeloid/LEC niche_NK cells/ILC1s"]],
+  niche_plots_all[["Mixed Myeloid/LEC niche_ILC2s"]],
+  niche_plots_all[["Mixed Myeloid/LEC niche_ILC3s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0.25, "cm"))
+
+plot_myly <- annotate_figure(
+  plot_myly, 
+  top = text_grob("Mixed Myeloid/LEC niche\n", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5)
+  )
+
+
+
+plot_epi <- ggarrange(
+  niche_plots_all[["Epithelial niche_NK cells/ILC1s"]],
+  niche_plots_all[["Epithelial niche_ILC2s"]],
+  niche_plots_all[["Epithelial niche_ILC3s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0.25, "cm"))
+
+plot_epi <- annotate_figure(
+  plot_epi, 
+  top = text_grob("Epithelial niche\n", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5)
+  )
+
+
+
+plot_endo <- ggarrange(
+  niche_plots_all[["Blood endothelial niche_NK cells/ILC1s"]],
+  niche_plots_all[["Blood endothelial niche_ILC2s"]],
+  niche_plots_all[["Blood endothelial niche_ILC3s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0.25, "cm"))
+
+plot_endo <- annotate_figure(
+  plot_endo, 
+  top = text_grob("Blood endothelial niche\n", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5)
+  )
+
+
+
+plot_ilcs_niches <- ggarrange(
+  plot_bpcbec, plot_myly, plot_epi, plot_endo, 
+  ncol = 4, nrow = 1)
+
+annotate_figure(
+  plot_ilcs_niches, 
+  top = text_grob("ILC composition across niches\n", color = "black", 
+                  face = "bold", size = 12)
+  )
+```
+
+```{r, fig.height=7, fig.width=9}
+
+plot_bpcbec <- ggarrange(
+  niche_plots_all[["Mixed BPC/BEC niche_NK cells/ILC1s"]],
+  niche_plots_all[["Mixed BPC/BEC niche_ILC2s"]],
+  niche_plots_all[["Mixed BPC/BEC niche_ILC3s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0.25, "cm"))
+
+plot_bpcbec <- annotate_figure(
+  plot_bpcbec, 
+  top = text_grob("Mixed BPC/BEC niche\n", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5)
+  )
+
+
+
+plot_myly <- ggarrange(
+  niche_plots_all[["Mixed Myeloid/LEC niche_NK cells/ILC1s"]],
+  niche_plots_all[["Mixed Myeloid/LEC niche_ILC2s"]],
+  niche_plots_all[["Mixed Myeloid/LEC niche_ILC3s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0.25, "cm"))
+
+plot_myly <- annotate_figure(
+  plot_myly, 
+  top = text_grob("Mixed Myeloid/LEC niche\n", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5)
+  )
+
+
+
+plot_epi <- ggarrange(
+  niche_plots_all[["Epithelial niche_NK cells/ILC1s"]],
+  niche_plots_all[["Epithelial niche_ILC2s"]],
+  niche_plots_all[["Epithelial niche_ILC3s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0.25, "cm"))
+
+plot_epi <- annotate_figure(
+  plot_epi, 
+  top = text_grob("Epithelial niche\n", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5)
+  )
+
+
+
+plot_endo <- ggarrange(
+  niche_plots_all[["Blood endothelial niche_NK cells/ILC1s"]],
+  niche_plots_all[["Blood endothelial niche_ILC2s"]],
+  niche_plots_all[["Blood endothelial niche_ILC3s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0.25, "cm"))
+
+plot_endo <- annotate_figure(
+  plot_endo, 
+  top = text_grob("Blood endothelial niche\n", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5)
+  )
+
+
+
+plot_stru_niches <- ggarrange(
+  plot_bpcbec, plot_myly, plot_epi, plot_endo, 
+  ncol = 4, nrow = 1)
+
+annotate_figure(
+  plot_stru_niches, 
+  top = text_grob("ILC composition across niches\n", color = "black", 
+                  face = "bold", size = 12)
+  )
+```
+
+```{r, fig.height=20, fig.width=10}
+
+# 1. Define the lists based on your data
+target_niches <- c("Mixed BPC/BEC niche", "Mixed Myeloid/LEC niche", 
+                   "Epithelial niche", "Blood endothelial niche")
+
+all_cell_types <- c("NK cells/ILC1s", "ILC2s", "ILC3s", "T helper cells", 
+                    "T cytotox cells", "Myeloid cells", "B cells & Plasma cells", 
+                    "LYVE1 CD31 vessels", "LYVE1 CD90 Lymphatics", 
+                    "EMCN CD31 Blood vessels", "Epithelia")
+
+# 2. Loop through each niche to create the columns
+niche_columns <- list()
+
+for (niche in target_niches) {
+  
+  # Collect all 11 plots for the current niche from your niche_plots_all list
+  # We use mget or a loop to grab them safely
+  current_niche_plots <- lapply(all_cell_types, function(cell) {
+    plot_key <- paste0(niche, "_", cell)
+    return(niche_plots_all[[plot_key]])
+  })
+  
+  # Remove any NULLs in case a specific cell/niche combo didn't exist
+  current_niche_plots <- current_niche_plots[!sapply(current_niche_plots, is.null)]
+  
+  # Arrange vertically (1 column, 11 rows)
+  col_plot <- ggarrange(
+    plotlist = current_niche_plots,
+    ncol = 1, 
+    nrow = length(current_niche_plots)
+  ) +
+  theme(plot.margin = margin(0, 0.5, 0, 0.5, "cm"))
+  
+  # Add the Niche title at the top of the column
+  niche_columns[[niche]] <- annotate_figure(
+    col_plot, 
+    top = text_grob(paste0(niche, "\n"), color = "black", 
+                    face = "bold", size = 11, hjust = 0.5)
+  )
+}
+
+# 3. Final Assembly: Combine the 4 Niche Columns
+plot_stru_niches_all <- ggarrange(
+  plotlist = niche_columns, 
+  ncol = 4, 
+  nrow = 1
+)
+
+# 4. Add the Global Title
+annotate_figure(
+  plot_stru_niches_all, 
+  top = text_grob("Cellular composition across niches\n", color = "black", 
+                  face = "bold", size = 14)
+)
+```
+
+```{r, fig.height=20, fig.width=10}
+
+# 1. Define the lists based on your data
+target_niches <- c("Mixed BPC/BEC niche", "Mixed Myeloid/LEC niche", 
+                   "Epithelial niche", "Blood endothelial niche")
+
+all_cell_types <- c("NK cells/ILC1s", "ILC2s", "ILC3s", "T helper cells", 
+                    "T cytotox cells", "Myeloid cells", "B cells & Plasma cells", 
+                    "LYVE1 CD31 vessels", "LYVE1 CD90 Lymphatics", 
+                    "EMCN CD31 Blood vessels", "Epithelia")
+
+# 2. Loop through each niche to create the columns
+niche_columns <- list()
+
+for (niche in target_niches) {
+  
+  # Collect all 11 plots for the current niche from your niche_plots_all list
+  current_niche_plots <- lapply(all_cell_types, function(cell) {
+    plot_key <- paste0(niche, "_", cell)
+    p <- niche_plots_all[[plot_key]]
+    
+    # --- HIGHLIGHT LOGIC START ---
+    # Check if this is the specific Niche and one of the two Cell Types to highlight
+    if (niche == "Mixed Myeloid/LEC niche" && 
+        cell %in% c("Myeloid cells", "LYVE1 CD90 Lymphatics")) {
+      
+      # Add a green border around the plot
+      p <- p + theme(plot.background = element_rect(color = "green", linewidth = 1.5, fill = NA))
+    }
+    # --- HIGHLIGHT LOGIC END ---
+    
+    return(p)
+  })
+  
+  # Remove any NULLs in case a specific cell/niche combo didn't exist
+  current_niche_plots <- current_niche_plots[!sapply(current_niche_plots, is.null)]
+  
+  # Arrange vertically (1 column, 11 rows)
+  col_plot <- ggarrange(
+    plotlist = current_niche_plots,
+    ncol = 1, 
+    nrow = length(current_niche_plots)
+  ) +
+  theme(plot.margin = margin(0, 0.5, 0, 0.5, "cm"))
+  
+  # Add the Niche title at the top of the column
+  niche_columns[[niche]] <- annotate_figure(
+    col_plot, 
+    top = text_grob(paste0(niche, "\n"), color = "black", 
+                    face = "bold", size = 11, hjust = 0.5)
+  )
+}
+
+# 3. Final Assembly: Combine the 4 Niche Columns
+plot_stru_niches_all <- ggarrange(
+  plotlist = niche_columns, 
+  ncol = 4, 
+  nrow = 1
+)
+
+# 4. Add the Global Title
+annotate_figure(
+  plot_stru_niches_all, 
+  top = text_grob("Cellular composition across niches\n", color = "black", 
+                  face = "bold", size = 14)
+)
 ```
 
 ```{r, fig.height=2, fig.width=9}
@@ -2081,7 +2412,7 @@ niche_colors <- c(
   "Epithelial niche" = "#117733", 
   "Mixed Myeloid/LEC niche" = "#DDCC77", 
   "Blood endothelial niche" = "#882255", 
-  "Mixed BPC/BEC" = "#332288"
+  "Mixed BPC/BEC niche" = "#332288"
 )
 
 # 2. Grab and Sort exactly 35 FOVs by Condition
@@ -2475,6 +2806,11 @@ for (current_niche in all_niches) {
 ```{r, fig.width=9, fig.height=13}
 ggarrange(top_figure, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(6.5, 0.1, 5.2), 
           labels = c("", "", "D"), label.y = 1.06)
+```
+
+```{r, fig.width=9, fig.height=11}
+ggarrange(upper_fig, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(5, 0.5, 6), 
+          labels = c("", "", "C"), label.y = 1.06)
 ```
 
 ```{r, fig.width=9, fig.height=6.5}
