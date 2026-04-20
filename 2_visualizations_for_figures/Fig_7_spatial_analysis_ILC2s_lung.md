@@ -1,7 +1,7 @@
 ---
 title: "Figure 7: ILC2s localize together with lymphatics and myeloid cells"
 author: "Sandy Kroh"
-date: "April 17, 2026"
+date: "April 20, 2026"
 output:
   html_document:
     toc: yes
@@ -429,12 +429,66 @@ print(img_plot_if_ilc2s)
 <img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-5-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
+``` r
+library(png)
+library(grid)
+library(ggplot2)
 
-Plot ILC2s on overlay of endothelial markers
+# 1. Define the path
+img_path <- "D:/Repositories/2025_Kroh_et_al/Murine_ILC_niches_lung_SI_IL-33/data/images/ILC2s_in_myeloid_lymphatic_niche_ROI.png"
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_if_ilc2s_roi <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+
+# Display the plot
+print(img_plot_if_ilc2s_roi)
+```
+
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-6-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
+``` r
+library(png)
+library(grid)
+library(ggplot2)
 
+# 1. Define the path
+img_path <- "D:/Repositories/2025_Kroh_et_al/Murine_ILC_niches_lung_SI_IL-33/data/images/ILC2s_in_myeloid_lymphatic_niche_ILC2s_myeloid_cells.png"
 
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_if_ilc2s_my <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+
+# Display the plot
+print(img_plot_if_ilc2s_my)
+```
+
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Coenrichment analysis
 
@@ -586,9 +640,129 @@ final_plot_ILC2s <- gg_heat +
 print(final_plot_ILC2s)
 ```
 
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+# --- 1. Gather all data into one master dataframe ---
+all_interactions <- data.frame()
+
+for (vr_name in vr_list_names) {
+  
+  cur_cell_proximities <- cell_proximities_list[[vr_name]]
+  
+  # Skip if this FOV has no interaction data
+  if(is.null(cur_cell_proximities) || nrow(cur_cell_proximities) == 0) next
+  
+  # Get metadata for condition
+  vr_samp <- subset(vr_merged, samples = vr_name)
+  vr_meta <- Metadata(vr_samp)
+  condition <- paste(unique(vr_meta$Condition), collapse = ", ")
+  
+  # Create a temporary dataframe for this FOV
+  temp_df <- data.frame(
+    Interaction = cur_cell_proximities$unified_int,
+    Enrichment = cur_cell_proximities$enrichm,
+    FOV = vr_name,
+    Condition = condition
+  )
+  
+  # Append to master dataframe
+  all_interactions <- rbind(all_interactions, temp_df)
+}
+
+# --- 2. Reshape data into a Wide Matrix ---
+wide_data <- all_interactions %>%
+  filter(grepl("NK cells/ILC1s", Interaction)) %>%
+  select(Interaction, FOV, Enrichment) %>%
+  mutate(Interaction = gsub("NK cells/ILC1s--|--NK cells/ILC1s", "", Interaction)) %>%
+  pivot_wider(names_from = FOV, values_from = Enrichment, values_fill = 0, values_fn = mean) 
+
+# Convert to matrix and assign rownames
+enrichmat_global <- as.matrix(wide_data[, -1])
+rownames(enrichmat_global) <- wide_data$Interaction
+
+# --- 3. Create Column Annotations (Condition mapping) ---
+anno_df <- unique(all_interactions[, c("FOV", "Condition")])
+rownames(anno_df) <- anno_df$FOV
+
+# Reorder the rows
+anno_df <- anno_df[colnames(enrichmat_global), , drop = FALSE]
+
+condition_colors <- cols_treat
+
+ha_top <- HeatmapAnnotation(
+  Condition = anno_df$Condition,
+  col = list(Condition = condition_colors),
+  annotation_name_side = "left"
+)
+
+# --- 4. Draw the Unified Master Heatmap ---
+master_heatmap <- Heatmap(
+  enrichmat_global,
+  
+  col = circlize::colorRamp2(c(-1, 0, 1), cols_heat),
+  name = "Enrichment\nScore",
+  heatmap_legend_param = list(direction = "vertical"),
+  
+  column_split = anno_df$Condition,
+  cluster_column_slices = FALSE, 
+  cluster_columns = FALSE,        
+  cluster_rows = TRUE,           
+  
+  # Y-Axis Label
+  row_title = "Interactions",
+  row_title_gp = gpar(fontsize = 11#, fontface = "bold"
+                      ),
+
+  # Aesthetics
+  show_column_names = FALSE,
+  column_names_rot = 45,
+  column_names_gp = gpar(fontsize = 8),
+  row_names_gp = gpar(fontsize = 9),
+  show_row_dend = TRUE,
+  
+  # Annotations and Titles
+  top_annotation = ha_top,
+  column_title = "Neighborhood Enrichment NK cells/ILC1s",
+  column_title_gp = gpar(fontsize = 12, fontface = "bold")
+)
+
+# --- 5. Convert to ggplot2 and explicitly position the X-axis ---
+
+# First, capture the raw heatmap (with normal, minimal padding)
+heat_grob <- grid::grid.grabExpr(
+  draw(master_heatmap, 
+       heatmap_legend_side = "right",     
+       annotation_legend_side = "right",  
+       merge_legend = TRUE,
+       padding = unit(c(0.1, 0.1, 0.1, 0.1), "cm"))
+)
+
+# Convert to a standard ggplot object
+gg_heat <- as.ggplot(heat_grob)
+
+# Add the X-axis label and manually nudge it to center under the heatmap body
+final_plot_nkilc1 <- gg_heat + 
+  labs(x = "FOV") + 
+  theme(
+    axis.title.x = element_text(
+      size = 11, 
+      # face = "bold", 
+      hjust = 0.37 
+    ), 
+    plot.margin = margin(0, 0, 0.5, 0.2, "cm")
+  )
+
+# Print your beautiful, perfectly aligned plot!
+print(final_plot_nkilc1)
+```
+
 <img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-10-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
-## Coenrichment barplots 
+## Coenrichment barplots
+
+### ILC2s
 
 
 ``` r
@@ -742,6 +916,161 @@ coenrichment_fig_ann
 ```
 
 <img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-11-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+### NK cells/ILC1s
+
+
+``` r
+# fine tune the co-enrichment plot
+# ILC2s around lymphatics -----------------------------------------
+interactions <- c("EMCN CD31 Blood vessels--NK cells/ILC1s")
+unic <- "EMCN CD31 Blood vessels"
+background_image <- backgroundlist[["EMCN CD31 Blood vessels"]]
+interaction_celltypes <- NULL
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,]
+    sample <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+    if(nrow(cur_cell_proximities) > 0 & sample != "20210906_FOV3_D3"){
+      interaction_celltypes <- rbind(interaction_celltypes,
+                                     data.frame(cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,], 
+                                                experiment = strsplit(sample, split = "_")[[1]][1], fov = strsplit(sample, split = "_")[[1]][2], condition = strsplit(sample, split = "_")[[1]][3]))
+    }
+  }
+interaction_celltypes$p.adj <- ifelse(interaction_celltypes$enrichm > 0, interaction_celltypes$p.adj_higher, interaction_celltypes$p.adj_lower)
+  # plot test results
+  # sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("p=",round(interaction_celltypes$p.adj,3)), ""))
+  sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("*"), ""))
+    # print(sig_label)
+plot_coenrichment_bec <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = condition)) +
+  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single")) +
+  facet_grid(.~condition, scales = "free_x") +
+  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), angle = 90, hjust = -0.02, size = 4) +
+  ylim(-1.6,3.6)+
+  NoLegend()+
+  theme_classic2()+
+  scale_fill_manual(values = cols_fov, name = "") +
+  ggtitle(gsub("EMCN CD31 ", "", interactions)) +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 9, hjust = 0.5
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 9),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_text(size =11, hjust = 0.5, face = "bold"),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())+
+  NoLegend()+  
+  ylab("Enrichment")
+
+
+# fine tune the co-enrichment plot
+# ILC2s around ILC2s -----------------------------------------
+interactions <- c("NK cells/ILC1s--NK cells/ILC1s")
+unic <- "NK cells/ILC1s"
+background_image <- backgroundlist[["NK cells/ILC1s"]]
+interaction_celltypes <- NULL
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,]
+    sample <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+    if(nrow(cur_cell_proximities) > 0 & sample != "20210906_FOV3_D3"){
+      interaction_celltypes <- rbind(interaction_celltypes,
+                                     data.frame(cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,], 
+                                                experiment = strsplit(sample, split = "_")[[1]][1], fov = strsplit(sample, split = "_")[[1]][2], condition = strsplit(sample, split = "_")[[1]][3]))
+    }
+  }
+interaction_celltypes$p.adj <- ifelse(interaction_celltypes$enrichm > 0, interaction_celltypes$p.adj_higher, interaction_celltypes$p.adj_lower)
+  # plot test results
+  # sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("p=",round(interaction_celltypes$p.adj,3)), ""))
+  sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("*"), ""))
+    # print(sig_label)
+plot_coenrichment_nkilc1 <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = condition)) +
+  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single")) +
+  facet_grid(.~condition, scales = "free_x") +
+  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), angle = 90, hjust = -0.02, size = 4) +
+  ylim(-1.6,3.6)+
+  NoLegend()+
+  theme_classic2()+
+  scale_fill_manual(values = cols_fov, name = "") +
+  ggtitle(gsub("LYVE1 CD90 ", "", interactions)) +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 9, hjust = 0.5
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 9),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_text(size =11, hjust = 0.5, face = "bold"),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())+
+  NoLegend()+  
+  ylab("Enrichment")
+
+
+# fine tune the co-enrichment plot
+# ILC2s around Myeloid cells -----------------------------------------
+interactions <- c("B cells & Plasma cells--NK cells/ILC1s")
+unic <- "B cells & Plasma cells"
+background_image <- backgroundlist[["B cells & Plasma cells"]]
+interaction_celltypes <- NULL
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,]
+    sample <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+    if(nrow(cur_cell_proximities) > 0 & sample != "20210906_FOV3_D3"){
+      interaction_celltypes <- rbind(interaction_celltypes,
+                                     data.frame(cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions,], 
+                                                experiment = strsplit(sample, split = "_")[[1]][1], fov = strsplit(sample, split = "_")[[1]][2], condition = strsplit(sample, split = "_")[[1]][3]))
+    }
+  }
+interaction_celltypes$p.adj <- ifelse(interaction_celltypes$enrichm > 0, interaction_celltypes$p.adj_higher, interaction_celltypes$p.adj_lower)
+  # plot test results
+  # sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("p=",round(interaction_celltypes$p.adj,3)), ""))
+  sig_label <- as.character(ifelse(interaction_celltypes$p.adj < 0.1, paste0("*"), ""))
+    # print(sig_label)
+plot_coenrichment_bpc <- ggplot(interaction_celltypes, aes(x = condition, y = enrichm, fill = condition)) +
+  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single")) +
+  facet_grid(.~condition, scales = "free_x") +
+  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), angle = 90, hjust = -0.02, size = 4) +
+  ylim(-1.6,3.6)+
+  NoLegend()+
+  theme_classic2()+
+  scale_fill_manual(values = cols_fov, name = "") +
+  ggtitle(gsub("LYVE1 CD90 ", "", interactions)) +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 9, hjust = 0.5
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 9),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_text(size =11, hjust = 0.5, face = "bold"),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())+
+  NoLegend()+  
+  ylab("Enrichment")
+
+coenrichment_fig_supp <- ggarrange(plot_coenrichment_nkilc1, plot_coenrichment_bpc, plot_coenrichment_bec, ncol = 3, nrow = 1)
+
+coenrichment_fig_supp_ann <- annotate_figure(coenrichment_fig_supp, 
+                left = text_grob("Coenrichment score", color = "black", rot = 90, 
+                                 size = 11))
+
+coenrichment_fig_supp_ann
+```
+
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-12-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # CIN analysis
 
@@ -906,7 +1235,7 @@ for (set_radius in all_radii) {
         geom_beeswarm(aes(color = Treatment), size = 1.5, cex = 2) + 
         # geom_text(data = n_df, aes(x = Treatment, y = Y_pos, label = Label), 
         #           size = 3.2, fontface = "italic", inherit.aes = FALSE) +
-        ggtitle(gsub("LYVE1 CD90 ", "", plot_title)) +
+        ggtitle(gsub("LYVE1 CD90 |EMCN CD31 ", "", plot_title)) +
         scale_y_continuous(expand = expansion(mult = c(0, 0.45))) +
         theme_classic() + 
         theme(axis.text.x = element_text(size = 9#, face = "bold"
@@ -929,7 +1258,7 @@ for (set_radius in all_radii) {
                                     label = sig_label, # Uses the dynamically detected column
                                     hide.ns = TRUE, 
                                     y.position = global_max * 1.1, 
-                                    step.increase = 0.1, 
+                                    step.increase = 0.15, 
                                     size = 4)
       }
       
@@ -960,7 +1289,9 @@ for (set_radius in all_radii) {
 }
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-4.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-5.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-6.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-7.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-8.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-9.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-10.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-11.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-12.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-13.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-14.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-15.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-16.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-17.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-18.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-19.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-20.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-21.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-22.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-23.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-24.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-25.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-26.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-27.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-28.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-29.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-30.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-31.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-32.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-33.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-34.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-35.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-36.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-37.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-38.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-39.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-40.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-41.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-42.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-43.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-44.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-4.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-5.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-6.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-7.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-8.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-9.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-10.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-11.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-12.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-13.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-14.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-15.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-16.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-17.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-18.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-19.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-20.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-21.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-22.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-23.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-24.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-25.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-26.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-27.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-28.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-29.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-30.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-31.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-32.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-33.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-34.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-35.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-36.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-37.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-38.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-39.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-40.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-41.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-42.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-43.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-44.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+### ILC2s
 
 
 ``` r
@@ -1006,13 +1337,67 @@ cin_ly <- ggarrange(
         )
 
 plot_cin <- ggarrange(cin_ilc, cin_my, cin_ly, 
-                      ncol = 1, nrow = 3, labels = c("D", "", ""))+
+                      ncol = 1, nrow = 3, labels = c("E", "", ""))+
   theme(plot.margin = margin(0, 0, 0, 0, "cm"))
 
 plot_cin
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+### NK cells/ILC1s
+
+
+``` r
+cin_nkilc1 <- 
+  ggarrange(
+  master_plot_list[["10 μm_NK cells/ILC1s_NK cells/ILC1s"]], 
+  master_plot_list[["10 μm_NK cells/ILC1s_EMCN CD31 Blood vessels"]], 
+  master_plot_list[["10 μm_NK cells/ILC1s_B cells & Plasma cells"]], 
+  ncol = 3, nrow = 1)+
+  plot_annotation(
+          title = paste0("NK cells/ILC1s (CIN = 10 µm)"),
+          theme = theme(
+            plot.title = element_text(size = 11, face = "bold", hjust = 0.5), 
+            plot.margin = margin(0, 0, 0, 0, "cm")
+          )
+        )
+
+
+cin_bec <- ggarrange(
+  master_plot_list[["10 μm_EMCN CD31 Blood vessels_NK cells/ILC1s"]], 
+  master_plot_list[["10 μm_EMCN CD31 Blood vessels_EMCN CD31 Blood vessels"]], 
+  master_plot_list[["10 μm_EMCN CD31 Blood vessels_B cells & Plasma cells"]], 
+  ncol = 3, nrow = 1)+
+  plot_annotation(
+          title = paste0("Blood vessels (CIN = 10 µm)"),
+          theme = theme(
+            plot.title = element_text(size = 11, face = "bold", hjust = 0.5), 
+            plot.margin = margin(0, 0, 0, 0, "cm")
+          )
+        )
+
+cin_bpc <- ggarrange(
+  master_plot_list[["10 μm_B cells & Plasma cells_NK cells/ILC1s"]], 
+  master_plot_list[["10 μm_B cells & Plasma cells_EMCN CD31 Blood vessels"]], 
+  master_plot_list[["10 μm_B cells & Plasma cells_B cells & Plasma cells"]], 
+  ncol = 3, nrow = 1)+
+  plot_annotation(
+          title = paste0("B cells & Plasma cells (CIN = 10 µm)"),
+          theme = theme(
+            plot.title = element_text(size = 11, face = "bold", hjust = 0.5), 
+            plot.margin = margin(0, 0, 0, 0, "cm")
+          )
+        )
+
+plot_cin_nkilc1 <- ggarrange(cin_nkilc1, cin_bec, cin_bpc, 
+                      ncol = 1, nrow = 3, labels = c("D", "", ""))+
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+
+plot_cin_nkilc1
+```
+
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Minimum distance
 
@@ -1050,6 +1435,8 @@ head(df_dist_all)
 ```
 
 ## Immune cells to lymphatics
+
+### ILC2s
 
 
 ``` r
@@ -1163,7 +1550,7 @@ for (condition in c("CTRL", "D1", "D2", "D3")) {
 ggarrange(plotlist = my_plot_list[c(1:4)], nrow = 1, ncol = 4)
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
 dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 1, ncol = 2, labels = c("C", "D"))
@@ -1171,17 +1558,17 @@ dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 1, ncol = 2, la
 dist_lymph
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-16-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
-dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 2, ncol = 1, labels = c("C"))+
+dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 2, ncol = 1, labels = c("D"))+
   theme(plot.margin = margin(0, 1, 0, 0, "cm"))
 
 dist_lymph
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1259,7 +1646,7 @@ for (ref_type in ref_cell_types) {
       hide.ns = TRUE, 
       tip.length = 0.01,
       # --- FIXED: Significance brackets start at y = 300 ---
-      y.position = 400, 
+      y.position = 380, 
       step.increase = 0.1, 
       size = 3.5
     )
@@ -1275,7 +1662,7 @@ for (ref_type in ref_cell_types) {
 if (length(grid_plot_list) > 0) {
   final_grid_dist_immune <- wrap_plots(grid_plot_list, ncol = 4) +
     plot_annotation(
-      title = paste0("Minimum Distances to: ", celltype_of_interest),
+      title = paste0("Minimum Distances to: ", gsub("LYVE1 CD90 ", "", celltype_of_interest)),
       theme = theme(
         plot.title = element_text(size = 12, face = "bold", hjust = 0.5))
     )
@@ -1284,7 +1671,229 @@ if (length(grid_plot_list) > 0) {
 }
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+### NK cells/ILC1s
+
+
+``` r
+# filter condition and reference cell types to compare ILC subtypes and 
+# T cells
+df_dist_ref <- df_dist_all %>%
+  # filter(Treatment == condition) %>%
+  filter(RefType == "ILC2s"
+         |
+           RefType == "NK cells/ILC1s"| RefType == "ILC3s"|
+           RefType == "T helper cells"| RefType == "T cytotox cells"| RefType == "Myeloid cells"| RefType == "B cells & Plasma cells"
+         )
+
+unique(df_dist_ref$Treatment)
+```
+
+```
+## [1] "D3"   "CTRL" "D1"   "D2"
+```
+
+``` r
+df_dist_ref$Treatment <- factor(df_dist_ref$Treatment, levels = c(
+  "CTRL", "D1", "D2", "D3"
+))
+unique(df_dist_ref$RefType)
+```
+
+```
+## [1] Myeloid cells          B cells & Plasma cells NK cells/ILC1s         ILC3s                  T cytotox cells        T helper cells         ILC2s                 
+## Levels: NK cells/ILC1s ILC2s ILC3s T helper cells T cytotox cells Myeloid cells B cells & Plasma cells LYVE1 CD31 vessels LYVE1 CD90 Lymphatics EMCN CD31 Blood vessels Epithelia
+```
+
+``` r
+# Blood vessels ------------------------------------------------------------
+celltype_of_interest <- "EMCN CD31 Blood vessels"
+ypos <- 100
+
+
+my_plot_list <- list()
+
+for (condition in c("CTRL", "D1", "D2", "D3")) {
+  
+  plot_data <- df_dist_ref %>%
+    filter(Treatment == condition) %>%
+    filter(NearestType == celltype_of_interest)
+  
+  # Test for statistical significance of ILC2s to the other cell types
+  stat.test <- plot_data %>%
+    dunn_test(Distance ~ RefType) %>%
+    adjust_pvalue(method = "bonferroni") %>%
+    add_significance()
+  stat.test <- stat.test %>% add_xy_position(x = "RefType")
+  
+  stat.test <- stat.test %>%
+    filter(group1 == "NK cells/ILC1s"|group2 == "NK cells/ILC1s"
+           )
+  
+  # Create lav´bels that depict mean value 
+  Labs = plot_data %>% 
+    group_by(RefType) %>%
+    summarise(lab_text = paste0(round(median(Distance), 0), " µm"), lab_pos = quantile(Distance)[3]
+                )
+  
+  # create plot
+  plot <- ggplot(plot_data, aes(x=RefType , 
+            y = Distance, 
+            fill = "RefType")) +
+    geom_boxplot(fill="white", outliers = FALSE)+
+    geom_beeswarm(aes(color = RefType), 
+                  alpha = 0.2, size = 0.1, cex = 0.08)+
+    stat_pvalue_manual(stat.test,
+                       size = 6,
+                       hide.ns = TRUE, 
+                       y.position = 110, 
+                       step.increase = 0.15
+                       )+
+    scale_y_continuous(expand = c(0, 0), limits = c(0,200))+
+    rotate_x_text(angle = 30)+
+  ggtitle(condition)+
+  scale_color_manual(values = ColorsCellType)+
+  theme_classic2()+
+  theme(
+    axis.text.x = element_text(angle = 30, vjust = 1, hjust = 1, 
+                                   # vjust = 1, hjust = 0.5, 
+                                   size = 9),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(hjust = 0.5, size = 9),
+    axis.title.y = element_text(size = 9),
+          plot.title = element_text(size = 10, hjust = 0.5, 
+                                    face = "bold"),
+    plot.margin = margin(0, 0, 0.2, 0.2, "cm"),
+    legend.title = element_text(size =11),
+    legend.text = element_text(size =12))+
+    NoLegend()+
+    xlab("Cell types")+
+    ylab("Minimal distance [µm]")+
+    geom_text(aes(y = 80 , #lab_pos, 
+                  label = lab_text, vjust = -0.5), angle = 30,
+              data = Labs, size=2)
+  plot
+  
+  assigned_name <- gsub(" ", "", paste0(celltype_of_interest, "_", condition))
+  assign(assigned_name, plot )
+  my_plot_list[[assigned_name]] <- plot
+  
+
+}
+
+# ggarrange(plotlist = my_plot_list[c(1:4)], nrow = 1, ncol = 4)
+
+dist_bec <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 2, ncol = 1, labels = c("C"))+
+  theme(plot.margin = margin(0, 1, 0, 0, "cm"))
+
+dist_bec
+```
+
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+# --- 1. SETTINGS ---
+celltype_of_interest <- "EMCN CD31 Blood vessels"
+ref_cell_types <- unique(df_dist_ref$RefType)
+treatment_levels <- c("CTRL", "D1", "D2", "D3")
+
+master_dist_list <- list() 
+grid_plot_list <- list()   
+
+# --- 2. LOOP THROUGH REFERENCE CELL TYPES ---
+for (ref_type in ref_cell_types) {
+  
+  # Step A: Filter data
+  stats_df <- df_dist_ref %>%
+    filter(RefType == ref_type) %>%
+    filter(NearestType == celltype_of_interest) %>%
+    mutate(Treatment = factor(Treatment, levels = treatment_levels))
+  
+  # Skip if there's no data for this specific pairing
+  if (nrow(stats_df) < 5) next
+  
+  # Step B: Statistical Testing (vs CTRL only)
+  stat.test <- tryCatch({
+    stats_df %>%
+      wilcox_test(Distance ~ Treatment, ref.group = "CTRL") %>%
+      add_significance() %>%
+      add_xy_position(x = "Treatment")
+  }, error = function(e) NULL)
+  
+  # Step C: Calculate Median Distance for Labels
+  median_df <- stats_df %>%
+    group_by(Treatment) %>%
+    summarise(med_dist = median(Distance, na.rm = TRUE), .groups = "drop") %>%
+    mutate(
+      Label = paste0(round(med_dist, 0), " \u00b5m"), 
+      Y_pos = 100 # Median labels kept at 400
+    )
+  
+  # Step D: Build the Plot
+  plot_title <- paste0(ref_type) 
+  
+  p <- ggplot(stats_df, aes(x = Treatment, y = Distance)) +
+    geom_boxplot(outlier.colour = NA, fill = "white", alpha = 0.5) +
+    geom_beeswarm(aes(color = Treatment), size = 0.1, cex = 0.1, alpha = 0.2) + 
+    
+    # Median Labels at y=400
+    geom_text(data = median_df, aes(x = Treatment, y = Y_pos,
+                                    label = Label), 
+              size = 3, angle = 30, color = "black", 
+              inherit.aes = FALSE) +
+    ggtitle(plot_title) +
+    # Y-axis fixed from 0 to 1000
+    scale_y_continuous(limits = c(0, 220), expand = c(0, 0)) + 
+    theme_classic() + 
+    theme(axis.text.x = element_text(size = 9),
+          axis.text.y = element_text(size = 9),
+          axis.title.x = element_blank(),
+          axis.title.y = element_text(size = 9),
+          plot.title = element_text(size = 10, hjust = 0.5, 
+                                    face = "bold"),
+          plot.margin = margin(0.25, 0.5, 0.25, 0.5, "cm"),
+          legend.position = "none") +
+    ylab("Distance [\u00b5m]") +
+    scale_color_manual(values = cols_treat)
+
+  # Step E: Add Stat Brackets
+  if (!is.null(stat.test) && nrow(stat.test) > 0) {
+    sig_col <- if ("p.adj.signif" %in% colnames(stat.test)) "p.adj.signif" else "p.signif"
+    
+    p <- p + stat_pvalue_manual(
+      stat.test, 
+      label = sig_col, 
+      hide.ns = TRUE, 
+      tip.length = 0.01,
+      # --- FIXED: Significance brackets start at y = 300 ---
+      y.position = 150, 
+      step.increase = 0.1, 
+      size = 3.5
+    )
+  }
+  
+  # Save to lists
+  grid_plot_list[[ref_type]] <- p
+  plot_key <- paste0(ref_type, "_to_Lymphatics")
+  master_dist_list[[plot_key]] <- p
+}
+
+# --- 3. PRINT THE FINAL GRID ---
+if (length(grid_plot_list) > 0) {
+  final_grid_dist_immune_nkilc1 <- wrap_plots(grid_plot_list, ncol = 4) +
+    plot_annotation(
+      title = paste0("Minimum Distances to: ", gsub("EMCN CD31 ", "", celltype_of_interest)),
+      theme = theme(
+        plot.title = element_text(size = 12, face = "bold", hjust = 0.5))
+    )
+  
+  print(final_grid_dist_immune_nkilc1)
+}
+```
+
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Visualization for figures
 
@@ -1292,13 +1901,13 @@ if (length(grid_plot_list) > 0) {
 
 
 ``` r
-top_figure <- ggarrange(final_plot_ILC2s, img_plot_if_ilc2s, ncol = 1, nrow = 2, heights = c(2.5, 1.8), labels = c("A", "B"))+
+top_figure <- ggarrange(final_plot_ILC2s, img_plot_if_ilc2s, img_plot_if_ilc2s_roi, ncol = 1, nrow = 3, heights = c(3, 3.6, 3.6), labels = c("A", "B", "C"))+
   theme(plot.margin = margin(0, 0, 0.5, 0, "cm"))
 
 top_figure
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1307,23 +1916,33 @@ bottom_figure <- ggarrange(dist_lymph, plot_cin, ncol = 2, widths = c(1, 2))
 bottom_figure
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
-ggarrange(top_figure, bottom_figure, nrow = 2, ncol = 1, heights = c(4.5, 5.5))
+ggarrange(top_figure, bottom_figure, nrow = 2, ncol = 1, heights = c(10.2, 5.5))
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-25-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Supplementary figures
 
 
 ``` r
-ggarrange(coenrichment_fig_ann, "NONE", final_grid_dist_immune, nrow = 3, ncol = 1, heights = c(2, 0.25, 4), labels = c("A", "B"))
+ggarrange(coenrichment_fig_ann, "NONE", final_grid_dist_immune, "NONE",
+          img_plot_if_ilc2s_my, 
+          nrow = 5, ncol = 1, heights = c(3, 0.25, 4, 0.25, 4.5), 
+          labels = c("A","", "B", "", "C"))
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-26-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+ggarrange(final_plot_nkilc1, coenrichment_fig_supp_ann, "NONE",  final_grid_dist_immune_nkilc1, "NONE", plot_cin_nkilc1, nrow = 6, ncol = 1, heights = c(2, 1.2, 0.1, 2, 0.1, 3), labels = c("A", "B", "", "C"))
+```
+
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-27-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 
