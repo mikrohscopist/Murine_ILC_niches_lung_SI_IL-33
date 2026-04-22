@@ -1424,7 +1424,7 @@ ggarrange(upper_fig, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(5, 0.1
 
 
 ``` r
-ggarrange(plot_comp_al1, "NONE", lower_supp_plot, ncol = 3, nrow = 1, labels = c("A", "", "B"), widths = c(5, 0.4, 10))
+ggarrange(plot_comp_al1, "NONE", lower_supp_plot, ncol = 3, nrow = 1, labels = c("A", "", "B"), widths = c(5.5, 0.4, 10))
 ```
 
 <img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />

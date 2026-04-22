@@ -1336,7 +1336,7 @@ ggarrange(upper_fig, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(5, 0.1
 ## Supplementary figures
 
 ```{r, fig.height=5, fig.width=9}
-ggarrange(plot_comp_al1, "NONE", lower_supp_plot, ncol = 3, nrow = 1, labels = c("A", "", "B"), widths = c(5, 0.4, 10))
+ggarrange(plot_comp_al1, "NONE", lower_supp_plot, ncol = 3, nrow = 1, labels = c("A", "", "B"), widths = c(5.5, 0.4, 10))
 
 ```
 
