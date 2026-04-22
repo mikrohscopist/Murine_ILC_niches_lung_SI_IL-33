@@ -1,10 +1,11 @@
 ---
 title: "Figure 2: major immune and non-immune cell types lung"
 author: "Sandy Kroh"
-date: "April 09, 2026"
+date: "April 22, 2026"
 output:
   html_document:
     toc: yes
+    toc_float: yes
     number_sections: yes
     fig_caption: yes
     keep_md: yes
