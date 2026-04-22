@@ -5,6 +5,7 @@ date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
   html_document:
     toc: yes
+    toc_float: yes
     number_sections: yes
     fig_caption: yes
     keep_md: yes

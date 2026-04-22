@@ -1,0 +1,521 @@
+---
+title: "Figure 4: Immune cells, ILCs and ILC subtypes in lung"
+author: "Sandy Kroh"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+    fig_caption: yes
+    keep_md: yes
+  pdf_document:
+    toc: yes
+params:
+  Sample: Default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+# knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
+                      fig.align='center', dpi = 600, 
+                      message = FALSE, warning = FALSE)
+options(width = 1200)
+```
+
+## Libraries
+
+```{r}
+library(Seurat)
+library(SeuratObject)
+library(dplyr)
+library(png)
+library(grid)
+library(ggplot2)
+library(ggpubr)
+
+```
+
+## Parameters
+
+```{r}
+set.seed(123)
+
+input_dir <- here::here("1_data_tidying", "Lung_SI_all_cells_all_ALs_files")
+
+output_dir <- here::here("2_visualizations_for_figures", "Fig_4_ILCs_in_lung_files")
+dir.create(output_dir)
+
+
+
+
+main_markers <- c(
+  "EpCAM", "EMCN", "LYVE1", "PDPN", "PDGFRa", "CD8a", "CD4",
+  "CD45", "CD3", "IRF4", "Kappa", "CD11c", "CD127", "GATA3eGFP", "RORgt"
+)
+
+
+immune_markers <- c(
+ "CD3", "CD4", "CD8a", "Kappa", "IRF4", "CD11c",
+  "CD127", "CD90", "EOMES", "GATA3eGFP", "RORgt", "Ki67",  "KLRG1", "NKp46", "CD117", "Areg", "CCR6", "CD44", "MHCII", "Sca1"
+)
+
+ilc_markers <- c(
+  "CD3", "CD4", "CD8a",
+  "CD127", "CD90", "EOMES", "GATA3eGFP", "RORgt", "KLRG1", "NKp46", "CD117", "CCR6", "MHCII", "Ki67", "Areg", "IRF4", "Sca1", "CD44"
+)
+
+
+cols_nat <- c("magenta", "cyan", "blue", "purple", "green", 
+                       "red", "yellow", "olivedrab1", "slateblue1", 
+                       "darkcyan", "gold","indianred1", "seagreen", "deeppink", 
+                       "orange", "brown", "violet",
+                       "deeppink4", "pink", 
+                       "grey", "black", "lightgreen", 
+                       "#FF0066",  
+                       "lightblue", "#FFCC99", "#CC00FF", 
+                       "blueviolet",  "goldenrod4", 
+                       "navy", "olivedrab", "lightcyan", "seagreen2", "darkviolet", "lightpink", "slateblue4", "olivedrab2")
+
+colfunc <- colorRampPalette(c("darkcyan", "green", "yellow", "magenta", "purple"))
+
+```
+
+# Load data
+
+```{r, fig.width=9, fig.height=6}
+
+SO.lung <- readRDS(paste0(input_dir, "/lung_all_cells_all_ALs.rds"))
+dim(SO.lung)
+
+SO.lung$AL1 <- gsub("Vessels", "Stromal cells", SO.lung$AL1)
+```
+
+Somehow TBET ended up in the metadata. We will put it back as a feature:
+
+```{r}
+
+# 1. Extract the current expression matrix from the active assay
+# Note: Using slot = "counts". If your MELC data is only stored in "data", change this.
+current_matrix <- GetAssayData(SO.lung, assay = "MELC", slot = "counts")
+
+# 2. Extract TBET from metadata and format it as a 1-row matrix
+tbet_values <- matrix(SO.lung$TBET, nrow = 1)
+rownames(tbet_values) <- "TBET"
+colnames(tbet_values) <- colnames(SO.lung) # Ensure cell names match perfectly
+
+# 3. Bind the TBET row to the bottom of the expression matrix
+new_matrix <- rbind(current_matrix, tbet_values)
+
+# 4. Overwrite the existing MELC assay with the updated matrix
+SO.lung[["MELC"]] <- CreateAssayObject(counts = new_matrix)
+
+# 5. Clean up: Remove TBET from the metadata so it doesn't cause confusion later
+SO.lung$TBET <- NULL
+
+# Verify the fix! TBET should now appear at the bottom of this list:
+rownames(SO.lung)
+```
+
+# Immune cells AL2 dot lot
+
+```{r, fig.width=6, fig.height=5}
+
+SO.lung$AL2 <- factor(SO.lung$AL2, levels = c(
+  "B cells & Plasma cells",
+  "Myeloid cells", 
+  "T cytotox. cells", 
+  "T helper cells", 
+  "ILCs"
+))
+
+
+dot_plot <- Seurat::DotPlot(subset(SO.lung, subset = AL1 == "Immune cells"), 
+                group.by = "AL2",
+                  features = c(
+                    "CD90", 
+                    "CD127", 
+                    "GATA3eGFP", 
+                    "KLRG1", 
+                    "RORgt", 
+                    "CD4", 
+                    "CD3", 
+                    "CD8a", 
+                    "CD68",
+                    "CD11c",
+                    "MHCII",
+                    "B220", 
+                    "Kappa", 
+                    "CD117"
+                  ), 
+                cols ="RdBu", assay = "MELC")+   
+    RotatedAxis()+
+    coord_flip()+
+  ggtitle("AL2 - Immune cells\n")+
+    theme(axis.text.x=element_text(size=10, angle = 45),
+          axis.text.y=element_text(size=10), 
+          axis.title.x = element_blank(), 
+          axis.title.y = element_text(size=11), 
+          plot.margin = margin(0.2, 2, 1, 0.2, "cm"), 
+          plot.title = element_text(size=12, face = "bold", hjust = 0.5), 
+          legend.text = element_text(size = 10),
+          legend.title = element_text(size = 10, face = "bold"))+ 
+  scale_color_gradient2(midpoint = 0, low = "gold", 
+                            high = "blue", space = "Lab" )
+
+dot_plot
+```
+
+# Differential expression ILC subtypes
+
+```{r, fig.height=3, fig.width=6}
+library(scater)
+library(SpatialExperiment)
+set.seed(8)
+
+SO.sub <- subset(SO.lung, subset = AL3 %in% c("NK cells/ILC1s", "ILC2s", "ILC3s", 
+                                              "T helper cells", "T cytotox cells"))
+
+counts = GetAssayData(SO.sub, layer = "counts")
+
+metadata = SO.sub@meta.data
+
+spatial_coords <- as.matrix(metadata[, c("Location_Center_X", "Location_Center_Y")])
+
+spe <- SpatialExperiment(
+  assays = list(counts = counts),
+  colData = metadata,
+  spatialCoords = spatial_coords
+)
+
+# Validate the SpatialExperiment object
+print(spe)
+
+# --- 3. Generate Aggregated Heatmap ---
+# Step A: Pseudo-bulk aggregation by cell type
+library(scuttle) # required for aggregateAcrossCells
+
+ilc_markers <- c("CD127", "CD90","GATA3eGFP", "KLRG1", "EOMES", "TBET",  
+                 "CD3", "CD8a", "CD4", "RORgt", "ICOS", 
+                 "MHCII", "CD44", "Ki67", "NKp46")
+
+pbs_annotated <- aggregateAcrossCells(spe, 
+                                      ids = spe$AL3, 
+                                      subset.row = ilc_markers, 
+                                      use.assay.type = "counts", 
+                                      statistics = "mean")
+
+# Step B: Extract matrix and Z-score (scale) the data
+library(pheatmap)
+# Transpose so rows = Cell Types, columns = Markers
+mat_annotated <- t(assay(pbs_annotated, "counts"))
+
+
+# Step C: Plot Heatmap
+pheatmap(mat = mat_annotated, 
+         scale = "column", 
+         clustering_method = "ward.D2",
+         color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+         display_numbers = TRUE, # Optional: shows Z-score values in the cells
+         main = "Aggregated Lineage Signatures (Z-scored)")
+
+```
+
+```{r, fig.height=5, fig.width=4}
+library(Seurat)
+library(ComplexHeatmap)
+library(ggplotify) # Required for as.ggplot()
+
+set.seed(8)
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO.lung, subset = AL3 %in% c("NK cells/ILC1s", "ILC2s", "ILC3s"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+
+# --- 2. Direct Pseudo-bulk Aggregation ---
+ilc_markers <- c("CD127", "CD90","GATA3eGFP", "KLRG1", "EOMES", "TBET",  
+                 "CD3", "CD4", "RORgt", "ICOS", 
+                 "MHCII", "CD44", "Ki67", "NKp46")
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "AL3")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  main = "ILC subtypes",
+  treeheight_col = 10,
+  treeheight_row = 20,
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat)))
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+print(gg_heat)
+```
+
+# IF overlays
+
+## Export TIFF images
+
+```{r eval=FALSE, include=FALSE}
+library(tiff)
+library(png) 
+library(dplyr)
+
+# 1. Setup Input Directory and Base Output Directory
+image_path <- "D:/Repositories/2025_Kroh_et_al/Murine_ILC_niches_lung_SI_IL-33/data/MELC_data/Lung"
+output_dir_base <- file.path(output_dir, "annotated_celltypes_16bit_split")
+
+# 2. Define Parameters
+dot_radius <- 2 
+al_columns <- c("AL1", "AL2", "AL3")
+samples <- unique(df_all_cells$FullInfo)
+
+# 3. Loop through each Sample (Subfolder)
+for (sample in samples) {
+  
+  # Filter data for current sample
+  samp_data <- df_all_cells %>% filter(FullInfo == sample)
+  
+  # --- Step A: Determine Exact Canvas Size for this Subfolder ---
+  sample_dir <- file.path(image_path, sample)
+  img_files <- list.files(sample_dir, pattern = "\\.(png|tif|tiff)$", ignore.case = TRUE, full.names = TRUE)
+  
+  if(length(img_files) == 0) {
+    message("⚠️ Skipping ", sample, " - no images found in subfolder to extract dimensions.")
+    next
+  }
+  
+  # Read the first image to extract dimensions
+  first_img <- img_files[1]
+  if (grepl("\\.png$", first_img, ignore.case = TRUE)) {
+    img_matrix <- png::readPNG(first_img)
+  } else {
+    img_matrix <- tiff::readTIFF(first_img)
+  }
+  
+  # Extract height (rows) and width (columns)
+  img_h <- nrow(img_matrix)
+  img_w <- ncol(img_matrix)
+  
+  message("Processing ", sample, " [Canvas Size: ", img_w, "x", img_h, "]")
+  
+  # --- Step B: Loop through AL1, AL2, and AL3 ---
+  for (al_col in al_columns) {
+    
+    # Define and create the specific subfolder for this AL level
+    # Maps AL1 -> celltypes_AL, AL2 -> celltypes_AL2, AL3 -> celltypes_AL3
+    folder_name <- ifelse(al_col == "AL1", "celltypes_AL", paste0("celltypes_", al_col))
+    al_out_dir <- file.path(output_dir_base, folder_name)
+    
+    if (!dir.exists(al_out_dir)) {
+      dir.create(al_out_dir, recursive = TRUE)
+    }
+    
+    # Get unique cell types in the current AL level, ignoring NAs
+    all_celltypes <- unique(samp_data[[al_col]])
+    all_celltypes <- all_celltypes[!is.na(all_celltypes)]
+    
+    # --- Step C: Draw and Save Mask for each Cell Type ---
+    for (ctype in all_celltypes) {
+      
+      # Filter for specific cell type in the current AL column
+      ctype_data <- samp_data %>% filter(.data[[al_col]] == ctype)
+      
+      # Skip if this specific cell type is not present
+      if (nrow(ctype_data) == 0) next
+      
+      # Create an empty matrix matched EXACTLY to the image dimensions
+      mask_matrix <- matrix(0, nrow = img_h, ncol = img_w)
+      
+      # Round coordinates and filter out any points sitting outside the canvas
+      coords <- ctype_data %>%
+        mutate(ix = round(Loc_X), iy = round(Loc_Y)) %>%
+        filter(ix >= 1 & ix <= img_w & iy >= 1 & iy <= img_h)
+      
+      # Draw dots
+      for(i in seq_len(nrow(coords))) {
+        cx <- coords$ix[i]
+        cy <- coords$iy[i]
+        
+        # Define boundaries so dots near the edge don't cause 'out of bounds' errors
+        x_range <- max(1, cx - dot_radius):min(img_w, cx + dot_radius)
+        y_range <- max(1, cy - dot_radius):min(img_h, cy + dot_radius)
+        
+        mask_matrix[y_range, x_range] <- 65535
+      }
+      
+      # Define File Path and Write
+      ctype_safe <- gsub("[ /]", "_", ctype)
+      
+      # Name format: FullInfo_celltype.tif (e.g., 20220316_1_Immune_cells_16bit.tif)
+      file_name <- paste0(sample, "_", ctype_safe, "_16bit.tif")
+      output_path <- file.path(al_out_dir, file_name)
+      
+      writeTIFF(mask_matrix / 65535, 
+                where = output_path, 
+                bits.per.sample = 16, 
+                reduce = TRUE)
+    }
+  }
+}
+
+message("🎉 16-bit Export complete! Images are sorted into subfolders under: ", output_dir_base)
+```
+
+## ILC2s
+
+```{r fig.height=6.6, fig.width=9}
+
+# 1. Define the path
+img_path <- paste0(here::here("data", "images"), "/Visual_validation_AL3_ILC2s_ROI.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_ilc2s <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+
+
+```
+
+## NK cells/ILC1s
+
+```{r fig.height=8.6, fig.width=9}
+
+# 1. Define the path
+img_path <- paste0(here::here("data", "images"), "/Visual_validation_AL3_ILC1sNKs_ROI.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_nkilc1 <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+
+```
+
+## ILC3s
+
+```{r fig.height=6.35, fig.width=9}
+
+# 1. Define the path
+img_path <- paste0(here::here("data", "images"), "/Visual_validation_AL3_ILC3s_ROI.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_ilc3s <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+
+```
+
+## T cells
+
+```{r fig.height=7.2, fig.width=9}
+
+# 1. Define the path
+img_path <- paste0(here::here("data", "images"), "/Visual_validation_AL3_Tcells_ROI.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_tcells <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+
+```
+
+# Visualizations for figures
+
+## Figure 4
+
+```{r, fig.width=9, fig.height=11.9}
+figure <- ggarrange(dot_plot, gg_heat, 
+          ncol = 2, nrow = 1, labels = c("A", "B"), widths = c(3, 2))+
+  theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
+
+ggarrange(figure, "NONE", img_plot_ilc2s, ncol = 1, nrow = 3, heights = c(5, 0.3, 6.6), labels = c("", "C"))
+```
+
+## Suppl. Figure 
+
+```{r, fig.width=9, fig.height=15}
+
+ggarrange(img_plot_nkilc1, img_plot_ilc3s, ncol = 1, nrow = 2, heights = c(8.6, 6.47), labels = c("A", "B"))
+```
+
+```{r fig.height=7.2, fig.width=9}
+
+# Display the plot
+print(img_plot_tcells)
+```
+
+## Session Information
+
+```{r}
+save.image(paste0(output_dir, "/environment.RData"))
+sessionInfo()
+```
