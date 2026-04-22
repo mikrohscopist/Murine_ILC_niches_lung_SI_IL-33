@@ -204,16 +204,16 @@ plot_prop <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = ILCtype), size = 2, cex = 3)+
   scale_color_manual(values = cols_ilcs_lung)+
-  theme_classic2()+
-  theme(plot.margin=margin(1,0.5,1,1,"cm"),
-        axis.text.x = element_text(angle = 30, 
-                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
-         axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
                        step.increase = 0.1, y.position = 20) +
@@ -346,16 +346,16 @@ plot_freq <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = ILCtype), size = 2, cex = 3)+
   scale_color_manual(values = cols_ilcs_lung)+
-  theme_classic2()+
-  theme(plot.margin=margin(1,0.5,1,1,"cm"),
-        axis.text.x = element_text(angle = 30, 
-                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
-        axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
                        step.increase = 0.1, y.position = 90) +
@@ -483,16 +483,16 @@ plot_freq_immune <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = ILCtype), size = 2, cex = 3)+
   scale_color_manual(values = cols_ilcs_lung)+
-  theme_classic2()+
-  theme(plot.margin=margin(1,0.5,1,1,"cm"),
-        axis.text.x = element_text(angle = 30, 
-                                   vjust = 1, size = 12, hjust = 1, face = "bold"),
-        axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
                        step.increase = 0.1, y.position = 11) +
@@ -513,8 +513,10 @@ plot_freq_immune
 # filter for CTRL and convert to longer format
 df <- df_lung %>%
   select(Treatment, Dataset, TotalCellCountFOV) %>%
+  mutate(Treatment = paste0("D", Treatment)) %>%
+  mutate(Treatment = gsub("DCTRL", "CTRL", Treatment)) %>%
   mutate(Treatment = factor(Treatment, level =c(
-    "CTRL", "1", "2", "3"
+    "CTRL", "D1", "D2", "D3"
   )))
 
 # Testing for normal distribution
@@ -564,12 +566,12 @@ pwc
 ## # A tibble: 6 × 9
 ##   .y.               group1 group2    n1    n2 statistic          p     p.adj p.adj.signif
 ## * <chr>             <chr>  <chr>  <int> <int>     <dbl>      <dbl>     <dbl> <chr>       
-## 1 TotalCellCountFOV CTRL   1          9     9     2.84  0.00449    0.0270    *           
-## 2 TotalCellCountFOV CTRL   2          9     9     0.515 0.607      1         ns          
-## 3 TotalCellCountFOV CTRL   3          9     9     4.56  0.00000502 0.0000301 ****        
-## 4 TotalCellCountFOV 1      2          9     9    -2.33  0.0200     0.120     ns          
-## 5 TotalCellCountFOV 1      3          9     9     1.72  0.0850     0.510     ns          
-## 6 TotalCellCountFOV 2      3          9     9     4.05  0.0000514  0.000308  ***
+## 1 TotalCellCountFOV CTRL   D1         9     9     2.84  0.00449    0.0270    *           
+## 2 TotalCellCountFOV CTRL   D2         9     9     0.515 0.607      1         ns          
+## 3 TotalCellCountFOV CTRL   D3         9     9     4.56  0.00000502 0.0000301 ****        
+## 4 TotalCellCountFOV D1     D2         9     9    -2.33  0.0200     0.120     ns          
+## 5 TotalCellCountFOV D1     D3         9     9     1.72  0.0850     0.510     ns          
+## 6 TotalCellCountFOV D2     D3         9     9     4.05  0.0000514  0.000308  ***
 ```
 
 ``` r
@@ -581,9 +583,9 @@ head(tab)
 ```
 ##   Treatment Freq
 ## 1      CTRL    9
-## 2         1    9
-## 3         2    9
-## 4         3    9
+## 2        D1    9
+## 3        D2    9
+## 4        D3    9
 ```
 
 ``` r
@@ -599,16 +601,16 @@ plot_count_all <- ggplot(df, aes(x = Treatment, y = TotalCellCountFOV, fill = "T
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(plot.margin=margin(1,0.5,1,1,"cm"),
-        axis.text.x = element_text(#angle = 45, 
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-         axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
                        step.increase = 0.1, y.position = 5200) +
@@ -637,8 +639,10 @@ plot_count_all
 # filter for CTRL and convert to longer format
 df <- df_lung %>%
   select(Treatment, Dataset, `Immune cells`) %>%
+  mutate(Treatment = paste0("D", Treatment)) %>%
+  mutate(Treatment = gsub("DCTRL", "CTRL", Treatment)) %>%
   mutate(Treatment = factor(Treatment, level =c(
-    "CTRL", "1", "2", "3"
+    "CTRL", "D1", "D2", "D3"
   )))
 
 # Testing for normal distribution
@@ -688,12 +692,12 @@ pwc
 ## # A tibble: 6 × 9
 ##   .y.          group1 group2    n1    n2 statistic           p      p.adj p.adj.signif
 ## * <chr>        <chr>  <chr>  <int> <int>     <dbl>       <dbl>      <dbl> <chr>       
-## 1 Immune cells CTRL   1          9     9      3.19 0.00143     0.00858    **          
-## 2 Immune cells CTRL   2          9     9      1.44 0.149       0.894      ns          
-## 3 Immune cells CTRL   3          9     9      5.08 0.000000379 0.00000228 ****        
-## 4 Immune cells 1      2          9     9     -1.75 0.0809      0.486      ns          
-## 5 Immune cells 1      3          9     9      1.89 0.0587      0.352      ns          
-## 6 Immune cells 2      3          9     9      3.64 0.000277    0.00166    **
+## 1 Immune cells CTRL   D1         9     9      3.19 0.00143     0.00858    **          
+## 2 Immune cells CTRL   D2         9     9      1.44 0.149       0.894      ns          
+## 3 Immune cells CTRL   D3         9     9      5.08 0.000000379 0.00000228 ****        
+## 4 Immune cells D1     D2         9     9     -1.75 0.0809      0.486      ns          
+## 5 Immune cells D1     D3         9     9      1.89 0.0587      0.352      ns          
+## 6 Immune cells D2     D3         9     9      3.64 0.000277    0.00166    **
 ```
 
 ``` r
@@ -705,9 +709,9 @@ head(tab)
 ```
 ##   Treatment Freq
 ## 1      CTRL    9
-## 2         1    9
-## 3         2    9
-## 4         3    9
+## 2        D1    9
+## 3        D2    9
+## 4        D3    9
 ```
 
 ``` r
@@ -723,16 +727,16 @@ plot_count_immune <- ggplot(df, aes(x = Treatment, y = `Immune cells`, fill = "T
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(plot.margin=margin(1,0.5,1,1,"cm"),
-        axis.text.x = element_text(#angle = 45, 
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-         axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
                        step.increase = 0.1, y.position = 1750) +
@@ -761,8 +765,10 @@ plot_count_immune
 # filter for CTRL and convert to longer format
 df <- df_lung %>%
   select(Treatment, Dataset, ILCs) %>%
+  mutate(Treatment = paste0("D", Treatment)) %>%
+  mutate(Treatment = gsub("DCTRL", "CTRL", Treatment)) %>%
   mutate(Treatment = factor(Treatment, level =c(
-    "CTRL", "1", "2", "3"
+    "CTRL", "D1", "D2", "D3"
   )))
 
 # Testing for normal distribution
@@ -812,12 +818,12 @@ pwc
 ## # A tibble: 6 × 9
 ##   .y.   group1 group2    n1    n2 statistic           p      p.adj p.adj.signif
 ## * <chr> <chr>  <chr>  <int> <int>     <dbl>       <dbl>      <dbl> <chr>       
-## 1 ILCs  CTRL   1          9     9     3.14  0.00166     0.00998    **          
-## 2 ILCs  CTRL   2          9     9     2.20  0.0275      0.165      ns          
-## 3 ILCs  CTRL   3          9     9     4.99  0.000000600 0.00000360 ****        
-## 4 ILCs  1      2          9     9    -0.940 0.347       1          ns          
-## 5 ILCs  1      3          9     9     1.85  0.0648      0.389      ns          
-## 6 ILCs  2      3          9     9     2.79  0.00533     0.0320     *
+## 1 ILCs  CTRL   D1         9     9     3.14  0.00166     0.00998    **          
+## 2 ILCs  CTRL   D2         9     9     2.20  0.0275      0.165      ns          
+## 3 ILCs  CTRL   D3         9     9     4.99  0.000000600 0.00000360 ****        
+## 4 ILCs  D1     D2         9     9    -0.940 0.347       1          ns          
+## 5 ILCs  D1     D3         9     9     1.85  0.0648      0.389      ns          
+## 6 ILCs  D2     D3         9     9     2.79  0.00533     0.0320     *
 ```
 
 ``` r
@@ -829,9 +835,9 @@ head(tab)
 ```
 ##   Treatment Freq
 ## 1      CTRL    9
-## 2         1    9
-## 3         2    9
-## 4         3    9
+## 2        D1    9
+## 3        D2    9
+## 4        D3    9
 ```
 
 ``` r
@@ -847,16 +853,16 @@ plot_count_ilc <- ggplot(df, aes(x = Treatment, y = ILCs, fill = "Treatment"))+
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(plot.margin=margin(1,0.5,1,1,"cm"),
-        axis.text.x = element_text(#angle = 45, 
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-         axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
                        step.increase = 0.08, y.position = 80) +
@@ -885,8 +891,10 @@ plot_count_ilc
 # filter for CTRL and convert to longer format
 df <- df_lung %>%
   select(Treatment, Dataset, `NK cells/ILC1s`) %>%
+  mutate(Treatment = paste0("D", Treatment)) %>%
+  mutate(Treatment = gsub("DCTRL", "CTRL", Treatment)) %>%
   mutate(Treatment = factor(Treatment, level =c(
-    "CTRL", "1", "2", "3"
+    "CTRL", "D1", "D2", "D3"
   )))
 
 # Testing for normal distribution
@@ -936,12 +944,12 @@ pwc
 ## # A tibble: 6 × 9
 ##   .y.            group1 group2    n1    n2 statistic         p    p.adj p.adj.signif
 ## * <chr>          <chr>  <chr>  <int> <int>     <dbl>     <dbl>    <dbl> <chr>       
-## 1 NK cells/ILC1s CTRL   1          9     9     3.69  0.000227  0.00136  **          
-## 2 NK cells/ILC1s CTRL   2          9     9     1.82  0.0687    0.412    ns          
-## 3 NK cells/ILC1s CTRL   3          9     9     4.02  0.0000573 0.000344 ***         
-## 4 NK cells/ILC1s 1      2          9     9    -1.87  0.0621    0.373    ns          
-## 5 NK cells/ILC1s 1      3          9     9     0.337 0.736     1        ns          
-## 6 NK cells/ILC1s 2      3          9     9     2.20  0.0276    0.166    ns
+## 1 NK cells/ILC1s CTRL   D1         9     9     3.69  0.000227  0.00136  **          
+## 2 NK cells/ILC1s CTRL   D2         9     9     1.82  0.0687    0.412    ns          
+## 3 NK cells/ILC1s CTRL   D3         9     9     4.02  0.0000573 0.000344 ***         
+## 4 NK cells/ILC1s D1     D2         9     9    -1.87  0.0621    0.373    ns          
+## 5 NK cells/ILC1s D1     D3         9     9     0.337 0.736     1        ns          
+## 6 NK cells/ILC1s D2     D3         9     9     2.20  0.0276    0.166    ns
 ```
 
 ``` r
@@ -953,9 +961,9 @@ head(tab)
 ```
 ##   Treatment Freq
 ## 1      CTRL    9
-## 2         1    9
-## 3         2    9
-## 4         3    9
+## 2        D1    9
+## 3        D2    9
+## 4        D3    9
 ```
 
 ``` r
@@ -971,16 +979,16 @@ plot_count_ilc1 <- ggplot(df, aes(x = Treatment, y = `NK cells/ILC1s`, fill = "T
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(plot.margin=margin(1,0.5,1,1,"cm"),
-        axis.text.x = element_text(#angle = 45, 
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-         axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
                        step.increase = 0.1, y.position = 65) +
@@ -1009,8 +1017,10 @@ plot_count_ilc1
 # filter for CTRL and convert to longer format
 df <- df_lung %>%
   select(Treatment, Dataset, `ILC2s`) %>%
+  mutate(Treatment = paste0("D", Treatment)) %>%
+  mutate(Treatment = gsub("DCTRL", "CTRL", Treatment)) %>%
   mutate(Treatment = factor(Treatment, level =c(
-    "CTRL", "1", "2", "3"
+    "CTRL", "D1", "D2", "D3"
   )))
 
 # Testing for normal distribution
@@ -1060,12 +1070,12 @@ pwc
 ## # A tibble: 6 × 9
 ##   .y.   group1 group2    n1    n2 statistic         p    p.adj p.adj.signif
 ## * <chr> <chr>  <chr>  <int> <int>     <dbl>     <dbl>    <dbl> <chr>       
-## 1 ILC2s CTRL   1          9     9     1.33  0.183     1        ns          
-## 2 ILC2s CTRL   2          9     9     0.839 0.401     1        ns          
-## 3 ILC2s CTRL   3          9     9     3.96  0.0000743 0.000446 ***         
-## 4 ILC2s 1      2          9     9    -0.492 0.622     1        ns          
-## 5 ILC2s 1      3          9     9     2.63  0.00853   0.0512   ns          
-## 6 ILC2s 2      3          9     9     3.12  0.00179   0.0108   *
+## 1 ILC2s CTRL   D1         9     9     1.33  0.183     1        ns          
+## 2 ILC2s CTRL   D2         9     9     0.839 0.401     1        ns          
+## 3 ILC2s CTRL   D3         9     9     3.96  0.0000743 0.000446 ***         
+## 4 ILC2s D1     D2         9     9    -0.492 0.622     1        ns          
+## 5 ILC2s D1     D3         9     9     2.63  0.00853   0.0512   ns          
+## 6 ILC2s D2     D3         9     9     3.12  0.00179   0.0108   *
 ```
 
 ``` r
@@ -1077,9 +1087,9 @@ head(tab)
 ```
 ##   Treatment Freq
 ## 1      CTRL    9
-## 2         1    9
-## 3         2    9
-## 4         3    9
+## 2        D1    9
+## 3        D2    9
+## 4        D3    9
 ```
 
 ``` r
@@ -1095,16 +1105,16 @@ plot_count_ilc2 <- ggplot(df, aes(x = Treatment, y = `ILC2s`, fill = "Treatment"
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(plot.margin=margin(1,0.5,1,1,"cm"),
-        axis.text.x = element_text(#angle = 45, 
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-         axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
                        step.increase = 0.1, y.position = 158) +
@@ -1133,8 +1143,10 @@ plot_count_ilc2
 # filter for CTRL and convert to longer format
 df <- df_lung %>%
   select(Treatment, Dataset, `ILC3s`) %>%
+  mutate(Treatment = paste0("D", Treatment)) %>%
+  mutate(Treatment = gsub("DCTRL", "CTRL", Treatment)) %>%
   mutate(Treatment = factor(Treatment, level =c(
-    "CTRL", "1", "2", "3"
+    "CTRL", "D1", "D2", "D3"
   )))
 
 # Testing for normal distribution
@@ -1184,12 +1196,12 @@ pwc
 ## # A tibble: 6 × 9
 ##   .y.   group1 group2    n1    n2 statistic        p   p.adj p.adj.signif
 ## * <chr> <chr>  <chr>  <int> <int>     <dbl>    <dbl>   <dbl> <chr>       
-## 1 ILC3s CTRL   1          9     9     2.01  0.0444   0.266   ns          
-## 2 ILC3s CTRL   2          9     9     2.73  0.00625  0.0375  *           
-## 3 ILC3s CTRL   3          9     9     3.30  0.000976 0.00585 **          
-## 4 ILC3s 1      2          9     9     0.724 0.469    1       ns          
-## 5 ILC3s 1      3          9     9     1.29  0.198    1       ns          
-## 6 ILC3s 2      3          9     9     0.563 0.573    1       ns
+## 1 ILC3s CTRL   D1         9     9     2.01  0.0444   0.266   ns          
+## 2 ILC3s CTRL   D2         9     9     2.73  0.00625  0.0375  *           
+## 3 ILC3s CTRL   D3         9     9     3.30  0.000976 0.00585 **          
+## 4 ILC3s D1     D2         9     9     0.724 0.469    1       ns          
+## 5 ILC3s D1     D3         9     9     1.29  0.198    1       ns          
+## 6 ILC3s D2     D3         9     9     0.563 0.573    1       ns
 ```
 
 ``` r
@@ -1201,9 +1213,9 @@ head(tab)
 ```
 ##   Treatment Freq
 ## 1      CTRL    9
-## 2         1    9
-## 3         2    9
-## 4         3    9
+## 2        D1    9
+## 3        D2    9
+## 4        D3    9
 ```
 
 ``` r
@@ -1219,16 +1231,16 @@ plot_count_ilc3 <- ggplot(df, aes(x = Treatment, y = `ILC3s`, fill = "Treatment"
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(plot.margin=margin(1,0.5,1,1,"cm"),
-        axis.text.x = element_text(#angle = 45, 
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-         axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
                        step.increase = 0.1, y.position = 11) +
@@ -1257,9 +1269,12 @@ plot_count_ilc3
 # filter for CTRL and convert to longer format
 df <- df_lung %>%
   select(Treatment, Dataset, `Prop_NK cells/ILC1s_perTotalILCsFOV`) %>%
-  mutate(Treatment = factor(Treatment, level =c(
-    "CTRL", "1", "2", "3"
-  )), 
+  mutate(Treatment = paste0("D", Treatment)) %>%
+  mutate(Treatment = gsub("DCTRL", "CTRL", Treatment)) %>%
+  mutate(
+    Treatment = factor(Treatment, level =c(
+    "CTRL", "D1", "D2", "D3"
+  )),
   `NK cells/ILC1s` = `Prop_NK cells/ILC1s_perTotalILCsFOV`)
 
 # Testing for normal distribution
@@ -1309,12 +1324,12 @@ pwc
 ## # A tibble: 6 × 9
 ##   .y.            group1 group2    n1    n2 statistic       p  p.adj p.adj.signif
 ## * <chr>          <chr>  <chr>  <int> <int>     <dbl>   <dbl>  <dbl> <chr>       
-## 1 NK cells/ILC1s CTRL   1          9     9     0.850 0.395   1      ns          
-## 2 NK cells/ILC1s CTRL   2          9     9     0.313 0.754   1      ns          
-## 3 NK cells/ILC1s CTRL   3          9     9    -1.75  0.0810  0.486  ns          
-## 4 NK cells/ILC1s 1      2          9     9    -0.537 0.591   1      ns          
-## 5 NK cells/ILC1s 1      3          9     9    -2.60  0.00945 0.0567 ns          
-## 6 NK cells/ILC1s 2      3          9     9    -2.06  0.0396  0.237  ns
+## 1 NK cells/ILC1s CTRL   D1         9     9     0.850 0.395   1      ns          
+## 2 NK cells/ILC1s CTRL   D2         9     9     0.313 0.754   1      ns          
+## 3 NK cells/ILC1s CTRL   D3         9     9    -1.75  0.0810  0.486  ns          
+## 4 NK cells/ILC1s D1     D2         9     9    -0.537 0.591   1      ns          
+## 5 NK cells/ILC1s D1     D3         9     9    -2.60  0.00945 0.0567 ns          
+## 6 NK cells/ILC1s D2     D3         9     9    -2.06  0.0396  0.237  ns
 ```
 
 ``` r
@@ -1326,9 +1341,9 @@ head(tab)
 ```
 ##   Treatment Freq
 ## 1      CTRL    9
-## 2         1    9
-## 3         2    9
-## 4         3    9
+## 2        D1    9
+## 3        D2    9
+## 4        D3    9
 ```
 
 ``` r
@@ -1344,16 +1359,16 @@ plot_freq_ilc1 <- ggplot(df, aes(x = Treatment, y = `NK cells/ILC1s`, fill = "Tr
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(plot.margin=margin(1,0.5,1,1,"cm"),
-        axis.text.x = element_text(#angle = 45, 
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-         axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
                        step.increase = 0.1, y.position = 14) +
@@ -1382,9 +1397,11 @@ plot_freq_ilc1
 # filter for CTRL and convert to longer format
 df <- df_lung %>%
   select(Treatment, Dataset, Prop_ILC2s_perTotalILCsFOV) %>%
+  mutate(Treatment = paste0("D", Treatment)) %>%
+  mutate(Treatment = gsub("DCTRL", "CTRL", Treatment)) %>%
   mutate(Treatment = factor(Treatment, level =c(
-    "CTRL", "1", "2", "3"
-  )), 
+    "CTRL", "D1", "D2", "D3"
+  )),
   ILC2s = Prop_ILC2s_perTotalILCsFOV)
 
 # Testing for normal distribution
@@ -1434,12 +1451,12 @@ pwc
 ## # A tibble: 6 × 9
 ##   .y.   group1 group2    n1    n2 statistic       p  p.adj p.adj.signif
 ## * <chr> <chr>  <chr>  <int> <int>     <dbl>   <dbl>  <dbl> <chr>       
-## 1 ILC2s CTRL   1          9     9    -1.13  0.259   1      ns          
-## 2 ILC2s CTRL   2          9     9    -0.984 0.325   1      ns          
-## 3 ILC2s CTRL   3          9     9     1.49  0.137   0.821  ns          
-## 4 ILC2s 1      2          9     9     0.145 0.884   1      ns          
-## 5 ILC2s 1      3          9     9     2.62  0.00885 0.0531 ns          
-## 6 ILC2s 2      3          9     9     2.47  0.0134  0.0806 ns
+## 1 ILC2s CTRL   D1         9     9    -1.13  0.259   1      ns          
+## 2 ILC2s CTRL   D2         9     9    -0.984 0.325   1      ns          
+## 3 ILC2s CTRL   D3         9     9     1.49  0.137   0.821  ns          
+## 4 ILC2s D1     D2         9     9     0.145 0.884   1      ns          
+## 5 ILC2s D1     D3         9     9     2.62  0.00885 0.0531 ns          
+## 6 ILC2s D2     D3         9     9     2.47  0.0134  0.0806 ns
 ```
 
 ``` r
@@ -1451,9 +1468,9 @@ head(tab)
 ```
 ##   Treatment Freq
 ## 1      CTRL    9
-## 2         1    9
-## 3         2    9
-## 4         3    9
+## 2        D1    9
+## 3        D2    9
+## 4        D3    9
 ```
 
 ``` r
@@ -1469,16 +1486,16 @@ plot_freq_ilc2 <- ggplot(df, aes(x = Treatment, y = `ILC2s`, fill = "Treatment")
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(plot.margin=margin(1,0.5,1,1,"cm"),
-        axis.text.x = element_text(#angle = 45, 
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-         axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
                        step.increase = 0.1, y.position = 14) +
@@ -1507,9 +1524,11 @@ plot_freq_ilc2
 # filter for CTRL and convert to longer format
 df <- df_lung %>%
   select(Treatment, Dataset, Prop_ILC3s_perTotalILCsFOV) %>%
+  mutate(Treatment = paste0("D", Treatment)) %>%
+  mutate(Treatment = gsub("DCTRL", "CTRL", Treatment)) %>%
   mutate(Treatment = factor(Treatment, level =c(
-    "CTRL", "1", "2", "3"
-  )), 
+    "CTRL", "D1", "D2", "D3"
+  )),
   ILC3s = Prop_ILC3s_perTotalILCsFOV)
 
 # Testing for normal distribution
@@ -1559,12 +1578,12 @@ pwc
 ## # A tibble: 6 × 9
 ##   .y.   group1 group2    n1    n2 statistic        p   p.adj p.adj.signif
 ## * <chr> <chr>  <chr>  <int> <int>     <dbl>    <dbl>   <dbl> <chr>       
-## 1 ILC3s CTRL   1          9     9     2.13  0.0330   0.198   ns          
-## 2 ILC3s CTRL   2          9     9     3.60  0.000316 0.00189 **          
-## 3 ILC3s CTRL   3          9     9     1.61  0.108    0.648   ns          
-## 4 ILC3s 1      2          9     9     1.47  0.141    0.849   ns          
-## 5 ILC3s 1      3          9     9    -0.524 0.600    1       ns          
-## 6 ILC3s 2      3          9     9    -1.99  0.0461   0.276   ns
+## 1 ILC3s CTRL   D1         9     9     2.13  0.0330   0.198   ns          
+## 2 ILC3s CTRL   D2         9     9     3.60  0.000316 0.00189 **          
+## 3 ILC3s CTRL   D3         9     9     1.61  0.108    0.648   ns          
+## 4 ILC3s D1     D2         9     9     1.47  0.141    0.849   ns          
+## 5 ILC3s D1     D3         9     9    -0.524 0.600    1       ns          
+## 6 ILC3s D2     D3         9     9    -1.99  0.0461   0.276   ns
 ```
 
 ``` r
@@ -1576,9 +1595,9 @@ head(tab)
 ```
 ##   Treatment Freq
 ## 1      CTRL    9
-## 2         1    9
-## 3         2    9
-## 4         3    9
+## 2        D1    9
+## 3        D2    9
+## 4        D3    9
 ```
 
 ``` r
@@ -1594,16 +1613,16 @@ plot_freq_ilc3 <- ggplot(df, aes(x = Treatment, y = `ILC3s`, fill = "Treatment")
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(plot.margin=margin(1,0.5,1,1,"cm"),
-        axis.text.x = element_text(#angle = 45, 
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-         axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
                        step.increase = 0.1, y.position = 14) +
@@ -1632,9 +1651,11 @@ plot_freq_ilc3
 # IMMUNE CELLS ---------------------------------------------------------------
 df <- df_lung %>%
   select(Treatment, Dataset, `Prop_Immune cells_perTotalCountFOV`) %>%
+  mutate(Treatment = paste0("D", Treatment)) %>%
+  mutate(Treatment = gsub("DCTRL", "CTRL", Treatment)) %>%
   mutate(Treatment = factor(Treatment, level =c(
-    "CTRL", "1", "2", "3"
-  )), 
+    "CTRL", "D1", "D2", "D3"
+  )),
   `Immune cells` = `Prop_Immune cells_perTotalCountFOV`)
 
 # Testing for normal distribution
@@ -1684,12 +1705,12 @@ pwc
 ## # A tibble: 6 × 9
 ##   .y.          group1 group2    n1    n2 statistic         p     p.adj p.adj.signif
 ## * <chr>        <chr>  <chr>  <int> <int>     <dbl>     <dbl>     <dbl> <chr>       
-## 1 Immune cells CTRL   1          9     9     0.839 0.401     1         ns          
-## 2 Immune cells CTRL   2          9     9     1.44  0.149     0.893     ns          
-## 3 Immune cells CTRL   3          9     9     4.39  0.0000115 0.0000690 ****        
-## 4 Immune cells 1      2          9     9     0.604 0.546     1         ns          
-## 5 Immune cells 1      3          9     9     3.55  0.000389  0.00233   **          
-## 6 Immune cells 2      3          9     9     2.94  0.00325   0.0195    *
+## 1 Immune cells CTRL   D1         9     9     0.839 0.401     1         ns          
+## 2 Immune cells CTRL   D2         9     9     1.44  0.149     0.893     ns          
+## 3 Immune cells CTRL   D3         9     9     4.39  0.0000115 0.0000690 ****        
+## 4 Immune cells D1     D2         9     9     0.604 0.546     1         ns          
+## 5 Immune cells D1     D3         9     9     3.55  0.000389  0.00233   **          
+## 6 Immune cells D2     D3         9     9     2.94  0.00325   0.0195    *
 ```
 
 ``` r
@@ -1701,9 +1722,9 @@ head(tab)
 ```
 ##   Treatment Freq
 ## 1      CTRL    9
-## 2         1    9
-## 3         2    9
-## 4         3    9
+## 2        D1    9
+## 3        D2    9
+## 4        D3    9
 ```
 
 ``` r
@@ -1719,16 +1740,16 @@ plot_immune <- ggplot(df, aes(x = Treatment, y = `Immune cells`, fill = "Treatme
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(plot.margin=margin(1,0.5,1,1,"cm"),
-        axis.text.x = element_text(#angle = 45, 
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-         axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
                        step.increase = 0.5, y.position = 40) +
@@ -1742,9 +1763,11 @@ plot_immune <- ggplot(df, aes(x = Treatment, y = `Immune cells`, fill = "Treatme
 # Endothelia & stroma ---------------------------------------------------------------
 df <- df_lung %>%
   select(Treatment, Dataset, `Prop_Endothelia & stroma_perTotalCountFOV`) %>%
+  mutate(Treatment = paste0("D", Treatment)) %>%
+  mutate(Treatment = gsub("DCTRL", "CTRL", Treatment)) %>%
   mutate(Treatment = factor(Treatment, level =c(
-    "CTRL", "1", "2", "3"
-  )), 
+    "CTRL", "D1", "D2", "D3"
+  )),
   `cells_of_interest` = `Prop_Endothelia & stroma_perTotalCountFOV`)
 
 # Testing for normal distribution
@@ -1794,12 +1817,12 @@ pwc
 ## # A tibble: 6 × 9
 ##   .y.               group1 group2    n1    n2 statistic         p    p.adj p.adj.signif
 ## * <chr>             <chr>  <chr>  <int> <int>     <dbl>     <dbl>    <dbl> <chr>       
-## 1 cells_of_interest CTRL   1          9     9    -2.37  0.0177    0.106    ns          
-## 2 cells_of_interest CTRL   2          9     9    -2.26  0.0238    0.143    ns          
-## 3 cells_of_interest CTRL   3          9     9    -4.27  0.0000192 0.000115 ***         
-## 4 cells_of_interest 1      2          9     9     0.112 0.911     1        ns          
-## 5 cells_of_interest 1      3          9     9    -1.90  0.0572    0.343    ns          
-## 6 cells_of_interest 2      3          9     9    -2.01  0.0440    0.264    ns
+## 1 cells_of_interest CTRL   D1         9     9    -2.37  0.0177    0.106    ns          
+## 2 cells_of_interest CTRL   D2         9     9    -2.26  0.0238    0.143    ns          
+## 3 cells_of_interest CTRL   D3         9     9    -4.27  0.0000192 0.000115 ***         
+## 4 cells_of_interest D1     D2         9     9     0.112 0.911     1        ns          
+## 5 cells_of_interest D1     D3         9     9    -1.90  0.0572    0.343    ns          
+## 6 cells_of_interest D2     D3         9     9    -2.01  0.0440    0.264    ns
 ```
 
 ``` r
@@ -1811,9 +1834,9 @@ head(tab)
 ```
 ##   Treatment Freq
 ## 1      CTRL    9
-## 2         1    9
-## 3         2    9
-## 4         3    9
+## 2        D1    9
+## 3        D2    9
+## 4        D3    9
 ```
 
 ``` r
@@ -1829,16 +1852,16 @@ plot_stroma <- ggplot(df, aes(x = Treatment, y = `cells_of_interest`, fill = "Tr
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(plot.margin=margin(1,0.5,1,1,"cm"),
-        axis.text.x = element_text(#angle = 45, 
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-         axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
                        step.increase = 0.2, y.position = 80) +
@@ -1852,9 +1875,11 @@ plot_stroma <- ggplot(df, aes(x = Treatment, y = `cells_of_interest`, fill = "Tr
 # Epithelia ---------------------------------------------------------------
 df <- df_lung %>%
   select(Treatment, Dataset, `Prop_Epithelia_perTotalCountFOV`) %>%
+  mutate(Treatment = paste0("D", Treatment)) %>%
+  mutate(Treatment = gsub("DCTRL", "CTRL", Treatment)) %>%
   mutate(Treatment = factor(Treatment, level =c(
-    "CTRL", "1", "2", "3"
-  )), 
+    "CTRL", "D1", "D2", "D3"
+  )),
   `cells_of_interest` = `Prop_Epithelia_perTotalCountFOV`)
 
 # Testing for normal distribution
@@ -1904,12 +1929,12 @@ pwc
 ## # A tibble: 6 × 9
 ##   .y.               group1 group2    n1    n2 statistic       p  p.adj p.adj.signif
 ## * <chr>             <chr>  <chr>  <int> <int>     <dbl>   <dbl>  <dbl> <chr>       
-## 1 cells_of_interest CTRL   1          9     9     2.66  0.00774 0.0465 *           
-## 2 cells_of_interest CTRL   2          9     9     2.50  0.0126  0.0755 ns          
-## 3 cells_of_interest CTRL   3          9     9     2.23  0.0260  0.156  ns          
-## 4 cells_of_interest 1      2          9     9    -0.168 0.867   1      ns          
-## 5 cells_of_interest 1      3          9     9    -0.436 0.663   1      ns          
-## 6 cells_of_interest 2      3          9     9    -0.269 0.788   1      ns
+## 1 cells_of_interest CTRL   D1         9     9     2.66  0.00774 0.0465 *           
+## 2 cells_of_interest CTRL   D2         9     9     2.50  0.0126  0.0755 ns          
+## 3 cells_of_interest CTRL   D3         9     9     2.23  0.0260  0.156  ns          
+## 4 cells_of_interest D1     D2         9     9    -0.168 0.867   1      ns          
+## 5 cells_of_interest D1     D3         9     9    -0.436 0.663   1      ns          
+## 6 cells_of_interest D2     D3         9     9    -0.269 0.788   1      ns
 ```
 
 ``` r
@@ -1921,9 +1946,9 @@ head(tab)
 ```
 ##   Treatment Freq
 ## 1      CTRL    9
-## 2         1    9
-## 3         2    9
-## 4         3    9
+## 2        D1    9
+## 3        D2    9
+## 4        D3    9
 ```
 
 ``` r
@@ -1939,16 +1964,16 @@ plot_epithelia <- ggplot(df, aes(x = Treatment, y = `cells_of_interest`, fill = 
   geom_boxplot(fill="white")+
   geom_beeswarm(aes(color = Treatment), size = 2, cex = 3)+
   scale_color_manual(values = cols_treat)+
-  theme_classic2()+
-  theme(plot.margin=margin(1,0.5,1,1,"cm"),
-        axis.text.x = element_text(#angle = 45, 
-                                   vjust = 1, size = 12, hjust = 0.5, face = "bold"),
-         axis.text.y = element_text(hjust = 0.5, size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12),
-        plot.title = element_text(size =14, hjust = 0.5),
-        legend.title = element_text(size =14),
-        legend.text = element_text(size =12))+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
                        step.increase = 0.15, y.position = 40) +
@@ -1972,10 +1997,16 @@ ggarrange(plot_immune, plot_stroma, plot_epithelia,
 
 ``` r
 ggarrange(plot_prop, plot_freq_immune, plot_freq, 
+          "NONE", "NONE", "NONE",
           plot_count_all, plot_count_immune, plot_count_ilc, 
+          "NONE", "NONE", "NONE",
           plot_count_ilc1, plot_count_ilc2, plot_count_ilc3, 
-          ncol = 3, nrow = 3, heights = c(3.5, 3, 3), 
-          labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I"))+
+          ncol = 3, nrow = 5, heights = c(4,0.5,  3, 0.5, 3), 
+          labels = c("A", "B", "C",
+                     "", "", "", 
+                     "D", "E", "F",
+                     "", "", "", 
+                     "G", "H", "I"))+
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
 ```
 
