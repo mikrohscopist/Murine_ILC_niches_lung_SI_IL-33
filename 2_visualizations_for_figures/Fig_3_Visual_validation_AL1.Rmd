@@ -1,0 +1,145 @@
+---
+title: "Figure 3: Visual validation AL1"
+author: "Sandy Kroh"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+    fig_caption: yes
+    keep_md: yes
+  pdf_document:
+    toc: yes
+params:
+  Sample: Default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+# knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
+                      fig.align='center', dpi = 600, 
+                      set.seed(8),
+                      message = FALSE, warning = FALSE)
+options(width = 1200)
+```
+
+## Libraries
+
+```{r}
+library(rlang)
+library(dplyr)
+library(png)
+library(grid)
+library(ggplot2)
+library(ggpubr)
+
+```
+
+## Parameters
+
+```{r}
+set.seed(123)
+
+input_dir <- here::here("data", "images")
+
+output_dir <- here::here("2_visualizations_for_figures", "Fig_3_Visual_validation_AL1_files")
+dir.create(output_dir)
+
+```
+
+# IF overlays
+
+```{r fig.height=4.1, fig.width=9}
+
+# 1. Define the path
+img_path <- paste0(input_dir, "/Visual_validation_AL1_Immune.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_immune <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+
+# Display the plot
+print(img_plot_immune)
+```
+
+```{r fig.height=8.1, fig.width=9}
+
+# 1. Define the path
+img_path <- paste0(input_dir, "/Visual_validation_AL1_Vessels.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_vessels <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+
+# Display the plot
+print(img_plot_vessels)
+```
+
+```{r fig.height=4.1, fig.width=9}
+
+# 1. Define the path
+img_path <- paste0(input_dir, "/Visual_validation_AL1_Epithelia.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_epithelia <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+
+# Display the plot
+print(img_plot_epithelia)
+```
+
+# Visualization for figures
+
+## Figure 1
+
+```{r, fig.width=9, fig.height=16.4}
+ggarrange(img_plot_immune, img_plot_vessels, img_plot_epithelia, 
+          nrow = 3, ncol = 1, 
+          heights = c(4.1, 8.1, 4.1), 
+          labels = "AUTO")
+```
+
+## Session Information
+
+```{r}
+sessionInfo()
+```
