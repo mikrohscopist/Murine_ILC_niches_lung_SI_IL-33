@@ -1,10 +1,11 @@
 ---
 title: "Figure 7: ILC2s localize together with lymphatics and myeloid cells"
 author: "Sandy Kroh"
-date: "April 20, 2026"
+date: "April 22, 2026"
 output:
   html_document:
     toc: yes
+    toc_float: yes
     number_sections: yes
     fig_caption: yes
     keep_md: yes
@@ -1939,7 +1940,7 @@ ggarrange(coenrichment_fig_ann, "NONE", final_grid_dist_immune, "NONE",
 
 
 ``` r
-ggarrange(final_plot_nkilc1, coenrichment_fig_supp_ann, "NONE",  final_grid_dist_immune_nkilc1, "NONE", plot_cin_nkilc1, nrow = 6, ncol = 1, heights = c(2, 1.2, 0.1, 2, 0.1, 3), labels = c("A", "B", "", "C"))
+ggarrange(final_plot_nkilc1, coenrichment_fig_supp_ann, "NONE",  final_grid_dist_immune_nkilc1, "NONE", plot_cin_nkilc1, nrow = 6, ncol = 1, heights = c(1.7, 1.2, 0.1, 2, 0.1, 3), labels = c("A", "B", "", "C"))
 ```
 
 <img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-27-1.png" alt="" width="100%" style="display: block; margin: auto;" />

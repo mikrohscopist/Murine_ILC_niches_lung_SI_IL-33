@@ -488,6 +488,109 @@ img_plot_tcells <- ggplot() +
 
 ```
 
+## B cells & Plasma cells
+
+```{r fig.height=8.35, fig.width=9}
+
+# 1. Define the path
+img_path <- paste0(here::here("data", "images"), "/AL2_BPCs.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_bpc <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+
+```
+
+## Myeloid cells
+
+```{r fig.height=7.2, fig.width=9}
+
+# 1. Define the path
+img_path <- paste0(here::here("data", "images"), "/AL2_Myeloid_cells.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_mye <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+
+```
+
+## BECs
+
+```{r fig.height=8.1, fig.width=9}
+
+# 1. Define the path
+img_path <- paste0(here::here("data", "images"), "/AL2_BECs.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_bec <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+
+
+img_plot_bec
+```
+
+## Lymphatics
+
+```{r fig.height=4.9, fig.width=9}
+
+# 1. Define the path
+img_path <- paste0(here::here("data", "images"), "/Visual_validation_AL2_Lymphatics.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_ly <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+
+img_plot_ly
+```
+
 # Visualizations for figures
 
 ## Figure 4
@@ -500,7 +603,7 @@ figure <- ggarrange(dot_plot, gg_heat,
 ggarrange(figure, "NONE", img_plot_ilc2s, ncol = 1, nrow = 3, heights = c(5, 0.3, 6.6), labels = c("", "C"))
 ```
 
-## Suppl. Figure 
+## Suppl. Figure
 
 ```{r, fig.width=9, fig.height=15}
 
@@ -511,6 +614,22 @@ ggarrange(img_plot_nkilc1, img_plot_ilc3s, ncol = 1, nrow = 2, heights = c(8.6, 
 
 # Display the plot
 print(img_plot_tcells)
+```
+
+```{r fig.height=8.35, fig.width=9}
+
+img_plot_bpc
+```
+
+```{r fig.height=8.5, fig.width=9}
+
+# Display the plot
+print(img_plot_mye)
+```
+
+```{r, fig.width=9, fig.height=13.2}
+
+ggarrange(img_plot_bec, "NONE", img_plot_ly, ncol = 1, nrow = 3, heights = c(8.1, 0.2, 4.9), labels = c("A", "",  "B"))
 ```
 
 ## Session Information

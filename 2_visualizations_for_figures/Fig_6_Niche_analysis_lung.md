@@ -1,10 +1,11 @@
 ---
 title: "Figure 6: Niche analysis mouse lung"
 author: "Sandy Kroh"
-date: "April 17, 2026"
+date: "April 22, 2026"
 output:
   html_document:
     toc: yes
+    toc_float: yes
     number_sections: yes
     fig_caption: yes
     keep_md: yes
@@ -25,25 +26,8 @@ editor_options:
 library(SeuratObject)
 library(dplyr)
 library(rstatix)
-
-# remove.packages("rlang")
-# remove.packages("dplyr")
-# install.packages("rlang")
-# install.packages("dplyr")
 library(rlang)
-library(dplyr)
-
-if (!requireNamespace("Giotto", quietly = TRUE))
-  devtools::install_github("drieslab/Giotto@suite")
-if (!requireNamespace("VoltRon", quietly = TRUE))
-#  devtools::install_github("Artur-man/VoltRon")
-  devtools::install_github("BIMSBbioinfo/VoltRon@dev")
-
-if (!requireNamespace("Seurat", quietly = TRUE))
-  install.packages("Seurat")
-library(Giotto)
 library(Seurat)
-library(VoltRon)
 library(ggplot2)
 library(ggpubr)
 library(readr)
@@ -375,17 +359,17 @@ plot_comp_al3 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, f
            linewidth = 0.05) +
   scale_fill_manual(values = ColorsCellType) +
   theme_classic() +
-  labs(title = "Cellular Microenvironments",
-       x = "Identified Tissue Niches", y = "Average Proportion of Cell Types", fill = "Cell Type") +
+  labs(title = "Cellular Niches",
+       x = "Identified Tissue Niches", y = "Average Proportion of Cell Types", fill = "AL3 cell types") +
   theme(
-    axis.text.x = element_text(angle = 45, face = "bold", size = 9 , 
+    axis.text.x = element_text(angle = 30, face = "bold", size = 9 , 
                                    hjust = 1),
     axis.title.x = element_blank(),
     axis.text.y = element_text(size = 9),
     axis.title.y = element_text(size = 9),
     legend.title = element_text(size = 9, face = "bold"),
     legend.text = element_text(size = 9),
-    plot.title = element_text(face = "bold", hjust = -0.25, size = 12), 
+    plot.title = element_text(face = "bold", hjust = 0.75, size = 12), 
     plot.margin = margin(0.2, 0, 0.5, 1, "cm"))
 
 print(plot_comp_al3)
@@ -393,13 +377,15 @@ print(plot_comp_al3)
 
 <img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-5-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
+
 ``` r
+set.seed(8)
+
 niche_composition <- df_all %>%
   group_by(Tissue_Niche, AL1) %>%
   summarise(Count = n(), .groups = "drop") %>%
   group_by(Tissue_Niche) %>%
   mutate(Fraction = Count / sum(Count))
-
 
 table_plot_al1 <- ggtexttable(niche_composition, 
                           rows = NULL
@@ -422,13 +408,14 @@ plot_comp_al1 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, f
     axis.title.y = element_text(size = 9),
     legend.title = element_text(size = 9, face = "bold"),
     legend.text = element_text(size = 9),
+    legend.position = "bottom", 
     plot.title = element_blank(), 
-    plot.margin = margin(0, 0, 0, 0.5, "cm"))
+    plot.margin = margin(0, 0, 0, 0.6, "cm"))
 
 print(plot_comp_al1)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-5-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-6-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -465,27 +452,27 @@ plot_comp_ilc <- ggplot(niche_composition,
            linewidth = 0.05) +
   scale_fill_manual(values = ColorsCellType) +
   theme_classic() +
-  labs(title = "AL3 ILC-subtypes - Cellular Microenvironments",
+  labs(title = "ILC subtypes across niches",
        x = "Identified Tissue Niches", 
        y = "Average Proportion of Cell Types", 
        # CHANGED legend title here
        fill = "AL3 ILC subtypes") + 
   theme(
-    axis.text.x = element_text(angle = 45, face = "bold", size = 9, 
+    axis.text.x = element_text(angle = 30, face = "bold", size = 9 , 
                                    hjust = 1),
     axis.title.x = element_blank(),
     axis.text.y = element_text(size = 9),
     axis.title.y = element_text(size = 9),
     legend.title = element_text(size = 9, face = "bold"),
     legend.text = element_text(size = 9),
-    plot.title = element_blank(), 
-    plot.margin = margin(0, 0, 0, 0.5, "cm"))
+    plot.title = element_text(face = "bold", hjust = -0.25, size = 12), 
+    plot.margin = margin(0.2, 0, 0.5, 1, "cm"))
 
 
 print(plot_comp_ilc)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-6-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -523,7 +510,7 @@ table_plot_al3 <- ggtexttable(niche_composition_al3,
 print(table_plot_al3)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
 # AL1 ---------------------------------------------------------------------------
@@ -544,7 +531,7 @@ table_plot_al1 <- ggtexttable(niche_composition_al1,
 print(table_plot_al1)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-7-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-8-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
 # AL3 ILCs ---------------------------------------------------------------------------
@@ -579,7 +566,7 @@ table_plot_ilc <- ggtexttable(niche_composition_ilc,
 print(table_plot_ilc)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-7-3.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-8-3.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -601,7 +588,7 @@ fov_composition <- fov_composition %>%
 # If you have 35+ FOVs, it is often better to facet them so they are readable
 lower_supp_plot <- ggplot(fov_composition, aes(x = FullInfo, y = Fraction, fill = Tissue_Niche)) +
   geom_bar(stat = "identity", position = "stack", color = "black", 
-           linewidth = 0.05) +
+           linewidth = 0.01) +
   facet_grid(~Condition, scales = "free_x", space = "free_x") +
   ggtitle("Cellular niches across acquired tissue regions") +
   scale_fill_manual(values = niche_colors) +
@@ -626,14 +613,15 @@ lower_supp_plot <- ggplot(fov_composition, aes(x = FullInfo, y = Fraction, fill 
     legend.text = element_text(size = 9),
     axis.text.y = element_text(size = 9),
     axis.title.y = element_text(size = 10, face = "bold"),
-    legend.position = "right",
+    legend.position = "bottom",
     plot.title = element_text(face = "bold", hjust = 0.5)
-  )
+  )+
+  guides(fill = guide_legend(ncol = 1))
 
 lower_supp_plot
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Niche abundance
 
@@ -703,7 +691,7 @@ for (target_niche in all_niches) {
     scale_y_continuous(expand = c(0, 0.5), limits = c(0,90))+
     theme_classic() + 
     theme(
-      axis.text.x = element_text(angle = 45, size = 9, face = "bold" , 
+      axis.text.x = element_text(angle = 30, size = 9, face = "bold" , 
                                      hjust = 1),
       axis.title.x = element_blank(),
       axis.text.y = element_text(size = 9),
@@ -734,9 +722,9 @@ for (target_niche in all_niches) {
 
 # --- 3. COMBINE INTO GRID ---
 if (length(niche_plot_list) > 0) {
-  final_niche_grid <- wrap_plots(niche_plot_list, ncol = 2) +
+  final_niche_grid <- wrap_plots(niche_plot_list, ncol = 4) +
     plot_annotation(
-      title = "Cellular Niche Abundance\nacross Conditions\n",
+      title = "Cellular Niche Abundance across Conditions",
       theme = theme(
         plot.title = element_text(size = 12, face = "bold", hjust = 0.5)
         )
@@ -746,17 +734,22 @@ if (length(niche_plot_list) > 0) {
 }
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-10-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
-upper_fig <- ggarrange(plot_comp_al3, final_niche_grid, ncol = 2, nrow = 1, 
-          widths = c(3.5, 4) , labels = c("A", "B"))
+upper_fig <- ggarrange(plot_comp_al3, plot_comp_ilc, 
+                       ncol = 2, nrow = 1, 
+                       widths = c(4, 3) ,
+                       labels = c("A", "B"))
+
+upper_fig <- ggarrange(upper_fig, final_niche_grid, ncol = 1, nrow = 2,
+          heights = c(6, 3) , labels = c("", "C"))
 
 upper_fig
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-10-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-11-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Cellular composition across conditions
 
@@ -819,7 +812,7 @@ for (current_niche in all_niches) {
       scale_color_manual(values = cols_treat) +
       theme_classic() +
     theme(
-      axis.text.x = element_text(angle = 45, size = 9, face = "bold" , 
+      axis.text.x = element_text(angle = 30, size = 9, face = "bold" , 
                                      hjust = 1),
       axis.title.x = element_blank(),
       axis.text.y = element_text(size = 9),
@@ -858,7 +851,7 @@ for (current_niche in all_niches) {
 }
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-11-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-11-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-11-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-11-4.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-12-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-12-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-12-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-12-4.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -933,7 +926,7 @@ annotate_figure(
   )
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-12-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-13-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -987,14 +980,16 @@ plot_stru_niches_all <- ggarrange(
 # 4. Add the Global Title
 plot_cell_comp_niche <- annotate_figure(
   plot_stru_niches_all, 
-  top = text_grob("Cellular composition across niches\n", color = "black", 
-                  face = "bold", size = 14)
+  left = text_grob("______________________________________________________________________ Cellular composition across niches _______________________________________________________________________", 
+                   color = "black", 
+                   # face = "bold", 
+                   size = 14, rot = 90)
 )
 
 plot_cell_comp_niche
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-13-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-14-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Spatial distribution of identified niches
 
@@ -1091,7 +1086,7 @@ niche_map_grid <- wrap_plots(final_plot_list, ncol = 9) +
 print(niche_map_grid)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-14-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-15-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1210,7 +1205,7 @@ final_atlas <- (grid_ctrl | grid_d3) / legend_plot +
 print(final_atlas)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-15-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Proliferation
 
@@ -1299,7 +1294,7 @@ final_ki67_plot <- wrap_plots(ki67_plots, ncol = 3) +
 print(final_ki67_plot)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1411,7 +1406,7 @@ for (current_niche in all_niches) {
 }
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-17-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-17-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-17-4.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-18-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-18-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-18-4.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Visualization for figures
 
@@ -1419,23 +1414,20 @@ for (current_niche in all_niches) {
 
 
 ``` r
-ggarrange(upper_fig, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(5, 0.5, 6), 
-          labels = c("", "", "C"), label.y = 1.06)
+ggarrange(upper_fig, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(5, 0.1, 4), 
+          labels = c("", "", "D"), label.y = 1.06)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Supplementary figures
 
 
 ``` r
-upper_supp_plot <- ggarrange(plot_comp_al1, "NONE", plot_comp_ilc, ncol = 3, nrow = 1, 
-          widths = c(10, 1, 10), labels = c("A", "B", ""))
-
-ggarrange(upper_supp_plot, "NONE", lower_supp_plot, ncol = 1, nrow = 3, labels = c("", "", "C"), heights = c(10, 1, 10))
+ggarrange(plot_comp_al1, "NONE", lower_supp_plot, ncol = 3, nrow = 1, labels = c("A", "", "B"), widths = c(5.5, 0.4, 10))
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1503,13 +1495,6 @@ ggplot(cell_comp_per_niche, aes(x = FullInfo, y = Fraction, fill = CellType)) +
     plot.subtitle = element_text(hjust = 0.5, size = 10, color = "gray30"),
     panel.spacing.y = unit(1, "lines") # Add a bit of space between niche rows
   )
-```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
-
-
-``` r
-plot_cell_comp_niche
 ```
 
 <img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
@@ -1591,8 +1576,10 @@ plot_stru_niches_all <- ggarrange(
 # 4. Add the Global Title
 annotate_figure(
   plot_stru_niches_all, 
-  top = text_grob("Cellular composition across niches\n", color = "black", 
-                  face = "bold", size = 14)
+  left = text_grob("______________________________________________________________________ Cellular composition across niches and conditions _______________________________________________________________________", 
+                   color = "black", 
+                   # face = "bold", 
+                   size = 12, rot = 90)
 )
 ```
 
@@ -1624,12 +1611,10 @@ sessionInfo()
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-##  [1] dbscan_1.2.3       patchwork_1.3.2    tidyr_1.3.1        stringr_1.6.0      ggbeeswarm_0.7.3   readr_2.1.6        ggpubr_0.6.2       ggplot2_4.0.1      VoltRon_0.2.3      Seurat_5.3.1       Giotto_4.2.2       GiottoClass_0.4.10 rlang_1.1.6        rstatix_0.7.3      dplyr_1.1.4        SeuratObject_5.2.0 sp_2.2-0          
+##  [1] dbscan_1.2.3       patchwork_1.3.2    tidyr_1.3.1        stringr_1.6.0      ggbeeswarm_0.7.3   readr_2.1.6        ggpubr_0.6.2       ggplot2_4.0.1      Seurat_5.3.1       rlang_1.1.6        rstatix_0.7.3      dplyr_1.1.4        SeuratObject_5.2.0 sp_2.2-0          
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] matrixStats_1.5.0           spatstat.sparse_3.1-0       bitops_1.0-9                EBImage_4.52.0              httr_1.4.8                  RColorBrewer_1.1-3          tools_4.5.2                 sctransform_0.4.2           backports_1.5.0             utf8_1.2.6                  R6_2.6.1                    lazyeval_0.2.2              uwot_0.2.4                  withr_3.0.2                 gridExtra_2.3               GiottoUtils_0.2.5           progressr_0.18.0            cli_3.6.5                   Biobase_2.70.0              spatstat.explore_3.5-3      fastDummies_1.7.5           shinyjs_2.1.1               labeling_0.4.3              sass_0.4.10                 S7_0.2.0                    spatstat.data_3.1-9         ggridges_0.5.7              pbapply_1.7-4               dichromat_2.0-0.1           parallelly_1.45.1           rstudioapi_0.18.0           generics_0.1.4              vroom_1.7.0                 gtools_3.9.5                ica_1.0-3                   spatstat.random_3.4-2       car_3.1-5                   Matrix_1.7-4                S4Vectors_0.48.0            abind_1.4-8                 terra_1.8-93                lifecycle_1.0.5            
-##  [43] scatterplot3d_0.3-45        yaml_2.3.10                 carData_3.0-6               SummarizedExperiment_1.40.0 gplots_3.3.0                SparseArray_1.10.1          Rtsne_0.17                  grid_4.5.2                  promises_1.5.0              crayon_1.5.3                miniUI_0.1.2                lattice_0.22-7              beachmat_2.26.0             cowplot_1.2.0               magick_2.9.0                pillar_1.11.1               knitr_1.51                  GenomicRanges_1.62.0        rjson_0.2.23                future.apply_1.20.2         codetools_0.2-20            glue_1.8.0                  spatstat.univar_3.1-4       data.table_1.17.8           vctrs_0.6.5                 png_0.1-8                   ids_1.0.1                   spam_2.11-1                 gtable_0.3.6                cachem_1.1.0                xfun_0.56                   S4Arrays_1.10.0             mime_0.13                   tidygraph_1.3.1             Seqinfo_1.0.0               survival_3.8-3              SingleCellExperiment_1.32.0 bluster_1.20.0              rgl_1.3.34                  fitdistrplus_1.2-6          ROCR_1.0-12                 colorsGen_1.0.0            
-##  [85] nlme_3.1-168                bit64_4.6.0-1               RcppAnnoy_0.0.22            rprojroot_2.1.1             bslib_0.10.0                irlba_2.3.5.1               vipor_0.4.7                 KernSmooth_2.23-26          otel_0.2.0                  colorspace_2.1-2            BiocGenerics_0.56.0         tidyselect_1.2.1            bit_4.6.0                   compiler_4.5.2              BiocNeighbors_2.4.0         DelayedArray_0.36.0         plotly_4.12.0               checkmate_2.3.4             scales_1.4.0                caTools_1.18.3              lmtest_0.9-40               tiff_0.1-12                 SpatialExperiment_1.20.0    digest_0.6.38               goftest_1.2-3               fftwtools_0.9-11            spatstat.utils_3.2-0        rmarkdown_2.30              XVector_0.50.0              htmltools_0.5.8.1           GiottoVisuals_0.2.14        pkgconfig_2.0.3             jpeg_0.1-11                 base64enc_0.1-6             MatrixGenerics_1.22.0       fastmap_1.2.0               htmlwidgets_1.6.4           shiny_1.13.0                Rvcg_0.25                   farver_2.1.2                jquerylib_0.1.4             zoo_1.8-14                 
-## [127] jsonlite_2.0.0              BiocParallel_1.44.0         BiocSingular_1.26.0         RCurl_1.98-1.17             magrittr_2.0.4              Formula_1.2-5               dotCall64_1.2               RCDT_1.3.0                  Rcpp_1.1.0                  viridis_0.6.5               reticulate_1.44.0           stringi_1.8.7               ggraph_2.2.2                MASS_7.3-65                 plyr_1.8.9                  parallel_4.5.2              listenv_0.10.0              ggrepel_0.9.6               deldir_2.0-4                graphlayouts_1.2.2          splines_4.5.2               tensor_1.5.1                hms_1.1.4                   locfit_1.5-9.12             colorRamp2_0.1.0            igraph_2.2.1                uuid_1.2-2                  spatstat.geom_3.6-0         ggsignif_0.6.4              RcppHNSW_0.6.0              reshape2_1.4.5              stats4_4.5.2                ScaledMatrix_1.18.0         evaluate_1.0.5              tzdb_0.5.0                  tweenr_2.0.3                httpuv_1.6.16               RANN_2.6.2                  purrr_1.2.0                 polyclip_1.10-7             future_1.69.0               scattermore_1.2            
-## [169] ggforce_0.5.0               rsvd_1.0.5                  broom_1.0.12                xtable_1.8-8                RSpectra_0.16-2             later_1.4.4                 viridisLite_0.4.2           Polychrome_1.5.4            tibble_3.3.0                beeswarm_0.4.0              memoise_2.0.1               IRanges_2.44.0              cluster_2.1.8.1             globals_0.19.0              here_1.0.2
+##   [1] RColorBrewer_1.1-3     rstudioapi_0.18.0      jsonlite_2.0.0         magrittr_2.0.4         spatstat.utils_3.2-0   farver_2.1.2           rmarkdown_2.30         vctrs_0.6.5            ROCR_1.0-12            spatstat.explore_3.5-3 htmltools_0.5.8.1      broom_1.0.12           Formula_1.2-5          sass_0.4.10            sctransform_0.4.2      parallelly_1.45.1      KernSmooth_2.23-26     bslib_0.10.0           htmlwidgets_1.6.4      ica_1.0-3              plyr_1.8.9             plotly_4.12.0          zoo_1.8-14             cachem_1.1.0           igraph_2.2.1           mime_0.13              lifecycle_1.0.5        pkgconfig_2.0.3        Matrix_1.7-4           R6_2.6.1               fastmap_1.2.0          fitdistrplus_1.2-6     future_1.69.0          shiny_1.13.0           digest_0.6.38          rprojroot_2.1.1        tensor_1.5.1           RSpectra_0.16-2        irlba_2.3.5.1          labeling_0.4.3         progressr_0.18.0       spatstat.sparse_3.1-0  httr_1.4.8             polyclip_1.10-7        abind_1.4-8            compiler_4.5.2         here_1.0.2             bit64_4.6.0-1          withr_3.0.2            S7_0.2.0               backports_1.5.0       
+##  [52] carData_3.0-6          fastDummies_1.7.5      ggsignif_0.6.4         MASS_7.3-65            tools_4.5.2            vipor_0.4.7            lmtest_0.9-40          otel_0.2.0             beeswarm_0.4.0         httpuv_1.6.16          future.apply_1.20.2    goftest_1.2-3          glue_1.8.0             nlme_3.1-168           promises_1.5.0         grid_4.5.2             Rtsne_0.17             cluster_2.1.8.1        reshape2_1.4.5         generics_0.1.4         gtable_0.3.6           spatstat.data_3.1-9    tzdb_0.5.0             data.table_1.17.8      hms_1.1.4              utf8_1.2.6             car_3.1-5              spatstat.geom_3.6-0    RcppAnnoy_0.0.22       ggrepel_0.9.6          RANN_2.6.2             pillar_1.11.1          vroom_1.7.0            spam_2.11-1            RcppHNSW_0.6.0         later_1.4.4            splines_4.5.2          lattice_0.22-7         bit_4.6.0              survival_3.8-3         deldir_2.0-4           tidyselect_1.2.1       miniUI_0.1.2           pbapply_1.7-4          knitr_1.51             gridExtra_2.3          scattermore_1.2        xfun_0.56              matrixStats_1.5.0      stringi_1.8.7          lazyeval_0.2.2        
+## [103] yaml_2.3.10            evaluate_1.0.5         codetools_0.2-20       tibble_3.3.0           cli_3.6.5              uwot_0.2.4             xtable_1.8-8           reticulate_1.44.0      jquerylib_0.1.4        dichromat_2.0-0.1      Rcpp_1.1.0             globals_0.19.0         spatstat.random_3.4-2  png_0.1-8              spatstat.univar_3.1-4  parallel_4.5.2         dotCall64_1.2          listenv_0.10.0         viridisLite_0.4.2      scales_1.4.0           ggridges_0.5.7         crayon_1.5.3           purrr_1.2.0            cowplot_1.2.0
 ```

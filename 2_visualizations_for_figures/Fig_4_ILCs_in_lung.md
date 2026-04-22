@@ -408,6 +408,111 @@ img_plot_tcells <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0, "cm"))
 ```
 
+## B cells & Plasma cells
+
+
+``` r
+# 1. Define the path
+img_path <- paste0(here::here("data", "images"), "/AL2_BPCs.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_bpc <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+```
+
+## Myeloid cells
+
+
+``` r
+# 1. Define the path
+img_path <- paste0(here::here("data", "images"), "/AL2_Myeloid_cells.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_mye <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+```
+
+## BECs
+
+
+``` r
+# 1. Define the path
+img_path <- paste0(here::here("data", "images"), "/AL2_BECs.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_bec <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+
+
+img_plot_bec
+```
+
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-15-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+## Lymphatics
+
+
+``` r
+# 1. Define the path
+img_path <- paste0(here::here("data", "images"), "/Visual_validation_AL2_Lymphatics.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_ly <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+
+img_plot_ly
+```
+
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
 # Visualizations for figures
 
 ## Figure 4
@@ -421,16 +526,16 @@ figure <- ggarrange(dot_plot, gg_heat,
 ggarrange(figure, "NONE", img_plot_ilc2s, ncol = 1, nrow = 3, heights = c(5, 0.3, 6.6), labels = c("", "C"))
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-13-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
-## Suppl. Figure 
+## Suppl. Figure
 
 
 ``` r
 ggarrange(img_plot_nkilc1, img_plot_ilc3s, ncol = 1, nrow = 2, heights = c(8.6, 6.47), labels = c("A", "B"))
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-14-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -438,7 +543,29 @@ ggarrange(img_plot_nkilc1, img_plot_ilc3s, ncol = 1, nrow = 2, heights = c(8.6, 
 print(img_plot_tcells)
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-15-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+img_plot_bpc
+```
+
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+# Display the plot
+print(img_plot_mye)
+```
+
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+ggarrange(img_plot_bec, "NONE", img_plot_ly, ncol = 1, nrow = 3, heights = c(8.1, 0.2, 4.9), labels = c("A", "",  "B"))
+```
+
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 
