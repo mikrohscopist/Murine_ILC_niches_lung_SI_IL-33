@@ -1,7 +1,7 @@
 ---
 title: "Figure 7: ILC2s localize together with lymphatics and myeloid cells"
 author: "Sandy Kroh"
-date: "April 20, 2026"
+date: "April 22, 2026"
 output:
   html_document:
     toc: yes

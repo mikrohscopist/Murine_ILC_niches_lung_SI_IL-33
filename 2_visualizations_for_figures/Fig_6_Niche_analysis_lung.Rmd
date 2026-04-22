@@ -5,6 +5,7 @@ date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
   html_document:
     toc: yes
+    toc_float: yes
     number_sections: yes
     fig_caption: yes
     keep_md: yes
@@ -31,25 +32,8 @@ options(width = 1200)
 library(SeuratObject)
 library(dplyr)
 library(rstatix)
-
-# remove.packages("rlang")
-# remove.packages("dplyr")
-# install.packages("rlang")
-# install.packages("dplyr")
 library(rlang)
-library(dplyr)
-
-if (!requireNamespace("Giotto", quietly = TRUE))
-  devtools::install_github("drieslab/Giotto@suite")
-if (!requireNamespace("VoltRon", quietly = TRUE))
-#  devtools::install_github("Artur-man/VoltRon")
-  devtools::install_github("BIMSBbioinfo/VoltRon@dev")
-
-if (!requireNamespace("Seurat", quietly = TRUE))
-  install.packages("Seurat")
-library(Giotto)
 library(Seurat)
-library(VoltRon)
 library(ggplot2)
 library(ggpubr)
 library(readr)
@@ -326,28 +310,32 @@ plot_comp_al3 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, f
            linewidth = 0.05) +
   scale_fill_manual(values = ColorsCellType) +
   theme_classic() +
-  labs(title = "Cellular Microenvironments",
-       x = "Identified Tissue Niches", y = "Average Proportion of Cell Types", fill = "Cell Type") +
+  labs(title = "Cellular Niches",
+       x = "Identified Tissue Niches", y = "Average Proportion of Cell Types", fill = "AL3 cell types") +
   theme(
-    axis.text.x = element_text(angle = 45, face = "bold", size = 9 , 
+    axis.text.x = element_text(angle = 30, face = "bold", size = 9 , 
                                    hjust = 1),
     axis.title.x = element_blank(),
     axis.text.y = element_text(size = 9),
     axis.title.y = element_text(size = 9),
     legend.title = element_text(size = 9, face = "bold"),
     legend.text = element_text(size = 9),
-    plot.title = element_text(face = "bold", hjust = -0.25, size = 12), 
+    plot.title = element_text(face = "bold", hjust = 0.75, size = 12), 
     plot.margin = margin(0.2, 0, 0.5, 1, "cm"))
 
 print(plot_comp_al3)
 
+```
+
+```{r, fig.height=6, fig.width=6}
+
+set.seed(8)
 
 niche_composition <- df_all %>%
   group_by(Tissue_Niche, AL1) %>%
   summarise(Count = n(), .groups = "drop") %>%
   group_by(Tissue_Niche) %>%
   mutate(Fraction = Count / sum(Count))
-
 
 table_plot_al1 <- ggtexttable(niche_composition, 
                           rows = NULL
@@ -370,8 +358,9 @@ plot_comp_al1 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, f
     axis.title.y = element_text(size = 9),
     legend.title = element_text(size = 9, face = "bold"),
     legend.text = element_text(size = 9),
+    legend.position = "bottom", 
     plot.title = element_blank(), 
-    plot.margin = margin(0, 0, 0, 0.5, "cm"))
+    plot.margin = margin(0, 0, 0, 0.6, "cm"))
 
 print(plot_comp_al1)
 
@@ -411,21 +400,21 @@ plot_comp_ilc <- ggplot(niche_composition,
            linewidth = 0.05) +
   scale_fill_manual(values = ColorsCellType) +
   theme_classic() +
-  labs(title = "AL3 ILC-subtypes - Cellular Microenvironments",
+  labs(title = "ILC subtypes across niches",
        x = "Identified Tissue Niches", 
        y = "Average Proportion of Cell Types", 
        # CHANGED legend title here
        fill = "AL3 ILC subtypes") + 
   theme(
-    axis.text.x = element_text(angle = 45, face = "bold", size = 9, 
+    axis.text.x = element_text(angle = 30, face = "bold", size = 9 , 
                                    hjust = 1),
     axis.title.x = element_blank(),
     axis.text.y = element_text(size = 9),
     axis.title.y = element_text(size = 9),
     legend.title = element_text(size = 9, face = "bold"),
     legend.text = element_text(size = 9),
-    plot.title = element_blank(), 
-    plot.margin = margin(0, 0, 0, 0.5, "cm"))
+    plot.title = element_text(face = "bold", hjust = -0.25, size = 12), 
+    plot.margin = margin(0.2, 0, 0.5, 1, "cm"))
 
 
 print(plot_comp_ilc)
@@ -521,7 +510,7 @@ print(table_plot_ilc)
 
 ```
 
-```{r, fig.height=3, fig.width=9}
+```{r, fig.height=4, fig.width=4.5}
 
 # --- 1. Calculate Niche Composition per FOV ---
 fov_composition <- df_all %>%
@@ -541,7 +530,7 @@ fov_composition <- fov_composition %>%
 # If you have 35+ FOVs, it is often better to facet them so they are readable
 lower_supp_plot <- ggplot(fov_composition, aes(x = FullInfo, y = Fraction, fill = Tissue_Niche)) +
   geom_bar(stat = "identity", position = "stack", color = "black", 
-           linewidth = 0.05) +
+           linewidth = 0.01) +
   facet_grid(~Condition, scales = "free_x", space = "free_x") +
   ggtitle("Cellular niches across acquired tissue regions") +
   scale_fill_manual(values = niche_colors) +
@@ -566,16 +555,17 @@ lower_supp_plot <- ggplot(fov_composition, aes(x = FullInfo, y = Fraction, fill 
     legend.text = element_text(size = 9),
     axis.text.y = element_text(size = 9),
     axis.title.y = element_text(size = 10, face = "bold"),
-    legend.position = "right",
+    legend.position = "bottom",
     plot.title = element_text(face = "bold", hjust = 0.5)
-  )
+  )+
+  guides(fill = guide_legend(ncol = 1))
 
 lower_supp_plot
 ```
 
 ## Niche abundance
 
-```{r, fig.height=6, fig.width=6}
+```{r, fig.height=3, fig.width=9}
 # ========================================================================
 # PART 3: COMPARING CONDITIONS
 # ========================================================================
@@ -640,7 +630,7 @@ for (target_niche in all_niches) {
     scale_y_continuous(expand = c(0, 0.5), limits = c(0,90))+
     theme_classic() + 
     theme(
-      axis.text.x = element_text(angle = 45, size = 9, face = "bold" , 
+      axis.text.x = element_text(angle = 30, size = 9, face = "bold" , 
                                      hjust = 1),
       axis.title.x = element_blank(),
       axis.text.y = element_text(size = 9),
@@ -671,9 +661,9 @@ for (target_niche in all_niches) {
 
 # --- 3. COMBINE INTO GRID ---
 if (length(niche_plot_list) > 0) {
-  final_niche_grid <- wrap_plots(niche_plot_list, ncol = 2) +
+  final_niche_grid <- wrap_plots(niche_plot_list, ncol = 4) +
     plot_annotation(
-      title = "Cellular Niche Abundance\nacross Conditions\n",
+      title = "Cellular Niche Abundance across Conditions",
       theme = theme(
         plot.title = element_text(size = 12, face = "bold", hjust = 0.5)
         )
@@ -683,9 +673,14 @@ if (length(niche_plot_list) > 0) {
 }
 ```
 
-```{r, fig.height=5, fig.width=9}
-upper_fig <- ggarrange(plot_comp_al3, final_niche_grid, ncol = 2, nrow = 1, 
-          widths = c(3.5, 4) , labels = c("A", "B"))
+```{r, fig.height=7, fig.width=9}
+upper_fig <- ggarrange(plot_comp_al3, plot_comp_ilc, 
+                       ncol = 2, nrow = 1, 
+                       widths = c(4, 3) ,
+                       labels = c("A", "B"))
+
+upper_fig <- ggarrange(upper_fig, final_niche_grid, ncol = 1, nrow = 2,
+          heights = c(6, 3) , labels = c("", "C"))
 
 upper_fig
 ```
@@ -751,7 +746,7 @@ for (current_niche in all_niches) {
       scale_color_manual(values = cols_treat) +
       theme_classic() +
     theme(
-      axis.text.x = element_text(angle = 45, size = 9, face = "bold" , 
+      axis.text.x = element_text(angle = 30, size = 9, face = "bold" , 
                                      hjust = 1),
       axis.title.x = element_blank(),
       axis.text.y = element_text(size = 9),
@@ -863,7 +858,7 @@ annotate_figure(
   )
 ```
 
-```{r, fig.height=20, fig.width=10}
+```{r, fig.height=17, fig.width=9}
 
 # 1. Define the lists based on your data
 target_niches <- c("Mixed BPC/BEC niche", "Mixed Myeloid/LEC niche", 
@@ -915,8 +910,10 @@ plot_stru_niches_all <- ggarrange(
 # 4. Add the Global Title
 plot_cell_comp_niche <- annotate_figure(
   plot_stru_niches_all, 
-  top = text_grob("Cellular composition across niches\n", color = "black", 
-                  face = "bold", size = 14)
+  left = text_grob("______________________________________________________________________ Cellular composition across niches _______________________________________________________________________", 
+                   color = "black", 
+                   # face = "bold", 
+                   size = 14, rot = 90)
 )
 
 plot_cell_comp_niche
@@ -1331,18 +1328,16 @@ for (current_niche in all_niches) {
 
 ## Figure 6
 
-```{r, fig.width=9, fig.height=11}
-ggarrange(upper_fig, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(5, 0.5, 6), 
-          labels = c("", "", "C"), label.y = 1.06)
+```{r, fig.width=9, fig.height=13}
+ggarrange(upper_fig, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(5, 0.1, 4), 
+          labels = c("", "", "D"), label.y = 1.06)
 ```
 
 ## Supplementary figures
 
-```{r, fig.height=8, fig.width=9}
-upper_supp_plot <- ggarrange(plot_comp_al1, "NONE", plot_comp_ilc, ncol = 3, nrow = 1, 
-          widths = c(10, 1, 10), labels = c("A", "B", ""))
+```{r, fig.height=5, fig.width=9}
+ggarrange(plot_comp_al1, "NONE", lower_supp_plot, ncol = 3, nrow = 1, labels = c("A", "", "B"), widths = c(5, 0.4, 10))
 
-ggarrange(upper_supp_plot, "NONE", lower_supp_plot, ncol = 1, nrow = 3, labels = c("", "", "C"), heights = c(10, 1, 10))
 ```
 
 ```{r, fig.height=12, fig.width=9}
@@ -1413,11 +1408,7 @@ ggplot(cell_comp_per_niche, aes(x = FullInfo, y = Fraction, fill = CellType)) +
   )
 ```
 
-```{r, fig.height=20, fig.width=10}
-plot_cell_comp_niche
-```
-
-```{r, fig.height=20, fig.width=10}
+```{r, fig.height=17, fig.width=9}
 
 # 1. Define the lists based on your data
 target_niches <- c("Mixed BPC/BEC niche", "Mixed Myeloid/LEC niche", 
@@ -1494,9 +1485,12 @@ plot_stru_niches_all <- ggarrange(
 # 4. Add the Global Title
 annotate_figure(
   plot_stru_niches_all, 
-  top = text_grob("Cellular composition across niches\n", color = "black", 
-                  face = "bold", size = 14)
+  left = text_grob("______________________________________________________________________ Cellular composition across niches and conditions _______________________________________________________________________", 
+                   color = "black", 
+                   # face = "bold", 
+                   size = 12, rot = 90)
 )
+
 ```
 
 ## Session Information
