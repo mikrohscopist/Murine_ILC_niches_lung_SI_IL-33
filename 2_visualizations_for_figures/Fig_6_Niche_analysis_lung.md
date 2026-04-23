@@ -1,7 +1,7 @@
 ---
 title: "Figure 6: Niche analysis mouse lung"
 author: "Sandy Kroh"
-date: "April 22, 2026"
+date: "April 23, 2026"
 output:
   html_document:
     toc: yes
@@ -410,7 +410,8 @@ plot_comp_al1 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, f
     legend.text = element_text(size = 9),
     legend.position = "bottom", 
     plot.title = element_blank(), 
-    plot.margin = margin(0, 0, 0, 0.6, "cm"))
+    plot.margin = margin(0, 0, 0, 0.6, "cm"))+
+  guides(fill = guide_legend(ncol = 2))
 
 print(plot_comp_al1)
 ```
