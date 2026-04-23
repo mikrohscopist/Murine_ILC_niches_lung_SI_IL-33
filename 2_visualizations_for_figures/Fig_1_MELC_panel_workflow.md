@@ -1,7 +1,7 @@
 ---
 title: "Figure 1: MELC panel and sample prep workflow"
 author: "Sandy Kroh"
-date: "April 22, 2026"
+date: "April 23, 2026"
 output:
   html_document:
     toc: yes
@@ -105,9 +105,9 @@ print(img_plot_melc_panel)
 
 
 ``` r
-ggarrange(img_plot_workflow, img_plot_melc_panel, 
+ggarrange(img_plot_melc_panel, img_plot_workflow, 
           nrow = 2, ncol = 1, 
-          heights = c(6.2, 6.6), 
+          heights = c(6.6, 6.2), 
           labels = "AUTO")
 ```
 
