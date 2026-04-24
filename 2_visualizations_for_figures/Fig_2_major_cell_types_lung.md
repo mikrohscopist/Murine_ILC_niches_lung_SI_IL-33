@@ -1,7 +1,7 @@
 ---
 title: "Figure 2: major immune and non-immune cell types lung"
 author: "Sandy Kroh"
-date: "April 22, 2026"
+date: "April 23, 2026"
 output:
   html_document:
     toc: yes
@@ -116,9 +116,11 @@ dot_plot <- Seurat::DotPlot(SO.lung,
                   features = c(
                     "Ki67", 
                     "CD68", 
+                    "CD11c",
                     "B220", 
                     "CD3", 
                     "CD45", 
+                    "Kappa",
                     "EMCN", 
                     "CD31", 
                     "LYVE1", 

@@ -1,7 +1,7 @@
 ---
 title: "Figure 4: Immune cells, ILCs and ILC subtypes in lung"
 author: "Sandy Kroh"
-date: "April 22, 2026"
+date: "April 24, 2026"
 output:
   html_document:
     toc: yes
@@ -566,6 +566,54 @@ ggarrange(img_plot_bec, "NONE", img_plot_ly, ncol = 1, nrow = 3, heights = c(8.1
 ```
 
 <img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+Seurat::DotPlot(SO.lung, 
+                group.by = "AL3",
+                  features = c(
+                    "CD45", 
+                    "EOMES", 
+                    "TBET", 
+                    "GATA3eGFP", 
+                    "KLRG1", 
+                    "CD127",
+                    "RORgt",
+                    "CD4", 
+                    "CD3", 
+                    "CD8a", 
+                    "B220", 
+                    "Kappa",
+                    "MHCII", 
+                    "CD68", 
+                    "CD11c",
+                    "CD31", 
+                    "EMCN", 
+                    "CD117",
+                    "CD90", 
+                    "PDGFRa", 
+                    "LYVE1",
+                    "EpCAM", 
+                    "CD138" 
+                  ), 
+                cols ="RdBu", assay = "MELC")+   
+    RotatedAxis()+
+  ylab("Annotated cell types (AL3)")+
+  ggtitle("All annotated cell types (AL3)")+
+    # coord_flip()+
+    theme(axis.text.x=element_text(size=10, angle = 45),
+          axis.text.y=element_text(size=10), 
+          axis.title.y = element_text(size=11, face = "bold"), 
+          axis.title.x = element_text(size=11, face = "bold"), 
+          # plot.margin = margin(0.2, 2, 1, 0.2, "cm"), 
+          plot.title = element_text(size=12, face = "bold", hjust = 0.5), 
+          legend.text = element_text(size = 10),
+          legend.title = element_text(size = 10, face = "bold"))+ 
+  scale_color_gradient2(midpoint = 0, low = "gold", 
+                            high = "blue", space = "Lab" )
+```
+
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 
