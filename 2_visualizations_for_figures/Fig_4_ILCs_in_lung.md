@@ -1,7 +1,7 @@
 ---
 title: "Figure 4: Immune cells, ILCs and ILC subtypes in lung"
 author: "Sandy Kroh"
-date: "April 24, 2026"
+date: "April 27, 2026"
 output:
   html_document:
     toc: yes
@@ -539,8 +539,9 @@ ggarrange(img_plot_nkilc1, img_plot_ilc3s, ncol = 1, nrow = 2, heights = c(8.6, 
 
 
 ``` r
-# Display the plot
-print(img_plot_tcells)
+empty <- ggarrange("NONE", "NONE", labels = "AUTO", widths = c(10, 9.6))
+ggarrange(empty, img_plot_tcells, ncol = 1, nrow = 2, 
+                     heights = c(0.2, 7.2))
 ```
 
 <img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />

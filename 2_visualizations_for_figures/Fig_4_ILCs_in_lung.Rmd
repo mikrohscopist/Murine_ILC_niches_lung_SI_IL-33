@@ -610,10 +610,11 @@ ggarrange(figure, "NONE", img_plot_ilc2s, ncol = 1, nrow = 3, heights = c(5, 0.3
 ggarrange(img_plot_nkilc1, img_plot_ilc3s, ncol = 1, nrow = 2, heights = c(8.6, 6.47), labels = c("A", "B"))
 ```
 
-```{r fig.height=7.2, fig.width=9}
+```{r fig.height=7.4, fig.width=9}
 
-# Display the plot
-print(img_plot_tcells)
+empty <- ggarrange("NONE", "NONE", labels = "AUTO", widths = c(10, 9.6))
+ggarrange(empty, img_plot_tcells, ncol = 1, nrow = 2, 
+                     heights = c(0.2, 7.2))
 ```
 
 ```{r fig.height=8.35, fig.width=9}
