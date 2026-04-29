@@ -1,7 +1,7 @@
 ---
 title: "Figure 1: MELC panel and sample prep workflow"
 author: "Sandy Kroh"
-date: "April 23, 2026"
+date: "April 29, 2026"
 output:
   html_document:
     toc: yes
@@ -45,32 +45,7 @@ dir.create(output_dir)
 
 # IF overlays
 
-
-``` r
-# 1. Define the path
-img_path <- paste0(input_dir, "/workflow_sample_prep@4x.png")
-
-# 2. Read the image and get dimensions
-img <- readPNG(img_path)
-h <- nrow(img)
-w <- ncol(img)
-
-# 3. Create the ggplot object
-# We use coord_fixed to ensure the image doesn't stretch
-img_plot_workflow <- ggplot() +
-  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
-  coord_fixed() +
-  theme_void() +
-  # Optional: adds a tiny margin to ensure the edges aren't clipped
-  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
-  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
-
-# Display the plot
-print(img_plot_workflow)
-```
-
-<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-3-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+## MELC panel mosaic
 
 
 ``` r
@@ -91,13 +66,128 @@ img_plot_melc_panel <- ggplot() +
   # Optional: adds a tiny margin to ensure the edges aren't clipped
   scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
-  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
-
-# Display the plot
-print(img_plot_melc_panel)
+  theme(plot.margin = margin(0, 0, 0.7, 0.7, "cm"))
 ```
 
-<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-4-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+## IF ILC markers colocalization
+
+
+``` r
+# 1. Define the path
+img_path <- paste0(input_dir, "/Colocalization_ILC_markers.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_coloc <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+```
+
+## IF endothelial markers colocalization
+
+
+``` r
+# 1. Define the path
+img_path <- paste0(input_dir, "/Colocalization_endothelial_markers.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_coloc_endo <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+```
+
+## IF immune markers colocalization
+
+
+``` r
+# 1. Define the path
+img_path <- paste0(input_dir, "/Colocalization_immune_markers.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_coloc_imm <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+```
+
+## IF epithelial markers colocalization
+
+
+``` r
+# 1. Define the path
+img_path <- paste0(input_dir, "/Colocalization_epithelial_markers.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_coloc_epi <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+```
+
+## MELC workflow
+
+
+``` r
+# 1. Define the path
+img_path <- paste0(input_dir, "/workflow_sample_prep@4x.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_workflow <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+```
 
 # Visualization for figures
 
@@ -105,13 +195,33 @@ print(img_plot_melc_panel)
 
 
 ``` r
-ggarrange(img_plot_melc_panel, img_plot_workflow, 
+ggarrange(img_plot_melc_panel, img_plot_coloc, 
           nrow = 2, ncol = 1, 
-          heights = c(6.6, 6.2), 
+          heights = c(6.9, 6.5), 
           labels = "AUTO")
 ```
 
-<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-5-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+## Supplementary Figures
+
+
+``` r
+# Display the plot
+print(img_plot_workflow)
+```
+
+<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-10-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+ggarrange(img_plot_coloc_endo, img_plot_coloc_imm, img_plot_coloc_epi, 
+          nrow = 3, ncol = 1, 
+          heights = c(8.2, 4.9, 3.7), 
+          labels = "AUTO")
+```
+
+<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-11-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 
