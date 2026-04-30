@@ -1,7 +1,7 @@
 ---
 title: "Figure 6: Niche analysis mouse lung"
 author: "Sandy Kroh"
-date: "April 29, 2026"
+date: "April 30, 2026"
 output:
   html_document:
     toc: yes
@@ -1606,9 +1606,10 @@ plot_myly <- annotate_figure(
 plot_endo <- ggarrange(
   niche_plots_all[["Blood endothelial niche_B cells & Plasma cells"]],
   niche_plots_all[["Blood endothelial niche_Myeloid cells"]],
+  niche_plots_all[["Blood endothelial niche_NK cells/ILC1s"]],
   niche_plots_all[["Blood endothelial niche_EMCN CD31 Blood vessels"]],
   niche_plots_all[["Blood endothelial niche_LYVE1 CD31 vessels"]],
-  ncol = 2, nrow = 2)+
+  ncol = 3, nrow = 2)+
   theme(plot.margin = margin(0, 0.25, 0, 0, "cm"))
 
 plot_endo <- annotate_figure(
@@ -1620,9 +1621,9 @@ plot_endo <- annotate_figure(
 
 
 ggarrange(
-  plot_myly, plot_endo, 
+  plot_endo, plot_myly, 
   ncol = 2, nrow = 1, 
-  widths = c(1, 2), 
+  widths = c(3, 1), 
   labels = "AUTO")
 ```
 
