@@ -1,7 +1,7 @@
 ---
 title: "Figure 7: ILC2s localize together with lymphatics and myeloid cells"
 author: "Sandy Kroh"
-date: "April 22, 2026"
+date: "Mai 04, 2026"
 output:
   html_document:
     toc: yes
@@ -1066,7 +1066,8 @@ coenrichment_fig_supp <- ggarrange(plot_coenrichment_nkilc1, plot_coenrichment_b
 
 coenrichment_fig_supp_ann <- annotate_figure(coenrichment_fig_supp, 
                 left = text_grob("Coenrichment score", color = "black", rot = 90, 
-                                 size = 11))
+                                 size = 11))+
+    theme(plot.margin = margin(0, 0.5, 0, 0.5, "cm"))
 
 coenrichment_fig_supp_ann
 ```
@@ -1392,8 +1393,8 @@ cin_bpc <- ggarrange(
         )
 
 plot_cin_nkilc1 <- ggarrange(cin_nkilc1, cin_bec, cin_bpc, 
-                      ncol = 1, nrow = 3, labels = c("D", "", ""))+
-  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+                      ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.5, 0, 0.5, "cm"))
 
 plot_cin_nkilc1
 ```
@@ -1746,7 +1747,7 @@ for (condition in c("CTRL", "D1", "D2", "D3")) {
     geom_beeswarm(aes(color = RefType), 
                   alpha = 0.2, size = 0.1, cex = 0.08)+
     stat_pvalue_manual(stat.test,
-                       size = 6,
+                       size = 5,
                        hide.ns = TRUE, 
                        y.position = 110, 
                        step.increase = 0.15
@@ -1773,7 +1774,7 @@ for (condition in c("CTRL", "D1", "D2", "D3")) {
     ylab("Minimal distance [µm]")+
     geom_text(aes(y = 80 , #lab_pos, 
                   label = lab_text, vjust = -0.5), angle = 30,
-              data = Labs, size=2)
+              data = Labs, size=3)
   plot
   
   assigned_name <- gsub(" ", "", paste0(celltype_of_interest, "_", condition))
@@ -1785,8 +1786,8 @@ for (condition in c("CTRL", "D1", "D2", "D3")) {
 
 # ggarrange(plotlist = my_plot_list[c(1:4)], nrow = 1, ncol = 4)
 
-dist_bec <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 2, ncol = 1, labels = c("C"))+
-  theme(plot.margin = margin(0, 1, 0, 0, "cm"))
+dist_bec <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 2, ncol = 1)+
+  theme(plot.margin = margin(0, 0, 0, 0.5, "cm"))
 
 dist_bec
 ```
@@ -1883,7 +1884,7 @@ for (ref_type in ref_cell_types) {
 
 # --- 3. PRINT THE FINAL GRID ---
 if (length(grid_plot_list) > 0) {
-  final_grid_dist_immune_nkilc1 <- wrap_plots(grid_plot_list, ncol = 4) +
+  final_grid_dist_immune_nkilc1 <- wrap_plots(grid_plot_list, ncol = 3) +
     plot_annotation(
       title = paste0("Minimum Distances to: ", gsub("EMCN CD31 ", "", celltype_of_interest)),
       theme = theme(
@@ -1895,6 +1896,16 @@ if (length(grid_plot_list) > 0) {
 ```
 
 <img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+supp_middle_plot <- ggarrange(dist_bec, final_grid_dist_immune_nkilc1, ncol = 2, nrow = 1, 
+          widths = c(3, 7), labels = c("C", "D"))
+
+supp_middle_plot
+```
+
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Visualization for figures
 
@@ -1908,7 +1919,7 @@ top_figure <- ggarrange(final_plot_ILC2s, img_plot_if_ilc2s, img_plot_if_ilc2s_r
 top_figure
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1917,14 +1928,14 @@ bottom_figure <- ggarrange(dist_lymph, plot_cin, ncol = 2, widths = c(1, 2))
 bottom_figure
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-25-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
 ggarrange(top_figure, bottom_figure, nrow = 2, ncol = 1, heights = c(10.2, 5.5))
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-25-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-26-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Supplementary figures
 
@@ -1936,14 +1947,14 @@ ggarrange(coenrichment_fig_ann, "NONE", final_grid_dist_immune, "NONE",
           labels = c("A","", "B", "", "C"))
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-26-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-27-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
-ggarrange(final_plot_nkilc1, coenrichment_fig_supp_ann, "NONE",  final_grid_dist_immune_nkilc1, "NONE", plot_cin_nkilc1, nrow = 6, ncol = 1, heights = c(1.7, 1.2, 0.1, 2, 0.1, 3), labels = c("A", "B", "", "C"))
+ggarrange(final_plot_nkilc1, coenrichment_fig_supp_ann, "NONE",  supp_middle_plot, "NONE", plot_cin_nkilc1, nrow = 6, ncol = 1, heights = c(1.6, 1, 0.1, 2.6, 0.1, 2.7), labels = c("A", "B", "", "", "", "E"))
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-27-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-28-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 

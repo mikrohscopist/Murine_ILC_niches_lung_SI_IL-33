@@ -1,7 +1,7 @@
 ---
 title: "Figure 6: Niche analysis mouse lung"
 author: "Sandy Kroh"
-date: "April 30, 2026"
+date: "Mai 04, 2026"
 output:
   html_document:
     toc: yes
@@ -408,10 +408,10 @@ plot_comp_al1 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, f
     axis.title.y = element_text(size = 9),
     legend.title = element_text(size = 9, face = "bold"),
     legend.text = element_text(size = 9),
-    legend.position = "bottom", 
+    legend.position = "right", 
     plot.title = element_blank(), 
     plot.margin = margin(0, 0, 0, 0.6, "cm"))+
-  guides(fill = guide_legend(ncol = 2))
+  guides(fill = guide_legend(ncol = 1))
 
 print(plot_comp_al1)
 ```
@@ -602,7 +602,7 @@ lower_supp_plot <- ggplot(fov_composition, aes(x = FullInfo, y = Fraction, fill 
   theme(
     # --- REMOVE THE BOX ON TOP ---
     strip.background = element_blank(),
-    strip.text = element_text(face = "bold", size = 11),
+    strip.text = element_text(size = 11),
     
     # Cleaning up the X-axis
     axis.text.x = element_blank(), 
@@ -615,9 +615,9 @@ lower_supp_plot <- ggplot(fov_composition, aes(x = FullInfo, y = Fraction, fill 
     axis.text.y = element_text(size = 9),
     axis.title.y = element_text(size = 10, face = "bold"),
     legend.position = "bottom",
-    plot.title = element_text(face = "bold", hjust = 0.5)
+    plot.title = element_text(face = "bold", size = 11, hjust = 0.5)
   )+
-  guides(fill = guide_legend(ncol = 1))
+  guides(fill = guide_legend(ncol = 4))
 
 lower_supp_plot
 ```
@@ -992,6 +992,679 @@ plot_cell_comp_niche
 
 <img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-14-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
+### Total counts
+
+
+``` r
+# --- 1. Settings ---
+# Ensure Condition is a factor in the correct order
+niche_composition$Condition <- factor(niche_composition$Condition, 
+                                      levels = c("CTRL", "D1", "D2", "D3"))
+
+all_niches <- unique(niche_composition$Tissue_Niche)
+all_cell_types <- unique(niche_composition$CellType)
+
+# --- 2. Main Loop ---
+for (current_niche in all_niches) {
+  
+  message("Processing Niche: ", current_niche)
+  niche_plots_abundance <- list()
+  
+  # Filter data for the specific niche
+  niche_data <- niche_composition %>% filter(Tissue_Niche == current_niche)
+  
+  for (current_cell in all_cell_types) {
+    
+    stats_df <- niche_data %>% filter(CellType == current_cell)
+    
+    # Skip if there's no data for this cell type in this niche
+    if(nrow(stats_df) == 0 || sum(stats_df$Cell_Count) == 0) next
+    
+    # --- Statistical Testing (Wilcoxon vs CTRL) ---
+    stat.test <- tryCatch({
+      stats_df %>%
+        wilcox_test(Cell_Count ~ Condition, ref.group = "CTRL") %>%
+        add_significance() %>%
+        add_xy_position(x = "Condition")
+    }, error = function(e) NULL)
+    
+    # --- Build the Plot with Requested Aesthetics ---
+    p <- ggplot(stats_df, aes(x = Condition, y = Cell_Count)) +
+      geom_boxplot(outlier.colour = NA, fill = "white", alpha = 0.5) +
+      geom_beeswarm(aes(color = Condition), size = 1, cex = 1.5, alpha = 0.6) +
+      # Title logic with the requested gsub pattern
+      ggtitle(gsub("LYVE1 CD90 |EMCN CD31 ", "", current_cell)) +
+      scale_y_continuous(expand = expansion(mult = c(0.1, 0.4))) +
+      scale_color_manual(values = cols_treat) +
+      theme_classic() +
+      theme(
+        axis.text.x = element_text(angle = 30, size = 9, face = "bold", hjust = 1),
+        axis.title.x = element_blank(),
+        axis.text.y = element_text(size = 9),
+        axis.title.y = element_text(size = 9),
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5, size = 11), 
+        plot.margin = margin(0.1, 0.4, 0.3, 0.4, "cm"),
+        legend.position = "none"
+      ) +
+      ylab("Cell Count")
+
+    # --- Add Significance Brackets ---
+    if (!is.null(stat.test) && nrow(stat.test) > 0) {
+      sig_col <- if("p.adj.signif" %in% colnames(stat.test)) "p.adj.signif" else "p.signif"
+      p <- p + stat_pvalue_manual(
+        stat.test, 
+        label = sig_col, 
+        hide.ns = TRUE, 
+        tip.length = 0.01, 
+        step.increase = 0.1,
+        size = 3.5
+      )
+    }
+    
+    niche_plots_abundance[[current_cell]] <- p
+  }
+  
+  # --- 3. Assemble and Print the Grid for this Niche ---
+  if (length(niche_plots) > 0) {
+    combined_grid_abundance <- wrap_plots(niche_plots_abundance, ncol = 4) +
+      plot_annotation(
+        title = paste("Niche Cell Counts:", current_niche),
+        subtitle = "Stats: Wilcoxon test vs CTRL",
+        theme = theme(
+          plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+          plot.subtitle = element_text(size = 10, hjust = 0.5)
+        )
+      )
+    
+    print(combined_grid_abundance)
+  }
+}
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-15-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-15-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-15-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-15-4.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+## Counts and frequencies per niche
+
+### ILC2s
+
+
+``` r
+library(dplyr)
+library(ggplot2)
+library(ggbeeswarm)
+library(rstatix)
+library(patchwork)
+
+# --- 1. Filter and Prepare Data ---
+ilc2_niche_comp <- niche_composition %>%
+  filter(CellType == "ILC2s") %>%
+  mutate(Condition = factor(Condition, levels = c("CTRL", "D1", "D2", "D3")))
+
+niche_colors_spec <- c(
+  "Mixed BPC/BEC niche" = "#332288", 
+  "Mixed Myeloid/LEC niche" = "#DDCC77", 
+  "Epithelial niche" = "#117733", 
+  "Blood endothelial niche" = "#882255"
+)
+
+# --- 2. Statistical Testing (Global calculation) ---
+stat.test_all <- ilc2_niche_comp %>%
+  group_by(Condition) %>%
+  dunn_test(Cell_Count ~ Tissue_Niche) %>%
+  adjust_pvalue(method = "bonferroni") %>%
+  add_significance() %>%
+  add_xy_position(x = "Tissue_Niche")
+
+# --- 3. Loop to Create 4 Individual Plots ---
+condition_list <- c("CTRL", "D1", "D2", "D3")
+individual_plots <- list()
+
+for (cond in condition_list) {
+  
+  # Filter data and stats for the specific condition
+  plot_data <- ilc2_niche_comp %>% filter(Condition == cond)
+  plot_stats <- stat.test_all %>% filter(Condition == cond)
+  
+  p <- ggplot(plot_data, aes(x = Tissue_Niche, y = Cell_Count)) +
+    geom_boxplot(outlier.colour = NA, fill = "white", alpha = 0.5) +
+    geom_beeswarm(aes(color = Tissue_Niche), size = 1.2, cex = 1.5, alpha = 0.6) +
+    
+    # Aesthetics and Limits
+    ylim(0, 150) +
+    scale_color_manual(values = niche_colors_spec) +
+    ggtitle(cond) + # Set condition as individual plot title
+    theme_classic() +
+    theme(
+      axis.text.x = element_text(angle = 30, size = 9, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 9),
+      axis.title.y = element_text(size = 9),
+      plot.title = element_text(hjust = 0.5, size = 11), 
+      plot.margin = margin(0.1, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
+    ylab(if(cond == "CTRL") "ILC2 Cell Count" else "") # Only label first Y-axis
+    
+  # Add Stats for this specific plot
+  if (nrow(plot_stats) > 0) {
+    p <- p + stat_pvalue_manual(
+      plot_stats, 
+      label = "p.adj.signif", 
+      hide.ns = TRUE, 
+      y.position = 110, # Adjusted slightly for clarity below ylim 150
+      tip.length = 0.01, 
+      step.increase = 0.15,
+      size = 3.5
+    )
+  }
+  
+  individual_plots[[cond]] <- p
+}
+
+# --- 4. Assemble Individual Plots Side-by-Side ---
+# This "glues" the 4 independent plots together
+final_niche_comparison_ilc2s <- wrap_plots(individual_plots, ncol = 4) +
+  plot_annotation(
+    title = "Total count ILC2s across Tissue Niches",
+    theme = theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+                  plot.margin = margin(0.5, 0, 0, 1.2, "cm")))
+
+print(final_niche_comparison_ilc2s)
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+### NK cells/ILC1s
+
+
+``` r
+# --- 1. Filter and Prepare Data (NK cells/ILC1s) ---
+target_cell <- "NK cells/ILC1s"
+
+nk_ilc1_niche_comp <- niche_composition %>%
+  filter(CellType == target_cell) %>%
+  mutate(Condition = factor(Condition, levels = c("CTRL", "D1", "D2", "D3")))
+
+niche_colors_spec <- c(
+  "Mixed BPC/BEC niche" = "#332288", 
+  "Mixed Myeloid/LEC niche" = "#DDCC77", 
+  "Epithelial niche" = "#117733", 
+  "Blood endothelial niche" = "#882255"
+)
+
+# --- 2. Statistical Testing (Comparing Niches within each Condition) ---
+stat.test_nk <- nk_ilc1_niche_comp %>%
+  group_by(Condition) %>%
+  dunn_test(Cell_Count ~ Tissue_Niche) %>%
+  adjust_pvalue(method = "bonferroni") %>%
+  add_significance() %>%
+  add_xy_position(x = "Tissue_Niche")
+
+# --- 3. Loop to Create 4 Individual Plots ---
+condition_list <- c("CTRL", "D1", "D2", "D3")
+nk_plots <- list()
+
+for (cond in condition_list) {
+  
+  plot_data <- nk_ilc1_niche_comp %>% filter(Condition == cond)
+  plot_stats <- stat.test_nk %>% filter(Condition == cond)
+  
+  p <- ggplot(plot_data, aes(x = Tissue_Niche, y = Cell_Count)) +
+    geom_boxplot(outlier.colour = NA, fill = "white", alpha = 0.5) +
+    geom_beeswarm(aes(color = Tissue_Niche), size = 1.2, cex = 1.5, alpha = 0.6) +
+    
+    # Aesthetics and Limits (Keep 150 as baseline or adjust to your data)
+    ylim(0, 70) +
+    scale_color_manual(values = niche_colors_spec) +
+    ggtitle(cond) +
+    theme_classic() +
+    theme(
+      axis.text.x = element_text(angle = 30, size = 9, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 9),
+      axis.title.y = element_text(size = 9),
+      plot.title = element_text(hjust = 0.5, size = 11), 
+      plot.margin = margin(0.1, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
+    ylab(if(cond == "CTRL") paste(target_cell, "Cell Count") else "")
+    
+  if (nrow(plot_stats) > 0) {
+    p <- p + stat_pvalue_manual(
+      plot_stats, 
+      label = "p.adj.signif", 
+      hide.ns = TRUE, 
+      y.position = 50, 
+      tip.length = 0.01, 
+      step.increase = 0.15,
+      size = 3.5
+    )
+  }
+  nk_plots[[cond]] <- p
+}
+
+# --- 4. Assemble ---
+final_niche_comparison_nkilc1 <- wrap_plots(nk_plots, ncol = 4) +
+  plot_annotation(
+    title = paste("Total count", target_cell, "across Tissue Niches"),
+    theme = theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+                  plot.margin = margin(0.5, 0, 0, 1.2, "cm")))
+
+final_niche_comparison_nkilc1
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+### ILC3s
+
+
+``` r
+# --- 1. Filter and Prepare Data (ILC3s) ---
+target_cell <- "ILC3s"
+
+ilc3_niche_comp <- niche_composition %>%
+  filter(CellType == target_cell) %>%
+  mutate(Condition = factor(Condition, levels = c("CTRL", "D1", "D2", "D3")))
+
+# --- 2. Statistical Testing ---
+stat.test_ilc3 <- ilc3_niche_comp %>%
+  group_by(Condition) %>%
+  dunn_test(Cell_Count ~ Tissue_Niche) %>%
+  adjust_pvalue(method = "bonferroni") %>%
+  add_significance() %>%
+  add_xy_position(x = "Tissue_Niche")
+
+# --- 3. Loop to Create 4 Individual Plots ---
+ilc3_plots <- list()
+
+for (cond in condition_list) {
+  
+  plot_data <- ilc3_niche_comp %>% filter(Condition == cond)
+  plot_stats <- stat.test_ilc3 %>% filter(Condition == cond)
+  
+  p <- ggplot(plot_data, aes(x = Tissue_Niche, y = Cell_Count)) +
+    geom_boxplot(outlier.colour = NA, fill = "white", alpha = 0.5) +
+    geom_beeswarm(aes(color = Tissue_Niche), size = 1.2, cex = 1.5, alpha = 0.6) +
+    
+    # Aesthetics and Limits
+    ylim(0, 10) + 
+    scale_color_manual(values = niche_colors_spec) +
+    ggtitle(cond) +
+    theme_classic() +
+    theme(
+      axis.text.x = element_text(angle = 30, size = 9, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 9),
+      axis.title.y = element_text(size = 9),
+      plot.title = element_text(hjust = 0.5, size = 11), 
+      plot.margin = margin(0.1, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
+    ylab(if(cond == "CTRL") paste(target_cell, "Cell Count") else "")
+    
+  if (nrow(plot_stats) > 0) {
+    p <- p + stat_pvalue_manual(
+      plot_stats, 
+      label = "p.adj.signif", 
+      hide.ns = TRUE, 
+      y.position = 5, 
+      tip.length = 0.01, 
+      step.increase = 0.08,
+      size = 3.5
+    )
+  }
+  ilc3_plots[[cond]] <- p
+}
+
+# --- 4. Assemble ---
+final_niche_comparison_ilc3s <- wrap_plots(ilc3_plots, ncol = 4) +
+  plot_annotation(
+    title = paste("Total count", target_cell, "across Tissue Niches"),
+    theme = theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+                  plot.margin = margin(0.5, 0, 0, 1.2, "cm")))
+
+final_niche_comparison_ilc3s
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+### ILC2 frequency
+
+
+``` r
+library(dplyr)
+library(ggplot2)
+library(ggbeeswarm)
+library(rstatix)
+library(patchwork)
+
+# --- 1. Filter and Prepare Data ---
+ilc2_freq_comp <- niche_composition %>%
+  filter(CellType == "ILC2s") %>%
+  mutate(Condition = factor(Condition, levels = c("CTRL", "D1", "D2", "D3")))
+
+niche_colors_spec <- c(
+  "Mixed BPC/BEC niche" = "#332288", 
+  "Mixed Myeloid/LEC niche" = "#DDCC77", 
+  "Epithelial niche" = "#117733", 
+  "Blood endothelial niche" = "#882255"
+)
+
+# --- 2. Statistical Testing (Comparing Frequency between Niches) ---
+stat.test_freq <- ilc2_freq_comp %>%
+  group_by(Condition) %>%
+  dunn_test(Frequency ~ Tissue_Niche) %>%
+  adjust_pvalue(method = "bonferroni") %>%
+  add_significance() %>%
+  add_xy_position(x = "Tissue_Niche")
+
+# --- 3. Loop to Create 4 Individual Plots ---
+condition_list <- c("CTRL", "D1", "D2", "D3")
+individual_plots <- list()
+
+for (cond in condition_list) {
+  
+  # Filter data and stats for the specific condition
+  plot_data <- ilc2_freq_comp %>% filter(Condition == cond)
+  plot_stats <- stat.test_freq %>% filter(Condition == cond)
+  
+  p <- ggplot(plot_data, aes(x = Tissue_Niche, y = Frequency)) +
+    geom_boxplot(outlier.colour = NA, fill = "white", alpha = 0.5) +
+    geom_beeswarm(aes(color = Tissue_Niche), size = 1.2, cex = 1.5, alpha = 0.6) +
+    
+    # Aesthetics and Limits (Adjusted for Percentage)
+    ylim(0, 15) + 
+    scale_color_manual(values = niche_colors_spec) +
+    ggtitle(cond) + 
+    theme_classic() +
+    theme(
+      axis.text.x = element_text(angle = 30, size = 9, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 9),
+      axis.title.y = element_text(size = 9),
+      plot.title = element_text(hjust = 0.5, size = 11), 
+      plot.margin = margin(0.1, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
+    ylab(if(cond == "CTRL") "ILC2 Frequency [%]" else "") 
+    
+  # Add Stats for this specific plot
+  if (nrow(plot_stats) > 0) {
+    p <- p + stat_pvalue_manual(
+      plot_stats, 
+      label = "p.adj.signif", 
+      hide.ns = TRUE, 
+      y.position = 13, 
+      tip.length = 0.01, 
+      step.increase = 0.15,
+      size = 3.5
+    )
+  }
+  
+  individual_plots[[cond]] <- p
+}
+
+# --- 4. Assemble Individual Plots Side-by-Side ---
+final_niche_freq_comparison <- wrap_plots(individual_plots, ncol = 4) +
+  plot_annotation(
+    title = "Frequency of ILC2s across Tissue Niches",
+    theme = theme(plot.title = element_text(size = 11, face = "bold", hjust = 0.5),
+                  plot.margin = margin(0.5, 0, 0, 1.2, "cm")))
+
+print(final_niche_freq_comparison)
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+### NK cells/ILC1s frequency
+
+
+``` r
+library(dplyr)
+library(ggplot2)
+library(ggbeeswarm)
+library(rstatix)
+library(patchwork)
+
+# --- 1. Filter and Prepare Data ---
+target_cell <- "NK cells/ILC1s"
+
+nk_freq_comp <- niche_composition %>%
+  filter(CellType == target_cell) %>%
+  mutate(Condition = factor(Condition, levels = c("CTRL", "D1", "D2", "D3")))
+
+niche_colors_spec <- c(
+  "Mixed BPC/BEC niche" = "#332288", 
+  "Mixed Myeloid/LEC niche" = "#DDCC77", 
+  "Epithelial niche" = "#117733", 
+  "Blood endothelial niche" = "#882255"
+)
+
+# --- 2. Statistical Testing ---
+stat.test_nk <- nk_freq_comp %>%
+  group_by(Condition) %>%
+  dunn_test(Frequency ~ Tissue_Niche) %>%
+  adjust_pvalue(method = "bonferroni") %>%
+  add_significance() %>%
+  add_xy_position(x = "Tissue_Niche")
+
+# --- 3. Loop to Create 4 Individual Plots ---
+condition_list <- c("CTRL", "D1", "D2", "D3")
+individual_plots <- list()
+
+for (cond in condition_list) {
+  
+  plot_data <- nk_freq_comp %>% filter(Condition == cond)
+  plot_stats <- stat.test_nk %>% filter(Condition == cond)
+  
+  p <- ggplot(plot_data, aes(x = Tissue_Niche, y = Frequency)) +
+    geom_boxplot(outlier.colour = NA, fill = "white", alpha = 0.5) +
+    geom_beeswarm(aes(color = Tissue_Niche), size = 1.2, cex = 1.5, alpha = 0.6) +
+    
+    ylim(0, 8) + 
+    scale_color_manual(values = niche_colors_spec) +
+    ggtitle(cond) + 
+    theme_classic() +
+    theme(
+      axis.text.x = element_text(angle = 30, size = 9, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 9),
+      axis.title.y = element_text(size = 9),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.1, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
+    ylab(if(cond == "CTRL") paste(target_cell, "Frequency [%]") else "") 
+    
+  if (nrow(plot_stats) > 0) {
+    p <- p + stat_pvalue_manual(
+      plot_stats, 
+      label = "p.adj.signif", 
+      hide.ns = TRUE, 
+      y.position = 6, 
+      tip.length = 0.01, 
+      step.increase = 0.2,
+      size = 3.5
+    )
+  }
+  
+  individual_plots[[cond]] <- p
+}
+
+# --- 4. Assemble ---
+final_niche_nk_comp <- wrap_plots(individual_plots, ncol = 4) +
+  plot_annotation(
+    title = paste("Frequency of", target_cell, "across Tissue Niches"),
+    theme = theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+                  plot.margin = margin(0.5, 0, 0, 1.2, "cm")))
+
+print(final_niche_nk_comp)
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+### ILC3s frequency
+
+
+``` r
+# --- 1. Filter and Prepare Data ---
+target_cell <- "ILC3s"
+
+ilc3_freq_comp <- niche_composition %>%
+  filter(CellType == target_cell) %>%
+  mutate(Condition = factor(Condition, levels = c("CTRL", "D1", "D2", "D3")))
+
+# --- 2. Statistical Testing ---
+stat.test_ilc3 <- ilc3_freq_comp %>%
+  group_by(Condition) %>%
+  dunn_test(Frequency ~ Tissue_Niche) %>%
+  adjust_pvalue(method = "bonferroni") %>%
+  add_significance() %>%
+  add_xy_position(x = "Tissue_Niche")
+
+# --- 3. Loop to Create 4 Individual Plots ---
+individual_plots <- list()
+
+for (cond in condition_list) {
+  
+  plot_data <- ilc3_freq_comp %>% filter(Condition == cond)
+  plot_stats <- stat.test_ilc3 %>% filter(Condition == cond)
+  
+  p <- ggplot(plot_data, aes(x = Tissue_Niche, y = Frequency)) +
+    geom_boxplot(outlier.colour = NA, fill = "white", alpha = 0.5) +
+    geom_beeswarm(aes(color = Tissue_Niche), size = 1.2, cex = 1.5, alpha = 0.6) +
+    
+    ylim(0, 2) + 
+    scale_color_manual(values = niche_colors_spec) +
+    ggtitle(cond) + 
+    theme_classic() +
+    theme(
+      axis.text.x = element_text(angle = 30, size = 9, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 9),
+      axis.title.y = element_text(size = 9),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.1, 0.2, 0.3, 0.2, "cm"),
+      legend.position = "none"
+    ) +
+    ylab(if(cond == "CTRL") paste(target_cell, "Frequency [%]") else "") 
+    
+  if (nrow(plot_stats) > 0) {
+    p <- p + stat_pvalue_manual(
+      plot_stats, 
+      label = "p.adj.signif", 
+      hide.ns = TRUE, 
+      y.position = 1, 
+      tip.length = 0.01, 
+      step.increase = 0.08,
+      size = 3.5
+    )
+  }
+  
+  individual_plots[[cond]] <- p
+}
+
+# --- 4. Assemble ---
+final_niche_ilc3_comp <- wrap_plots(individual_plots, ncol = 4) +
+  plot_annotation(
+    title = paste("Frequency of", target_cell, "across Tissue Niches"),
+    theme = theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+                  plot.margin = margin(0.5, 0, 0, 1.2, "cm")))
+
+print(final_niche_ilc3_comp)
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+All ILC subtypes
+
+
+``` r
+# --- 1. Filter Data for ILC Subsets ---
+# The niche_composition table already has Frequency per FOV (Filename)
+target_ilcs <- c("NK cells/ILC1s", "ILC2s", "ILC3s")
+
+ilc_plot_data <- niche_composition %>%
+  filter(CellType %in% target_ilcs)
+
+niche_colors_spec <- c(
+  "Mixed BPC/BEC niche" = "#332288", 
+  "Mixed Myeloid/LEC niche" = "#DDCC77", 
+  "Epithelial niche" = "#117733", 
+  "Blood endothelial niche" = "#882255"
+)
+
+# --- 2. Create the Plots in a Loop ---
+ilc_summary_plots <- list()
+
+for (cell in target_ilcs) {
+  
+  # Filter for the current cell type
+  plot_df <- ilc_plot_data %>% filter(CellType == cell)
+  
+  # Statistical Testing: Compare Frequency between different Tissue_Niches
+  # (Pooled across all Conditions/Filenames)
+  stat.test <- plot_df %>%
+    dunn_test(Frequency ~ Tissue_Niche) %>%
+    adjust_pvalue(method = "bonferroni") %>%
+    add_significance() %>%
+    add_xy_position(x = "Tissue_Niche")
+  
+  # Build the Plot
+  p <- ggplot(plot_df, aes(x = Tissue_Niche, y = Frequency)) +
+    geom_boxplot(outlier.colour = NA, fill = "white", alpha = 0.5) +
+    # Each point represents one acquired area (Filename)
+    geom_beeswarm(aes(color = Tissue_Niche), size = 1.2, cex = 0.9, alpha = 0.5) +
+    
+    # Dynamics and Aesthetics
+    scale_y_continuous(expand = expansion(mult = c(0.05, 0.4))) + 
+    scale_color_manual(values = niche_colors_spec) +
+    ggtitle(cell) + 
+    theme_classic() +
+    theme(
+      axis.text.x = element_text(angle = 45, size = 9, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 9),
+      axis.title.y = element_text(size = 9),
+      plot.title = element_text(hjust = 0.5, size = 11), 
+      plot.margin = margin(0.1, 0.4, 0.3, 0.4, "cm"),
+      legend.position = "none"
+    ) +
+    ylab("Frequency [%]")
+    
+  # Add Stats
+  if (nrow(stat.test) > 0) {
+    p <- p + stat_pvalue_manual(
+      stat.test, 
+      label = "p.adj.signif", 
+      hide.ns = TRUE, 
+      tip.length = 0.01, 
+      step.increase = 0.1, 
+      size = 3.5
+    )
+  }
+  
+  ilc_summary_plots[[cell]] <- p
+}
+
+# --- 3. Assemble and Print ---
+final_ilc_niche_comparison <- wrap_plots(ilc_summary_plots, ncol = 3) +
+  plot_annotation(
+    title = "ILC Frequency across Tissue Niches",
+    theme = theme(
+      plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+      plot.margin = margin(0, 0, 0, 1, "cm"),
+      plot.subtitle = element_text(size = 10, hjust = 0.5)
+    )
+  )
+
+print(final_ilc_niche_comparison)
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
 ## Spatial distribution of identified niches
 
 
@@ -1087,7 +1760,7 @@ niche_map_grid <- wrap_plots(final_plot_list, ncol = 9) +
 print(niche_map_grid)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-15-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1207,7 +1880,7 @@ final_atlas <- (grid_ctrl | grid_d3) / legend_plot +
 print(final_atlas)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Proliferation
 
@@ -1296,7 +1969,7 @@ final_ki67_plot <- wrap_plots(ki67_plots, ncol = 3) +
 print(final_ki67_plot)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-25-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1408,7 +2081,7 @@ for (current_niche in all_niches) {
 }
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-18-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-18-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-18-4.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-26-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-26-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-26-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-26-4.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Visualization for figures
 
@@ -1420,16 +2093,31 @@ ggarrange(upper_fig, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(5.4, 0
           labels = c("", "", "D"), label.y = 1.06)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-27-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Supplementary figures
 
 
 ``` r
-ggarrange(plot_comp_al1, "NONE", lower_supp_plot, ncol = 3, nrow = 1, labels = c("A", "", "B"), widths = c(5.5, 0.4, 10))
+final_ilc2_niche_comparison <- wrap_plots(ilc_summary_plots[["ILC2s"]], ncol = 1) +
+  plot_annotation(
+    theme = theme(
+      plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+      plot.margin = margin(0, 0, 0, 1, "cm"),
+      plot.subtitle = element_text(size = 10, hjust = 0.5)
+    )
+  )
+
+
+sup_upper <- ggarrange(plot_comp_al1, "NONE", final_ilc2_niche_comparison, ncol = 3, nrow = 1, labels = c("A", "", "B"), widths = c(6, 0.4, 4))
+
+ggarrange(sup_upper, "NONE", lower_supp_plot, final_niche_freq_comparison,
+          nrow = 4, ncol = 1, 
+          heights = c(4, 0.5, 5, 3),
+          labels = c("","", "C", "D"))
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-28-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1500,7 +2188,7 @@ ggplot(cell_comp_per_niche, aes(x = FullInfo, y = Fraction, fill = CellType)) +
   )
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-29-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1586,14 +2274,14 @@ annotate_figure(
 )
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-30-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
 plot_myly <- ggarrange(
   niche_plots_all[["Mixed Myeloid/LEC niche_Myeloid cells"]],
   niche_plots_all[["Mixed Myeloid/LEC niche_LYVE1 CD90 Lymphatics"]],
-  ncol = 1, nrow = 2)+
+  ncol = 1, nrow = 3)+
   theme(plot.margin = margin(0, 0.25, 0, 0, "cm"))
 
 plot_myly <- annotate_figure(
@@ -1606,10 +2294,10 @@ plot_myly <- annotate_figure(
 plot_endo <- ggarrange(
   niche_plots_all[["Blood endothelial niche_B cells & Plasma cells"]],
   niche_plots_all[["Blood endothelial niche_Myeloid cells"]],
-  niche_plots_all[["Blood endothelial niche_NK cells/ILC1s"]],
-  niche_plots_all[["Blood endothelial niche_EMCN CD31 Blood vessels"]],
   niche_plots_all[["Blood endothelial niche_LYVE1 CD31 vessels"]],
-  ncol = 3, nrow = 2)+
+  niche_plots_all[["Blood endothelial niche_EMCN CD31 Blood vessels"]],
+  niche_plots_all[["Blood endothelial niche_NK cells/ILC1s"]],
+  ncol = 2, nrow = 3)+
   theme(plot.margin = margin(0, 0.25, 0, 0, "cm"))
 
 plot_endo <- annotate_figure(
@@ -1620,14 +2308,55 @@ plot_endo <- annotate_figure(
 
 
 
+plot_bpc <- ggarrange(
+  niche_plots_all[["Mixed BPC/BEC niche_Myeloid cells"]],
+  niche_plots_all[["Mixed BPC/BEC niche_EMCN CD31 Blood vessels"]],
+  niche_plots_all[["Mixed BPC/BEC niche_NK cells/ILC1s"]],
+  ncol = 1, nrow = 3)+
+  theme(plot.margin = margin(0, 0.25, 0, 0, "cm"))
+
+plot_bpc <- annotate_figure(
+  plot_bpc, 
+  left = text_grob("Mixed BPC/BEC niche", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5, rot = 90))+
+  theme(plot.margin = margin(0, 0.25, 0, 0, "cm"))
+
+
+
 ggarrange(
-  plot_endo, plot_myly, 
-  ncol = 2, nrow = 1, 
-  widths = c(3, 1), 
+  plot_endo, plot_myly, plot_bpc, 
+  ncol = 3, nrow = 1, 
+  widths = c(2, 1, 1), 
   labels = "AUTO")
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-31-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+ggarrange(final_niche_comparison_ilc2s, 
+          final_niche_comparison_nkilc1, 
+          final_niche_comparison_ilc3s, nrow = 3, ncol = 1, labels = "AUTO")
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-32-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+``` r
+ggarrange(final_niche_freq_comparison, 
+          final_niche_nk_comp, 
+          final_niche_ilc3_comp, nrow = 3, ncol = 1, labels = "AUTO")
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-32-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+ggarrange(final_niche_comparison_ilc2s, 
+          final_niche_freq_comparison,
+          nrow = 2, ncol = 1, labels = "AUTO")
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-33-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 
