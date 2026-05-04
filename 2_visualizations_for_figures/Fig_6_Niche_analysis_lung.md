@@ -1,7 +1,7 @@
 ---
 title: "Figure 6: Niche analysis mouse lung"
 author: "Sandy Kroh"
-date: "April 22, 2026"
+date: "April 30, 2026"
 output:
   html_document:
     toc: yes
@@ -410,7 +410,8 @@ plot_comp_al1 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, f
     legend.text = element_text(size = 9),
     legend.position = "bottom", 
     plot.title = element_blank(), 
-    plot.margin = margin(0, 0, 0, 0.6, "cm"))
+    plot.margin = margin(0, 0, 0, 0.6, "cm"))+
+  guides(fill = guide_legend(ncol = 2))
 
 print(plot_comp_al1)
 ```
@@ -1195,10 +1196,11 @@ grid_d3 <- wrap_elements(full = (
 final_atlas <- (grid_ctrl | grid_d3) / legend_plot + 
   plot_layout(heights = c(10, 0.2)) +
   plot_annotation(
-    title = "Spatial distribution of tissue niches",
+    # title = "Spatial distribution of tissue niches",
     theme = theme(
       plot.background = element_rect(fill = "black", color = NA),
-      plot.title = element_text(color = "white", size = 12, face = "bold", hjust = 0.5, margin = margin(t = 1, b = 1))
+      # plot.title = element_text(color = "white", size = 12, face = "bold", hjust = 0.5, margin = margin(t = 1, b = 1))
+      plot.title = element_blank()
     )
   ) & theme(plot.background = element_rect(fill = "black", color = NA))
 
@@ -1414,7 +1416,7 @@ for (current_niche in all_niches) {
 
 
 ``` r
-ggarrange(upper_fig, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(5, 0.1, 4), 
+ggarrange(upper_fig, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(5.4, 0.1, 3.6), 
           labels = c("", "", "D"), label.y = 1.06)
 ```
 
@@ -1469,8 +1471,9 @@ ggplot(cell_comp_per_niche, aes(x = FullInfo, y = Fraction, fill = CellType)) +
   scale_fill_manual(values = ColorsCellType) +
   scale_y_continuous(labels = scales::percent, expand = c(0, 0)) +
   theme_classic() +
-  labs(title = "Cell Type Composition per Tissue Niche",
-       subtitle = "Each bar represents one FOV partitioned by cell type percentages",
+  labs(
+    # title = "Cell Type Composition per Tissue Niche",
+    # subtitle = "Each bar represents one FOV partitioned by cell type percentages",
        y = "Cell Type Proportion (%)", 
        x = "FOVs",
        fill = "AL3 cell types") +
@@ -1584,6 +1587,47 @@ annotate_figure(
 ```
 
 <img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+plot_myly <- ggarrange(
+  niche_plots_all[["Mixed Myeloid/LEC niche_Myeloid cells"]],
+  niche_plots_all[["Mixed Myeloid/LEC niche_LYVE1 CD90 Lymphatics"]],
+  ncol = 1, nrow = 2)+
+  theme(plot.margin = margin(0, 0.25, 0, 0, "cm"))
+
+plot_myly <- annotate_figure(
+  plot_myly, 
+  left = text_grob("Mixed Myeloid/LEC niche", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5, rot = 90))+
+  theme(plot.margin = margin(0, 0.25, 0, 0, "cm"))
+
+
+plot_endo <- ggarrange(
+  niche_plots_all[["Blood endothelial niche_B cells & Plasma cells"]],
+  niche_plots_all[["Blood endothelial niche_Myeloid cells"]],
+  niche_plots_all[["Blood endothelial niche_NK cells/ILC1s"]],
+  niche_plots_all[["Blood endothelial niche_EMCN CD31 Blood vessels"]],
+  niche_plots_all[["Blood endothelial niche_LYVE1 CD31 vessels"]],
+  ncol = 3, nrow = 2)+
+  theme(plot.margin = margin(0, 0.25, 0, 0, "cm"))
+
+plot_endo <- annotate_figure(
+  plot_endo, 
+  left = text_grob("Blood endothelial niche", color = "black", 
+                  face = "bold", size = 11, hjust = 0.5, rot = 90))+
+  theme(plot.margin = margin(0, 0.25, 0, 0, "cm"))
+
+
+
+ggarrange(
+  plot_endo, plot_myly, 
+  ncol = 2, nrow = 1, 
+  widths = c(3, 1), 
+  labels = "AUTO")
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 

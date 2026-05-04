@@ -1,7 +1,7 @@
 ---
 title: "Figure 5: Quantification lung"
 author: "Sandy Kroh"
-date: "April 22, 2026"
+date: "April 29, 2026"
 output:
   html_document:
     toc: yes
@@ -211,7 +211,7 @@ plot_prop <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
       axis.text.y = element_text(size = 10),
       axis.title.y = element_text(size = 10),
       plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
-      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
       legend.position = "none"
     ) +
   stat_pvalue_manual(pwc,
@@ -353,7 +353,7 @@ plot_freq <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
       axis.text.y = element_text(size = 10),
       axis.title.y = element_text(size = 10),
       plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
-      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
       legend.position = "none"
     ) +
   stat_pvalue_manual(pwc,
@@ -490,7 +490,7 @@ plot_freq_immune <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
       axis.text.y = element_text(size = 10),
       axis.title.y = element_text(size = 10),
       plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
-      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
       legend.position = "none"
     ) +
   stat_pvalue_manual(pwc,
@@ -608,7 +608,7 @@ plot_count_all <- ggplot(df, aes(x = Treatment, y = TotalCellCountFOV, fill = "T
       axis.text.y = element_text(size = 10),
       axis.title.y = element_text(size = 10),
       plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
-      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
       legend.position = "none"
     ) +
   stat_pvalue_manual(pwc,
@@ -734,7 +734,7 @@ plot_count_immune <- ggplot(df, aes(x = Treatment, y = `Immune cells`, fill = "T
       axis.text.y = element_text(size = 10),
       axis.title.y = element_text(size = 10),
       plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
-      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
       legend.position = "none"
     ) +
   stat_pvalue_manual(pwc,
@@ -860,7 +860,7 @@ plot_count_ilc <- ggplot(df, aes(x = Treatment, y = ILCs, fill = "Treatment"))+
       axis.text.y = element_text(size = 10),
       axis.title.y = element_text(size = 10),
       plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
-      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
       legend.position = "none"
     ) +
   stat_pvalue_manual(pwc,
@@ -986,7 +986,7 @@ plot_count_ilc1 <- ggplot(df, aes(x = Treatment, y = `NK cells/ILC1s`, fill = "T
       axis.text.y = element_text(size = 10),
       axis.title.y = element_text(size = 10),
       plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
-      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
       legend.position = "none"
     ) +
   stat_pvalue_manual(pwc,
@@ -1112,7 +1112,7 @@ plot_count_ilc2 <- ggplot(df, aes(x = Treatment, y = `ILC2s`, fill = "Treatment"
       axis.text.y = element_text(size = 10),
       axis.title.y = element_text(size = 10),
       plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
-      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
       legend.position = "none"
     ) +
   stat_pvalue_manual(pwc,
@@ -1238,7 +1238,7 @@ plot_count_ilc3 <- ggplot(df, aes(x = Treatment, y = `ILC3s`, fill = "Treatment"
       axis.text.y = element_text(size = 10),
       axis.title.y = element_text(size = 10),
       plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
-      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
       legend.position = "none"
     ) +
   stat_pvalue_manual(pwc,
@@ -1366,7 +1366,7 @@ plot_freq_ilc1 <- ggplot(df, aes(x = Treatment, y = `NK cells/ILC1s`, fill = "Tr
       axis.text.y = element_text(size = 10),
       axis.title.y = element_text(size = 10),
       plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
-      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
       legend.position = "none"
     ) +
   stat_pvalue_manual(pwc,
@@ -1493,7 +1493,7 @@ plot_freq_ilc2 <- ggplot(df, aes(x = Treatment, y = `ILC2s`, fill = "Treatment")
       axis.text.y = element_text(size = 10),
       axis.title.y = element_text(size = 10),
       plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
-      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
       legend.position = "none"
     ) +
   stat_pvalue_manual(pwc,
@@ -1620,7 +1620,7 @@ plot_freq_ilc3 <- ggplot(df, aes(x = Treatment, y = `ILC3s`, fill = "Treatment")
       axis.text.y = element_text(size = 10),
       axis.title.y = element_text(size = 10),
       plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
-      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
       legend.position = "none"
     ) +
   stat_pvalue_manual(pwc,
@@ -1747,7 +1747,7 @@ plot_immune <- ggplot(df, aes(x = Treatment, y = `Immune cells`, fill = "Treatme
       axis.text.y = element_text(size = 10),
       axis.title.y = element_text(size = 10),
       plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
-      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
       legend.position = "none"
     ) +
   stat_pvalue_manual(pwc,
@@ -1859,7 +1859,7 @@ plot_stroma <- ggplot(df, aes(x = Treatment, y = `cells_of_interest`, fill = "Tr
       axis.text.y = element_text(size = 10),
       axis.title.y = element_text(size = 10),
       plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
-      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
       legend.position = "none"
     ) +
   stat_pvalue_manual(pwc,
@@ -1971,7 +1971,7 @@ plot_epithelia <- ggplot(df, aes(x = Treatment, y = `cells_of_interest`, fill = 
       axis.text.y = element_text(size = 10),
       axis.title.y = element_text(size = 10),
       plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
-      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
       legend.position = "none"
     ) +
   stat_pvalue_manual(pwc,
@@ -1996,21 +1996,65 @@ ggarrange(plot_immune, plot_stroma, plot_epithelia,
 
 
 ``` r
-ggarrange(plot_prop, plot_freq_immune, plot_freq, 
-          "NONE", "NONE", "NONE",
-          plot_count_all, plot_count_immune, plot_count_ilc, 
-          "NONE", "NONE", "NONE",
-          plot_count_ilc1, plot_count_ilc2, plot_count_ilc3, 
-          ncol = 3, nrow = 5, heights = c(4,0.5,  3, 0.5, 3), 
-          labels = c("A", "B", "C",
-                     "", "", "", 
-                     "D", "E", "F",
-                     "", "", "", 
-                     "G", "H", "I"))+
+top_figure <- ggarrange(plot_prop, plot_freq_immune, plot_freq, 
+          ncol = 3, nrow = 1, 
+          labels = c("AUTO"), 
+          label.x = 0.1)+
+  theme(plot.margin = margin(0, 0, 0.2, 0, "cm"))
+
+
+middle_figure <- ggarrange(
+          plot_count_all, plot_count_immune, plot_count_ilc,
+          plot_count_ilc2, 
+          ncol = 2, nrow = 2, 
+          labels = c("D", "E", "F",
+                     "G"),
+          label.x = 0.1)+
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+
+
+
+final_figure <- ggarrange(top_figure, middle_figure, 
+          ncol = 1, nrow = 2, heights = c(3, 4.5))+
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
+
+final_figure
 ```
 
 <img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+``` r
+annotate_figure(final_figure,
+               bottom = text_grob("N: CTRL/D1/D2 = 9 FOVs, D3 = 8 FOVs; Kruskal-Wallis-test & Dunn’s test; Significance levels of adjusted p-values: **** = 1e-04, *** = 0.001, ** = 0.01, * = 0.05", 
+                                  color = "black", 
+                                  # hjust = -1,
+                                  face = "italic", size = 8))
+```
+
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-17-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+suppl_figure <- ggarrange(plot_count_ilc1, plot_count_ilc3, 
+          ncol = 2, nrow = 1, 
+          labels = c("AUTO"),
+          label.x = 0.1)+
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+
+suppl_figure
+```
+
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+``` r
+annotate_figure(suppl_figure,
+               bottom = text_grob("N: CTRL/D1/D2 = 9 FOVs, D3 = 8 FOVs; Kruskal-Wallis-test & Dunn’s test; Significance levels of adjusted p-values: **** = 1e-04, *** = 0.001, ** = 0.01, * = 0.05",
+                                  color = "black",
+                                  # hjust = -1,
+                                  face = "italic", size = 8))
+```
+
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-18-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2020,7 +2064,7 @@ ggarrange(plot_freq_ilc1, plot_freq_ilc2, plot_freq_ilc3,
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 

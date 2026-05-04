@@ -1,7 +1,7 @@
 ---
 title: "Figure 4: Immune cells, ILCs and ILC subtypes in lung"
 author: "Sandy Kroh"
-date: "April 22, 2026"
+date: "April 27, 2026"
 output:
   html_document:
     toc: yes
@@ -539,8 +539,9 @@ ggarrange(img_plot_nkilc1, img_plot_ilc3s, ncol = 1, nrow = 2, heights = c(8.6, 
 
 
 ``` r
-# Display the plot
-print(img_plot_tcells)
+empty <- ggarrange("NONE", "NONE", labels = "AUTO", widths = c(10, 9.6))
+ggarrange(empty, img_plot_tcells, ncol = 1, nrow = 2, 
+                     heights = c(0.2, 7.2))
 ```
 
 <img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
@@ -566,6 +567,54 @@ ggarrange(img_plot_bec, "NONE", img_plot_ly, ncol = 1, nrow = 3, heights = c(8.1
 ```
 
 <img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+Seurat::DotPlot(SO.lung, 
+                group.by = "AL3",
+                  features = c(
+                    "CD45", 
+                    "EOMES", 
+                    "TBET", 
+                    "GATA3eGFP", 
+                    "KLRG1", 
+                    "CD127",
+                    "RORgt",
+                    "CD4", 
+                    "CD3", 
+                    "CD8a", 
+                    "B220", 
+                    "Kappa",
+                    "MHCII", 
+                    "CD68", 
+                    "CD11c",
+                    "CD31", 
+                    "EMCN", 
+                    "CD117",
+                    "CD90", 
+                    "PDGFRa", 
+                    "LYVE1",
+                    "EpCAM", 
+                    "CD138" 
+                  ), 
+                cols ="RdBu", assay = "MELC")+   
+    RotatedAxis()+
+  ylab("Annotated cell types (AL3)")+
+  ggtitle("All annotated cell types (AL3)")+
+    # coord_flip()+
+    theme(axis.text.x=element_text(size=10, angle = 45),
+          axis.text.y=element_text(size=10), 
+          axis.title.y = element_text(size=11, face = "bold"), 
+          axis.title.x = element_text(size=11, face = "bold"), 
+          # plot.margin = margin(0.2, 2, 1, 0.2, "cm"), 
+          plot.title = element_text(size=12, face = "bold", hjust = 0.5), 
+          legend.text = element_text(size = 10),
+          legend.title = element_text(size = 10, face = "bold"))+ 
+  scale_color_gradient2(midpoint = 0, low = "gold", 
+                            high = "blue", space = "Lab" )
+```
+
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 
