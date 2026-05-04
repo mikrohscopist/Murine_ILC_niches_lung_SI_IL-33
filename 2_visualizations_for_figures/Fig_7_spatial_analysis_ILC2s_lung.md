@@ -1401,6 +1401,144 @@ plot_cin_nkilc1
 
 <img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
+
+``` r
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# --- 1. Define the specific target types and all background columns ---
+target_types <- c("ILC2s", "LYVE1 CD90 Lymphatics", "Myeloid cells")
+
+all_cell_cols <- c(
+  "Epithelia", "EMCN CD31 Blood vessels", "LYVE1 CD31 vessels", 
+  "LYVE1 CD90 Lymphatics", "Myeloid cells", "B cells & Plasma cells", 
+  "NK cells/ILC1s", "ILC3s", "T cytotox cells", "T helper cells", "ILC2s"
+)
+
+other_cols <- setdiff(all_cell_cols, target_types)
+
+# --- 2. Prepare the data ---
+niche_composition_cin <- df_cin_lung %>%
+  filter(Radius == "10 \u03BCm", 
+         Reference %in% target_types) %>%
+  mutate(Others = rowSums(across(all_of(other_cols)), na.rm = TRUE)) %>%
+  group_by(Reference) %>%
+  summarise(across(all_of(c(target_types, "Others")), mean, na.rm = TRUE), .groups = "drop") %>%
+  pivot_longer(cols = -Reference, 
+               names_to = "TargetCellType", 
+               values_to = "MeanProportion") %>%
+  mutate(
+    Reference = factor(Reference, levels = target_types),
+    TargetCellType = factor(TargetCellType, levels = c(target_types, "Others")),
+    # Create the label: round to 1 decimal and add % sign
+    # We only show the label if the proportion is greater than 3% to avoid overlap
+    LabelText = ifelse(MeanProportion > 1, paste0(round(MeanProportion, 1), "%"), "")
+  )
+
+# --- 3. Plot the Stacked Bar Plot ---
+ggplot(niche_composition_cin, aes(x = Reference, y = MeanProportion, fill = TargetCellType)) +
+  geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.2) +
+  # Add the frequency labels on the fractions
+  geom_text(aes(label = LabelText), 
+            position = position_stack(vjust = 0.5), 
+            size = 3.5, 
+            fontface = "bold",
+            color = "black") +
+  scale_fill_manual(values = c(
+    "ILC2s" = "seagreen2",
+    "LYVE1 CD90 Lymphatics" = "yellow",
+    "Myeloid cells" = "burlywood",
+    "Others" = "grey"
+  )) +
+  theme_classic() +
+  labs(title = "Neighborhood Composition (10\u00B5m)",
+       subtitle = "Proportions of target types vs. background (Others)",
+       x = "Reference Cell Type",
+       y = "Mean Proportion in Neighborhood (%)",
+       fill = "Target Cell Type") +
+  theme(
+    axis.text.x = element_text(face = "bold", size = 10),
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+    plot.subtitle = element_text(size = 10, hjust = 0.5),
+    legend.position = "right"
+  )
+```
+
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# --- 1. Define the specific target types and background columns ---
+# Naming updated to "Lymphatics"
+target_types <- c("ILC2s", "Lymphatics", "Myeloid cells")
+
+# --- 2. Prepare the data split by Treatment ---
+niche_comp_condition <- df_cin_lung %>%
+  # Rename the main column and the values in Reference immediately
+  rename(Lymphatics = `LYVE1 CD90 Lymphatics`) %>%
+  mutate(Reference = ifelse(Reference == "LYVE1 CD90 Lymphatics", "Lymphatics", Reference)) %>%
+  filter(Radius == "10 \u03BCm", 
+         Reference %in% target_types) %>%
+  # Sum background cell proportions per observation to create 'Others'
+  # Note: 'LYVE1 CD90 Lymphatics' is removed here as it is now 'Lymphatics' (a target)
+  mutate(Others = rowSums(across(c(
+    "Epithelia", "EMCN CD31 Blood vessels", "LYVE1 CD31 vessels", 
+    "B cells & Plasma cells", "NK cells/ILC1s", "ILC3s", 
+    "T cytotox cells", "T helper cells"
+  )), na.rm = TRUE)) %>%
+  # Group by BOTH Reference and Treatment (Condition)
+  group_by(Treatment, Reference) %>%
+  summarise(across(all_of(c(target_types, "Others")), mean, na.rm = TRUE), .groups = "drop") %>%
+  # Pivot to long format for ggplot
+  pivot_longer(cols = -c(Treatment, Reference), 
+               names_to = "TargetCellType", 
+               values_to = "MeanProportion") %>%
+  # Set factor levels for consistent ordering
+  mutate(
+    Treatment = factor(Treatment, levels = c("CTRL", "D1", "D2", "D3")),
+    Reference = factor(Reference, levels = target_types),
+    TargetCellType = factor(TargetCellType, levels = c(target_types, "Others")),
+    # Create labels, hiding those below 3% to keep the plot clean
+    LabelText = ifelse(MeanProportion > 1, paste0(round(MeanProportion, 1), "%"), "")
+  )
+
+# --- 3. Plot with Faceting by Condition ---
+ggplot(niche_comp_condition, aes(x = Reference, y = MeanProportion, fill = TargetCellType)) +
+  geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.1, 
+         alpha = 0.5) +
+  geom_text(aes(label = LabelText), 
+            position = position_stack(vjust = 0.5), 
+            size = 3, 
+            fontface = "bold") +
+  # Split into 4 plots based on Treatment
+  facet_wrap(~Treatment, nrow = 1) +
+  scale_fill_manual(values = c(
+    "ILC2s" = "seagreen2",
+    "Lymphatics" = "yellow",
+    "Myeloid cells" = "burlywood",
+    "Others" = "grey"
+  )) +
+  theme_classic() +
+  labs(title = "CIN analysis (10 \u00B5m) per Condition",
+       x = "Reference Cell Type",
+       y = "Mean Proportion in Neighborhood (%)",
+       fill = "Target Cell Type") +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, face = "bold", size = 9),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+    legend.position = "right"
+  )
+```
+
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
 # Minimum distance
 
 ## Load data
@@ -1552,7 +1690,7 @@ for (condition in c("CTRL", "D1", "D2", "D3")) {
 ggarrange(plotlist = my_plot_list[c(1:4)], nrow = 1, ncol = 4)
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
 dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 1, ncol = 2, labels = c("C", "D"))
@@ -1560,7 +1698,7 @@ dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 1, ncol = 2, la
 dist_lymph
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-20-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1570,7 +1708,7 @@ dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 2, ncol = 1, la
 dist_lymph
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1673,7 +1811,7 @@ if (length(grid_plot_list) > 0) {
 }
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### NK cells/ILC1s
 
@@ -1792,7 +1930,7 @@ dist_bec <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 2, ncol = 1)+
 dist_bec
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1895,7 +2033,7 @@ if (length(grid_plot_list) > 0) {
 }
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1905,7 +2043,7 @@ supp_middle_plot <- ggarrange(dist_bec, final_grid_dist_immune_nkilc1, ncol = 2,
 supp_middle_plot
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-25-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Visualization for figures
 
@@ -1919,7 +2057,7 @@ top_figure <- ggarrange(final_plot_ILC2s, img_plot_if_ilc2s, img_plot_if_ilc2s_r
 top_figure
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-26-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1928,14 +2066,14 @@ bottom_figure <- ggarrange(dist_lymph, plot_cin, ncol = 2, widths = c(1, 2))
 bottom_figure
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-25-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-27-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
 ggarrange(top_figure, bottom_figure, nrow = 2, ncol = 1, heights = c(10.2, 5.5))
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-26-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-28-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Supplementary figures
 
@@ -1947,14 +2085,14 @@ ggarrange(coenrichment_fig_ann, "NONE", final_grid_dist_immune, "NONE",
           labels = c("A","", "B", "", "C"))
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-27-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-29-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
 ggarrange(final_plot_nkilc1, coenrichment_fig_supp_ann, "NONE",  supp_middle_plot, "NONE", plot_cin_nkilc1, nrow = 6, ncol = 1, heights = c(1.6, 1, 0.1, 2.6, 0.1, 2.7), labels = c("A", "B", "", "", "", "E"))
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-28-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-30-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 
