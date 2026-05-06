@@ -135,6 +135,7 @@ SO.lung$AL2 <- factor(SO.lung$AL2, levels = c(
 dot_plot <- Seurat::DotPlot(subset(SO.lung, subset = AL1 == "Immune cells"), 
                 group.by = "AL2",
                   features = c(
+                    "ICOS",
                     "CD90", 
                     "CD127", 
                     "GATA3eGFP", 
