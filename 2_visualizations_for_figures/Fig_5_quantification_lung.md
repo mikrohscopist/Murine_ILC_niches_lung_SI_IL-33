@@ -1,7 +1,7 @@
 ---
 title: "Figure 5: Quantification lung"
 author: "Sandy Kroh"
-date: "April 29, 2026"
+date: "Mai 06, 2026"
 output:
   html_document:
     toc: yes
@@ -233,6 +233,146 @@ plot_prop
 
 <img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-4-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
+
+``` r
+# filter for CTRL and convert to longer format
+df <- df_lung %>%
+  filter(Treatment == "3") %>%
+  select(Treatment, Dataset, `NK cells/ILC1s`, ILC2s, ILC3s) %>%
+  tidyr::pivot_longer(cols = c(`NK cells/ILC1s`, ILC2s, ILC3s), names_to = "ILCtype") %>%
+  mutate(ILCtype = factor(ILCtype, level = c(
+    "NK cells/ILC1s", "ILC2s", "ILC3s"
+  )))
+
+# Testing for normal distribution
+shapiro.test(df$value)
+```
+
+```
+## 
+## 	Shapiro-Wilk normality test
+## 
+## data:  df$value
+## W = 0.81232, p-value = 0.0002255
+```
+
+``` r
+moments::kurtosis(df$value)
+```
+
+```
+## [1] 3.499666
+```
+
+``` r
+moments::jarque.test(df$value)
+```
+
+```
+## 
+## 	Jarque-Bera Normality Test
+## 
+## data:  df$value
+## JB = 7.4486, p-value = 0.02413
+## alternative hypothesis: greater
+```
+
+``` r
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`value` ~ ILCtype)
+res.kruskal
+```
+
+```
+## # A tibble: 1 × 6
+##   .y.       n statistic    df         p method        
+## * <chr> <int>     <dbl> <int>     <dbl> <chr>         
+## 1 value    27      20.9     2 0.0000291 Kruskal-Wallis
+```
+
+``` r
+df %>% kruskal_effsize(`value` ~ ILCtype)
+```
+
+```
+## # A tibble: 1 × 5
+##   .y.       n effsize method  magnitude
+## * <chr> <int>   <dbl> <chr>   <ord>    
+## 1 value    27   0.787 eta2[H] large
+```
+
+``` r
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`value` ~ ILCtype, p.adjust.method = "bonferroni") 
+pwc
+```
+
+```
+## # A tibble: 3 × 9
+##   .y.   group1         group2    n1    n2 statistic          p     p.adj p.adj.signif
+## * <chr> <chr>          <chr>  <int> <int>     <dbl>      <dbl>     <dbl> <chr>       
+## 1 value NK cells/ILC1s ILC2s      9     9      1.87 0.0612     0.184     ns          
+## 2 value NK cells/ILC1s ILC3s      9     9     -2.67 0.00748    0.0224    *           
+## 3 value ILC2s          ILC3s      9     9     -4.55 0.00000544 0.0000163 ****
+```
+
+``` r
+# add N to plot
+tab <- data.frame(xtabs(~ ILCtype, data = df))
+head(tab)
+```
+
+```
+##          ILCtype Freq
+## 1 NK cells/ILC1s    9
+## 2          ILC2s    9
+## 3          ILC3s    9
+```
+
+``` r
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "ILCtype")
+
+plot_d3 <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = ILCtype), size = 2, cex = 3)+
+  scale_color_manual(values = cols_ilcs_lung)+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
+      legend.position = "none"
+    ) +
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.1, y.position = 180) +
+  xlab(NULL)+
+  ylab("Count per FOV [#]")+
+  ggtitle("ILC subtypes D3")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,250))+
+    # annotate(geom = 'text',
+    #        x="ILC2s",
+    #        y=28,
+    #        label=Labels[1], 
+    #        #angle = 90, 
+    #        size = 10/.pt)+
+  NoLegend()
+
+plot_d3
+```
+
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-5-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
 ## 4C - Frequencies of ILCs within ILC compartment \@ CTRL conditions
 
 
@@ -368,7 +508,144 @@ plot_freq <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
 plot_freq
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-5-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-6-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+# filter for CTRL and convert to longer format
+df <- df_lung %>%
+  filter(Treatment == "3") %>%
+  select(Treatment, Dataset, `Prop_NK cells/ILC1s_perTotalILCsFOV`, Prop_ILC2s_perTotalILCsFOV, Prop_ILC3s_perTotalILCsFOV) %>%
+  tidyr::pivot_longer(cols = c(`Prop_NK cells/ILC1s_perTotalILCsFOV`, Prop_ILC2s_perTotalILCsFOV, Prop_ILC3s_perTotalILCsFOV), names_to = "ILCtype") %>%
+  mutate(ILCtype = gsub("Prop_|_perTotalILCsFOV", "", ILCtype), 
+         ILCtype = factor(ILCtype, level = c(
+    "NK cells/ILC1s", "ILC2s", "ILC3s"
+  )))
+
+# Testing for normal distribution
+shapiro.test(df$value)
+```
+
+```
+## 
+## 	Shapiro-Wilk normality test
+## 
+## data:  df$value
+## W = 0.87901, p-value = 0.004573
+```
+
+``` r
+moments::kurtosis(df$value)
+```
+
+```
+## [1] 1.740977
+```
+
+``` r
+moments::jarque.test(df$value)
+```
+
+```
+## 
+## 	Jarque-Bera Normality Test
+## 
+## data:  df$value
+## JB = 2.4851, p-value = 0.2886
+## alternative hypothesis: greater
+```
+
+``` r
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`value` ~ ILCtype)
+res.kruskal
+```
+
+```
+## # A tibble: 1 × 6
+##   .y.       n statistic    df          p method        
+## * <chr> <int>     <dbl> <int>      <dbl> <chr>         
+## 1 value    27      23.1     2 0.00000943 Kruskal-Wallis
+```
+
+``` r
+df %>% kruskal_effsize(`value` ~ ILCtype)
+```
+
+```
+## # A tibble: 1 × 5
+##   .y.       n effsize method  magnitude
+## * <chr> <int>   <dbl> <chr>   <ord>    
+## 1 value    27   0.881 eta2[H] large
+```
+
+``` r
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`value` ~ ILCtype, p.adjust.method = "bonferroni") 
+pwc
+```
+
+```
+## # A tibble: 3 × 9
+##   .y.   group1         group2    n1    n2 statistic          p      p.adj p.adj.signif
+## * <chr> <chr>          <chr>  <int> <int>     <dbl>      <dbl>      <dbl> <chr>       
+## 1 value NK cells/ILC1s ILC2s      9     9      2.41 0.0162     0.0485     *           
+## 2 value NK cells/ILC1s ILC3s      9     9     -2.41 0.0162     0.0485     *           
+## 3 value ILC2s          ILC3s      9     9     -4.81 0.00000150 0.00000451 ****
+```
+
+``` r
+# add N to plot
+tab <- data.frame(xtabs(~ ILCtype, data = df))
+head(tab)
+```
+
+```
+##          ILCtype Freq
+## 1 NK cells/ILC1s    9
+## 2          ILC2s    9
+## 3          ILC3s    9
+```
+
+``` r
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "ILCtype")
+
+plot_freq_d3 <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = ILCtype), size = 2, cex = 3)+
+  scale_color_manual(values = cols_ilcs_lung)+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.subtitle = element_text(hjust = 0.5, size = 11), 
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
+      legend.position = "none"
+    ) +
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.1, y.position = 90) +
+  xlab(NULL)+
+  ylab("Frequency per FOV/ILCs [%]")+
+  ggtitle("D3", subtitle = "ILC compartment")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,119))+
+  NoLegend()
+
+
+plot_freq_d3
+```
+
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## 4B - Frequency of ILCs within immune compartment \@ CTRL
 
@@ -504,7 +781,143 @@ plot_freq_immune <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
 plot_freq_immune
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-6-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+# filter for CTRL and convert to longer format
+df <- df_lung %>%
+  filter(Treatment == "3") %>%
+  select(Treatment, Dataset, `Prop_NK cells/ILC1s_perTotalImmuneFOV`, Prop_ILC2s_perTotalImmuneFOV, Prop_ILC3s_perTotalImmuneFOV) %>%
+  tidyr::pivot_longer(cols = c(`Prop_NK cells/ILC1s_perTotalImmuneFOV`, Prop_ILC2s_perTotalImmuneFOV, Prop_ILC3s_perTotalImmuneFOV), names_to = "ILCtype") %>%
+  mutate(ILCtype = gsub("Prop_|_perTotalImmuneFOV", "", ILCtype), 
+         ILCtype = factor(ILCtype, level = c(
+    "NK cells/ILC1s", "ILC2s", "ILC3s"
+  )))
+
+# Testing for normal distribution
+shapiro.test(df$value)
+```
+
+```
+## 
+## 	Shapiro-Wilk normality test
+## 
+## data:  df$value
+## W = 0.85373, p-value = 0.001367
+```
+
+``` r
+moments::kurtosis(df$value)
+```
+
+```
+## [1] 3.812105
+```
+
+``` r
+moments::jarque.test(df$value)
+```
+
+```
+## 
+## 	Jarque-Bera Normality Test
+## 
+## data:  df$value
+## JB = 7.3038, p-value = 0.02594
+## alternative hypothesis: greater
+```
+
+``` r
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`value` ~ ILCtype)
+res.kruskal
+```
+
+```
+## # A tibble: 1 × 6
+##   .y.       n statistic    df          p method        
+## * <chr> <int>     <dbl> <int>      <dbl> <chr>         
+## 1 value    27      23.2     2 0.00000917 Kruskal-Wallis
+```
+
+``` r
+df %>% kruskal_effsize(`value` ~ ILCtype)
+```
+
+```
+## # A tibble: 1 × 5
+##   .y.       n effsize method  magnitude
+## * <chr> <int>   <dbl> <chr>   <ord>    
+## 1 value    27   0.883 eta2[H] large
+```
+
+``` r
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`value` ~ ILCtype, p.adjust.method = "bonferroni") 
+pwc
+```
+
+```
+## # A tibble: 3 × 9
+##   .y.   group1         group2    n1    n2 statistic          p      p.adj p.adj.signif
+## * <chr> <chr>          <chr>  <int> <int>     <dbl>      <dbl>      <dbl> <chr>       
+## 1 value NK cells/ILC1s ILC2s      9     9      2.41 0.0160     0.0481     *           
+## 2 value NK cells/ILC1s ILC3s      9     9     -2.41 0.0160     0.0481     *           
+## 3 value ILC2s          ILC3s      9     9     -4.82 0.00000146 0.00000438 ****
+```
+
+``` r
+# add N to plot
+tab <- data.frame(xtabs(~ ILCtype, data = df))
+head(tab)
+```
+
+```
+##          ILCtype Freq
+## 1 NK cells/ILC1s    9
+## 2          ILC2s    9
+## 3          ILC3s    9
+```
+
+``` r
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "ILCtype")
+
+plot_freq_immune_d3 <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = ILCtype), size = 2, cex = 3)+
+  scale_color_manual(values = cols_ilcs_lung)+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.subtitle = element_text(hjust = 0.5, size = 11), 
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
+      legend.position = "none"
+    ) +
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.1, y.position = 15) +
+  xlab(NULL)+
+  ylab("Frequency per FOV/Immune [%]")+
+  ggtitle("D3", subtitle = "Immune compartment")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,20))+
+  NoLegend()
+
+plot_freq_immune_d3
+```
+
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Total cell count IL-33
 
@@ -630,7 +1043,7 @@ plot_count_all <- ggplot(df, aes(x = Treatment, y = TotalCellCountFOV, fill = "T
 plot_count_all
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-10-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Total immune count IL-33
 
@@ -756,7 +1169,7 @@ plot_count_immune <- ggplot(df, aes(x = Treatment, y = `Immune cells`, fill = "T
 plot_count_immune
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-11-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Total ILC count IL-33
 
@@ -865,11 +1278,11 @@ plot_count_ilc <- ggplot(df, aes(x = Treatment, y = ILCs, fill = "Treatment"))+
     ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
-                       step.increase = 0.08, y.position = 80) +
+                       step.increase = 0.1, y.position = 180) +
   xlab(NULL)+
   ylab("Total count per FOV [#]")+
   ggtitle("ILCs")+
-  scale_y_continuous(expand = c(0, 0), limits = c(0,100))+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,250))+
   NoLegend()
 # +
 #     annotate(geom = 'text',
@@ -882,7 +1295,7 @@ plot_count_ilc <- ggplot(df, aes(x = Treatment, y = ILCs, fill = "Treatment"))+
 plot_count_ilc
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-12-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Total count ILC1s/NK cells
 
@@ -1008,7 +1421,7 @@ plot_count_ilc1 <- ggplot(df, aes(x = Treatment, y = `NK cells/ILC1s`, fill = "T
 plot_count_ilc1
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-10-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-13-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Total count ILC2s
 
@@ -1117,11 +1530,11 @@ plot_count_ilc2 <- ggplot(df, aes(x = Treatment, y = `ILC2s`, fill = "Treatment"
     ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
-                       step.increase = 0.1, y.position = 158) +
+                       step.increase = 0.1, y.position = 180) +
   xlab(NULL)+
   ylab("Total count per FOV [#]")+
   ggtitle("ILC2s")+
-  scale_y_continuous(expand = c(0, 0), limits = c(0,190))+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,250))+
   NoLegend()
 # +
 #     annotate(geom = 'text',
@@ -1134,7 +1547,7 @@ plot_count_ilc2 <- ggplot(df, aes(x = Treatment, y = `ILC2s`, fill = "Treatment"
 plot_count_ilc2
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-11-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-14-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Total count ILC3s
 
@@ -1260,7 +1673,7 @@ plot_count_ilc3 <- ggplot(df, aes(x = Treatment, y = `ILC3s`, fill = "Treatment"
 plot_count_ilc3
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-12-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-15-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Freq ILC1s of ILC compartment
 
@@ -1388,7 +1801,7 @@ plot_freq_ilc1 <- ggplot(df, aes(x = Treatment, y = `NK cells/ILC1s`, fill = "Tr
 plot_freq_ilc1
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-13-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Freq ILC2s of ILC compartment
 
@@ -1515,7 +1928,7 @@ plot_freq_ilc2 <- ggplot(df, aes(x = Treatment, y = `ILC2s`, fill = "Treatment")
 plot_freq_ilc2
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-14-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Freq ILC3s of ILC compartment
 
@@ -1642,7 +2055,7 @@ plot_freq_ilc3 <- ggplot(df, aes(x = Treatment, y = `ILC3s`, fill = "Treatment")
 plot_freq_ilc3
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-15-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Freq of immune cells, Endothelia & stroma and epithelia within total cells
 
@@ -1990,7 +2403,7 @@ ggarrange(plot_immune, plot_stroma, plot_epithelia,
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Combine plots for figure
 
@@ -2021,7 +2434,7 @@ final_figure <- ggarrange(top_figure, middle_figure,
 final_figure
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
 annotate_figure(final_figure,
@@ -2031,12 +2444,13 @@ annotate_figure(final_figure,
                                   face = "italic", size = 8))
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-17-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-20-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
-suppl_figure <- ggarrange(plot_count_ilc1, plot_count_ilc3, 
-          ncol = 2, nrow = 1, 
+suppl_figure <- ggarrange(plot_count_ilc1, plot_count_ilc3, plot_freq_immune_d3, plot_freq_d3,
+          ncol = 2, nrow = 2, 
+          heights = c(3, 4),
           labels = c("AUTO"),
           label.x = 0.1)+
   theme(plot.margin = margin(0, 0, 0, 0, "cm"))
@@ -2044,7 +2458,7 @@ suppl_figure <- ggarrange(plot_count_ilc1, plot_count_ilc3,
 suppl_figure
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
 annotate_figure(suppl_figure,
@@ -2054,7 +2468,7 @@ annotate_figure(suppl_figure,
                                   face = "italic", size = 8))
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-18-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-21-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2064,7 +2478,7 @@ ggarrange(plot_freq_ilc1, plot_freq_ilc2, plot_freq_ilc3,
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 

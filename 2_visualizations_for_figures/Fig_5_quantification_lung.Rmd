@@ -170,6 +170,76 @@ plot_prop
 
 ```
 
+```{r, fig.width=3, fig.height=4}
+
+# filter for CTRL and convert to longer format
+df <- df_lung %>%
+  filter(Treatment == "3") %>%
+  select(Treatment, Dataset, `NK cells/ILC1s`, ILC2s, ILC3s) %>%
+  tidyr::pivot_longer(cols = c(`NK cells/ILC1s`, ILC2s, ILC3s), names_to = "ILCtype") %>%
+  mutate(ILCtype = factor(ILCtype, level = c(
+    "NK cells/ILC1s", "ILC2s", "ILC3s"
+  )))
+
+# Testing for normal distribution
+shapiro.test(df$value)
+moments::kurtosis(df$value)
+moments::jarque.test(df$value)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`value` ~ ILCtype)
+res.kruskal
+df %>% kruskal_effsize(`value` ~ ILCtype)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`value` ~ ILCtype, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ ILCtype, data = df))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "ILCtype")
+
+plot_d3 <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = ILCtype), size = 2, cex = 3)+
+  scale_color_manual(values = cols_ilcs_lung)+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
+      legend.position = "none"
+    ) +
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.1, y.position = 180) +
+  xlab(NULL)+
+  ylab("Count per FOV [#]")+
+  ggtitle("ILC subtypes D3")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,250))+
+    # annotate(geom = 'text',
+    #        x="ILC2s",
+    #        y=28,
+    #        label=Labels[1], 
+    #        #angle = 90, 
+    #        size = 10/.pt)+
+  NoLegend()
+
+plot_d3
+
+```
+
 ## 4C - Frequencies of ILCs within ILC compartment \@ CTRL conditions
 
 ```{r, fig.width=3, fig.height=4}
@@ -236,6 +306,72 @@ plot_freq <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
 plot_freq
 ```
 
+```{r, fig.width=3, fig.height=4}
+
+# filter for CTRL and convert to longer format
+df <- df_lung %>%
+  filter(Treatment == "3") %>%
+  select(Treatment, Dataset, `Prop_NK cells/ILC1s_perTotalILCsFOV`, Prop_ILC2s_perTotalILCsFOV, Prop_ILC3s_perTotalILCsFOV) %>%
+  tidyr::pivot_longer(cols = c(`Prop_NK cells/ILC1s_perTotalILCsFOV`, Prop_ILC2s_perTotalILCsFOV, Prop_ILC3s_perTotalILCsFOV), names_to = "ILCtype") %>%
+  mutate(ILCtype = gsub("Prop_|_perTotalILCsFOV", "", ILCtype), 
+         ILCtype = factor(ILCtype, level = c(
+    "NK cells/ILC1s", "ILC2s", "ILC3s"
+  )))
+
+# Testing for normal distribution
+shapiro.test(df$value)
+moments::kurtosis(df$value)
+moments::jarque.test(df$value)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`value` ~ ILCtype)
+res.kruskal
+df %>% kruskal_effsize(`value` ~ ILCtype)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`value` ~ ILCtype, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ ILCtype, data = df))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "ILCtype")
+
+plot_freq_d3 <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = ILCtype), size = 2, cex = 3)+
+  scale_color_manual(values = cols_ilcs_lung)+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.subtitle = element_text(hjust = 0.5, size = 11), 
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
+      legend.position = "none"
+    ) +
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.1, y.position = 90) +
+  xlab(NULL)+
+  ylab("Frequency per FOV/ILCs [%]")+
+  ggtitle("D3", subtitle = "ILC compartment")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,119))+
+  NoLegend()
+
+
+plot_freq_d3
+```
+
 ## 4B - Frequency of ILCs within immune compartment \@ CTRL
 
 ```{r, fig.width=3, fig.height=4}
@@ -299,6 +435,71 @@ plot_freq_immune <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
   NoLegend()
 
 plot_freq_immune
+```
+
+```{r, fig.width=3, fig.height=4}
+
+# filter for CTRL and convert to longer format
+df <- df_lung %>%
+  filter(Treatment == "3") %>%
+  select(Treatment, Dataset, `Prop_NK cells/ILC1s_perTotalImmuneFOV`, Prop_ILC2s_perTotalImmuneFOV, Prop_ILC3s_perTotalImmuneFOV) %>%
+  tidyr::pivot_longer(cols = c(`Prop_NK cells/ILC1s_perTotalImmuneFOV`, Prop_ILC2s_perTotalImmuneFOV, Prop_ILC3s_perTotalImmuneFOV), names_to = "ILCtype") %>%
+  mutate(ILCtype = gsub("Prop_|_perTotalImmuneFOV", "", ILCtype), 
+         ILCtype = factor(ILCtype, level = c(
+    "NK cells/ILC1s", "ILC2s", "ILC3s"
+  )))
+
+# Testing for normal distribution
+shapiro.test(df$value)
+moments::kurtosis(df$value)
+moments::jarque.test(df$value)
+
+# Kruskal-Wallis-test to check for significance between tested groups and effect size
+res.kruskal <- df %>% kruskal_test(`value` ~ ILCtype)
+res.kruskal
+df %>% kruskal_effsize(`value` ~ ILCtype)
+
+# Pairwise comparisons using Dunn's test
+pwc <- df %>% 
+  dunn_test(`value` ~ ILCtype, p.adjust.method = "bonferroni") 
+pwc
+
+# add N to plot
+tab <- data.frame(xtabs(~ ILCtype, data = df))
+head(tab)
+# Add cell number per cluster to cluster labels
+Labels = paste0("n = ", tab$Freq, "")
+
+
+
+# Visualization: box plots with p-values
+pwc <- pwc %>% add_xy_position(x = "ILCtype")
+
+plot_freq_immune_d3 <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
+  geom_boxplot(fill="white")+
+  geom_beeswarm(aes(color = ILCtype), size = 2, cex = 3)+
+  scale_color_manual(values = cols_ilcs_lung)+
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(angle = 45, size = 10, face = "bold", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 10),
+      axis.title.y = element_text(size = 10),
+      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+      plot.subtitle = element_text(hjust = 0.5, size = 11), 
+      plot.margin = margin(0.5, 1, 0.5, 1, "cm"),
+      legend.position = "none"
+    ) +
+  stat_pvalue_manual(pwc,
+                       hide.ns = TRUE, size = 6,
+                       step.increase = 0.1, y.position = 15) +
+  xlab(NULL)+
+  ylab("Frequency per FOV/Immune [%]")+
+  ggtitle("D3", subtitle = "Immune compartment")+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,20))+
+  NoLegend()
+
+plot_freq_immune_d3
 ```
 
 ## Total cell count IL-33
@@ -494,11 +695,11 @@ plot_count_ilc <- ggplot(df, aes(x = Treatment, y = ILCs, fill = "Treatment"))+
     ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
-                       step.increase = 0.08, y.position = 80) +
+                       step.increase = 0.1, y.position = 180) +
   xlab(NULL)+
   ylab("Total count per FOV [#]")+
   ggtitle("ILCs")+
-  scale_y_continuous(expand = c(0, 0), limits = c(0,100))+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,250))+
   NoLegend()
 # +
 #     annotate(geom = 'text',
@@ -634,11 +835,11 @@ plot_count_ilc2 <- ggplot(df, aes(x = Treatment, y = `ILC2s`, fill = "Treatment"
     ) +
   stat_pvalue_manual(pwc,
                        hide.ns = TRUE, size = 6,
-                       step.increase = 0.1, y.position = 158) +
+                       step.increase = 0.1, y.position = 180) +
   xlab(NULL)+
   ylab("Total count per FOV [#]")+
   ggtitle("ILC2s")+
-  scale_y_continuous(expand = c(0, 0), limits = c(0,190))+
+  scale_y_continuous(expand = c(0, 0), limits = c(0,250))+
   NoLegend()
 # +
 #     annotate(geom = 'text',
@@ -1153,9 +1354,10 @@ annotate_figure(final_figure,
                                   face = "italic", size = 8))
 ```
 
-```{r, fig.width=9, fig.height=3}
-suppl_figure <- ggarrange(plot_count_ilc1, plot_count_ilc3, 
-          ncol = 2, nrow = 1, 
+```{r, fig.width=9, fig.height=7}
+suppl_figure <- ggarrange(plot_count_ilc1, plot_count_ilc3, plot_freq_immune_d3, plot_freq_d3,
+          ncol = 2, nrow = 2, 
+          heights = c(3, 4),
           labels = c("AUTO"),
           label.x = 0.1)+
   theme(plot.margin = margin(0, 0, 0, 0, "cm"))
