@@ -1,7 +1,7 @@
 ---
 title: "Figure 4: Immune cells, ILCs and ILC subtypes in lung"
 author: "Sandy Kroh"
-date: "April 27, 2026"
+date: "Mai 06, 2026"
 output:
   html_document:
     toc: yes
@@ -139,6 +139,7 @@ SO.lung$AL2 <- factor(SO.lung$AL2, levels = c(
 dot_plot <- Seurat::DotPlot(subset(SO.lung, subset = AL1 == "Immune cells"), 
                 group.by = "AL2",
                   features = c(
+                    "ICOS",
                     "CD90", 
                     "CD127", 
                     "GATA3eGFP", 

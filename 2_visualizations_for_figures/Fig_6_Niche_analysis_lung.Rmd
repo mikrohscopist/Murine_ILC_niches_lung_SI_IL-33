@@ -1874,7 +1874,7 @@ final_ki67_plot <- wrap_plots(ki67_plots, ncol = 3) +
 print(final_ki67_plot)
 ```
 
-```{r fig.height=12, fig.width=12, warning=FALSE}
+```{r fig.height=14, fig.width=12, warning=FALSE}
 library(dplyr)
 library(tidyr)
 library(ggplot2)
@@ -1884,7 +1884,7 @@ library(patchwork)
 library(ggpubr)
 
 # --- 1. SETTINGS & PARAMETERS ---
-target_markers <- c("Ki67", "GATA3eGFP", "EOMES", "TBET", "MHCII", "KLRG1")
+target_markers <- c("Ki67", "GATA3eGFP", "EOMES", "TBET", "MHCII", "KLRG1", "ICOS")
 target_cells   <- c("NK cells/ILC1s", "ILC2s", "ILC3s", "T helper cells", "T cytotox cells")
 
 # --- 2. DATA AGGREGATION ---

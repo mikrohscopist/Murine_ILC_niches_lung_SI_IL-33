@@ -215,7 +215,7 @@ ggarrange(img_plot_melc_panel, img_plot_coloc,
 
 ## Supplementary Figures
 
-```{r fig.height=6.2, fig.width=9}
+```{r fig.height=13, fig.width=9}
 
 
 # Display the plot

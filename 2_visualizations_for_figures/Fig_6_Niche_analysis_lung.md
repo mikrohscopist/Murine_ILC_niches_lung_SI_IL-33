@@ -1,7 +1,7 @@
 ---
 title: "Figure 6: Niche analysis mouse lung"
 author: "Sandy Kroh"
-date: "Mai 04, 2026"
+date: "Mai 06, 2026"
 output:
   html_document:
     toc: yes
@@ -1982,7 +1982,7 @@ library(patchwork)
 library(ggpubr)
 
 # --- 1. SETTINGS & PARAMETERS ---
-target_markers <- c("Ki67", "GATA3eGFP", "EOMES", "TBET", "MHCII", "KLRG1")
+target_markers <- c("Ki67", "GATA3eGFP", "EOMES", "TBET", "MHCII", "KLRG1", "ICOS")
 target_cells   <- c("NK cells/ILC1s", "ILC2s", "ILC3s", "T helper cells", "T cytotox cells")
 
 # --- 2. DATA AGGREGATION ---
