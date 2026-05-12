@@ -1,7 +1,7 @@
 ---
 title: "Figure 7: ILC2s localize together with lymphatics and myeloid cells"
 author: "Sandy Kroh"
-date: "Mai 04, 2026"
+date: "Mai 12, 2026"
 output:
   html_document:
     toc: yes
@@ -491,6 +491,37 @@ print(img_plot_if_ilc2s_my)
 
 <img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
+
+``` r
+library(png)
+library(grid)
+library(ggplot2)
+
+# 1. Define the path
+img_path <- "D:/Repositories/2025_Kroh_et_al/Murine_ILC_niches_lung_SI_IL-33/data/images/ILC2s_in_myeloid_lymphatic_niche_ILC2s_ICOS.png"
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_if_ilc2s_icos <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+
+# Display the plot
+print(img_plot_if_ilc2s_icos)
+```
+
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
 # Coenrichment analysis
 
 
@@ -641,7 +672,7 @@ final_plot_ILC2s <- gg_heat +
 print(final_plot_ILC2s)
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-10-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -759,7 +790,7 @@ final_plot_nkilc1 <- gg_heat +
 print(final_plot_nkilc1)
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-10-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-11-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Coenrichment barplots
 
@@ -916,7 +947,7 @@ coenrichment_fig_ann <- annotate_figure(coenrichment_fig,
 coenrichment_fig_ann
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-11-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-12-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### NK cells/ILC1s
 
@@ -1072,7 +1103,7 @@ coenrichment_fig_supp_ann <- annotate_figure(coenrichment_fig_supp,
 coenrichment_fig_supp_ann
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-12-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-13-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # CIN analysis
 
@@ -1291,7 +1322,7 @@ for (set_radius in all_radii) {
 }
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-4.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-5.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-6.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-7.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-8.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-9.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-10.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-11.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-12.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-13.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-14.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-15.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-16.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-17.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-18.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-19.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-20.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-21.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-22.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-23.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-24.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-25.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-26.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-27.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-28.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-29.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-30.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-31.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-32.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-33.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-34.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-35.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-36.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-37.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-38.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-39.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-40.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-41.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-42.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-43.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-44.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-4.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-5.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-6.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-7.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-8.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-9.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-10.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-11.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-12.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-13.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-14.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-15.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-16.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-17.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-18.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-19.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-20.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-21.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-22.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-23.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-24.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-25.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-26.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-27.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-28.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-29.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-30.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-31.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-32.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-33.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-34.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-35.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-36.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-37.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-38.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-39.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-40.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-41.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-42.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-43.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-44.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### ILC2s
 
@@ -1345,7 +1376,7 @@ plot_cin <- ggarrange(cin_ilc, cin_my, cin_ly,
 plot_cin
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### NK cells/ILC1s
 
@@ -1399,7 +1430,7 @@ plot_cin_nkilc1 <- ggarrange(cin_nkilc1, cin_bec, cin_bpc,
 plot_cin_nkilc1
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1465,7 +1496,7 @@ ggplot(niche_composition_cin, aes(x = Reference, y = MeanProportion, fill = Targ
   )
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1473,71 +1504,130 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 
-# --- 1. Define the specific target types and background columns ---
-# Naming updated to "Lymphatics"
-target_types <- c("ILC2s", "Lymphatics", "Myeloid cells")
+# --- 1. Define the specific target types ---
+target_types <- c("ILC2s", "Lymphatics", "Myeloid cells", "EMCN CD31 Blood vessels")
 
 # --- 2. Prepare the data split by Treatment ---
-niche_comp_condition <- df_cin_lung %>%
-  # Rename the main column and the values in Reference immediately
+niche_comp_dodged <- df_cin_lung %>%
+  # Rename column and Reference values to "Lymphatics"
   rename(Lymphatics = `LYVE1 CD90 Lymphatics`) %>%
   mutate(Reference = ifelse(Reference == "LYVE1 CD90 Lymphatics", "Lymphatics", Reference)) %>%
   filter(Radius == "10 \u03BCm", 
          Reference %in% target_types) %>%
-  # Sum background cell proportions per observation to create 'Others'
-  # Note: 'LYVE1 CD90 Lymphatics' is removed here as it is now 'Lymphatics' (a target)
+  # Calculate 'Others' per observation
   mutate(Others = rowSums(across(c(
     "Epithelia", "EMCN CD31 Blood vessels", "LYVE1 CD31 vessels", 
     "B cells & Plasma cells", "NK cells/ILC1s", "ILC3s", 
     "T cytotox cells", "T helper cells"
   )), na.rm = TRUE)) %>%
-  # Group by BOTH Reference and Treatment (Condition)
+  # Group by Treatment and Reference
   group_by(Treatment, Reference) %>%
-  summarise(across(all_of(c(target_types, "Others")), mean, na.rm = TRUE), .groups = "drop") %>%
-  # Pivot to long format for ggplot
+  # Use median as requested
+  summarise(across(all_of(c(target_types, "Others")), median, na.rm = TRUE), .groups = "drop") %>%
+  # Pivot to long format for dodged bars
   pivot_longer(cols = -c(Treatment, Reference), 
                names_to = "TargetCellType", 
-               values_to = "MeanProportion") %>%
+               values_to = "MedianProportion") %>%
   # Set factor levels for consistent ordering
   mutate(
     Treatment = factor(Treatment, levels = c("CTRL", "D1", "D2", "D3")),
     Reference = factor(Reference, levels = target_types),
     TargetCellType = factor(TargetCellType, levels = c(target_types, "Others")),
-    # Create labels, hiding those below 3% to keep the plot clean
-    LabelText = ifelse(MeanProportion > 1, paste0(round(MeanProportion, 1), "%"), "")
+    # Create labels for bars > 1%
+    LabelText = ifelse(MedianProportion > 1, paste0(round(MedianProportion, 1), "%"), "")
   )
 
-# --- 3. Plot with Faceting by Condition ---
-ggplot(niche_comp_condition, aes(x = Reference, y = MeanProportion, fill = TargetCellType)) +
-  geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.1, 
-         alpha = 0.5) +
+# --- 3. Plot as a Dodged Bar Plot ---
+ggplot(niche_comp_dodged, aes(x = Reference, y = MedianProportion, fill = TargetCellType)) +
+  # Using position_dodge instead of stack
+  geom_bar(stat = "identity", position = position_dodge(width = 0.9), 
+           color = "black", linewidth = 0.1, alpha = 0.5) +
+  # Adjust text position to match dodged bars
   geom_text(aes(label = LabelText), 
-            position = position_stack(vjust = 0.5), 
-            size = 3, 
+            position = position_dodge(width = 0.9), 
+            vjust = -0.5, 
+            size = 2.8, 
             fontface = "bold") +
-  # Split into 4 plots based on Treatment
   facet_wrap(~Treatment, nrow = 1) +
   scale_fill_manual(values = c(
     "ILC2s" = "seagreen2",
     "Lymphatics" = "yellow",
     "Myeloid cells" = "burlywood",
+    "EMCN CD31 Blood vessels" = "red",
     "Others" = "grey"
   )) +
+  # Expand y-axis to prevent labels from being cut off
+  scale_y_continuous(expand = expansion(mult = c(0, 0.2))) +
   theme_classic() +
   labs(title = "CIN analysis (10 \u00B5m) per Condition",
+       subtitle = "Bars depict median proportions (Dodged)",
        x = "Reference Cell Type",
-       y = "Mean Proportion in Neighborhood (%)",
+       y = "Median Proportion in Neighborhood (%)",
        fill = "Target Cell Type") +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, face = "bold", size = 9),
     strip.background = element_blank(),
     strip.text = element_text(face = "bold", size = 11),
     plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-    legend.position = "right"
+    legend.position = "bottom"
   )
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+# --- 1. Prepare the Data ---
+# We calculate the mean proportion of "Lymphatics" across every Reference cell type
+plot_data_lymph <- df_cin_lung %>%
+  # Rename the target column
+  rename(Lymphatics = `LYVE1 CD90 Lymphatics`) %>%
+  # Update the Reference column values as well
+  mutate(Reference = ifelse(Reference == "LYVE1 CD90 Lymphatics", "Lymphatics", Reference)) %>%
+  filter(Radius == "10 \u03BCm") %>%
+  # Group by Condition and the Reference cell type (the X-axis)
+  group_by(Treatment, Reference) %>%
+  summarise(MeanProportion = mean(Lymphatics, na.rm = TRUE), .groups = "drop") %>%
+  # Set factor levels for consistent display
+  mutate(
+    Treatment = factor(Treatment, levels = c("CTRL", "D1", "D2", "D3")),
+    Reference = factor(Reference, levels = c(
+      "ILC2s", "NK cells/ILC1s", "ILC3s", "T helper cells", "T cytotox cells",
+      "Myeloid cells", "B cells & Plasma cells", "Lymphatics", 
+      "LYVE1 CD31 vessels", "EMCN CD31 Blood vessels", "Epithelia"
+    ))
+  )
+
+# --- 2. Create the Plot ---
+ggplot(plot_data_lymph, aes(x = Reference, y = MeanProportion, fill = "Lymphatics")) +
+  # Applying alpha 0.5 to the fill
+  geom_bar(stat = "identity", color = "black", linewidth = 0.2, alpha = 0.5) +
+  # Facet by condition (CTRL, D1, D2, D3)
+  facet_wrap(~Treatment, nrow = 1) +
+  # Using the established yellow color for Lymphatics
+  scale_fill_manual(values = c("Lymphatics" = "yellow")) +
+  theme_classic() +
+  labs(
+    title = "Proportion of Lymphatics in Neighborhood (10\u00B5m)",
+    subtitle = "Mean frequency in the spatial niche of all annotated cell types",
+    x = "Reference Cell Type",
+    y = "Mean Proportion of Lymphatics (%)"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, face = "bold", size = 9),
+    axis.title.x = element_blank(),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 11),
+    plot.title = element_text(face = "bold", size = 13, hjust = 0.5),
+    legend.position = "none" # Color is redundant since all bars are Lymphatics
+  )
+```
+
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Minimum distance
 
@@ -1690,7 +1780,7 @@ for (condition in c("CTRL", "D1", "D2", "D3")) {
 ggarrange(plotlist = my_plot_list[c(1:4)], nrow = 1, ncol = 4)
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
 dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 1, ncol = 2, labels = c("C", "D"))
@@ -1698,7 +1788,7 @@ dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 1, ncol = 2, la
 dist_lymph
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-20-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-22-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1708,7 +1798,7 @@ dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 2, ncol = 1, la
 dist_lymph
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1771,7 +1861,7 @@ for (ref_type in ref_cell_types) {
           axis.title.y = element_text(size = 9),
           plot.title = element_text(size = 10, hjust = 0.5, 
                                     face = "bold"),
-          plot.margin = margin(0.25, 0.5, 0.25, 0.5, "cm"),
+          plot.margin = margin(0.1, 0.5, 0.1, 0.5, "cm"),
           legend.position = "none") +
     ylab("Distance [\u00b5m]") +
     scale_color_manual(values = cols_treat)
@@ -1811,7 +1901,7 @@ if (length(grid_plot_list) > 0) {
 }
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### NK cells/ILC1s
 
@@ -1930,7 +2020,7 @@ dist_bec <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 2, ncol = 1)+
 dist_bec
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-25-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2033,7 +2123,7 @@ if (length(grid_plot_list) > 0) {
 }
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-26-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2043,7 +2133,7 @@ supp_middle_plot <- ggarrange(dist_bec, final_grid_dist_immune_nkilc1, ncol = 2,
 supp_middle_plot
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-25-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-27-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Visualization for figures
 
@@ -2057,7 +2147,7 @@ top_figure <- ggarrange(final_plot_ILC2s, img_plot_if_ilc2s, img_plot_if_ilc2s_r
 top_figure
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-26-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-28-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2066,33 +2156,35 @@ bottom_figure <- ggarrange(dist_lymph, plot_cin, ncol = 2, widths = c(1, 2))
 bottom_figure
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-27-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-29-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
 ggarrange(top_figure, bottom_figure, nrow = 2, ncol = 1, heights = c(10.2, 5.5))
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-28-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-30-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Supplementary figures
 
 
 ``` r
-ggarrange(coenrichment_fig_ann, "NONE", final_grid_dist_immune, "NONE",
-          img_plot_if_ilc2s_my, 
-          nrow = 5, ncol = 1, heights = c(3, 0.25, 4, 0.25, 4.5), 
-          labels = c("A","", "B", "", "C"))
+ggarrange(coenrichment_fig_ann, "NONE", 
+          img_plot_if_ilc2s_my,           
+          img_plot_if_ilc2s_icos,
+          final_grid_dist_immune, 
+          nrow = 5, ncol = 1, heights = c(2, 0.05, 4.5, 5.5, 3), 
+          labels = c("A","", "B", "C", "D"))
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-29-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-31-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
 ggarrange(final_plot_nkilc1, coenrichment_fig_supp_ann, "NONE",  supp_middle_plot, "NONE", plot_cin_nkilc1, nrow = 6, ncol = 1, heights = c(1.6, 1, 0.1, 2.6, 0.1, 2.7), labels = c("A", "B", "", "", "", "E"))
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-30-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-32-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 
@@ -2120,12 +2212,12 @@ sessionInfo()
 ## [1] grid      stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-##  [1] png_0.1-8             circlize_0.4.17       ComplexHeatmap_2.26.1 ggplotify_0.1.3       patchwork_1.3.2       tidyr_1.3.1           stringr_1.6.0         ggbeeswarm_0.7.3      readr_2.1.6           ggpubr_0.6.2          ggplot2_4.0.1         VoltRon_0.2.3         Seurat_5.3.1          Giotto_4.2.2          GiottoClass_0.4.10    rlang_1.1.6           rstatix_0.7.3         dplyr_1.1.4           SeuratObject_5.2.0    sp_2.2-0             
+##  [1] scales_1.4.0          png_0.1-8             circlize_0.4.17       ComplexHeatmap_2.26.1 ggplotify_0.1.3       patchwork_1.3.2       tidyr_1.3.1           stringr_1.6.0         ggbeeswarm_0.7.3      readr_2.1.6           ggpubr_0.6.2          ggplot2_4.0.1         VoltRon_0.2.3         Seurat_5.3.1          Giotto_4.2.2          GiottoClass_0.4.10    rlang_1.1.6           rstatix_0.7.3         dplyr_1.1.4           SeuratObject_5.2.0    sp_2.2-0             
 ## 
 ## loaded via a namespace (and not attached):
 ##   [1] fs_1.6.6                    matrixStats_1.5.0           spatstat.sparse_3.1-0       bitops_1.0-9                EBImage_4.52.0              doParallel_1.0.17           httr_1.4.8                  RColorBrewer_1.1-3          tools_4.5.2                 sctransform_0.4.2           backports_1.5.0             utf8_1.2.6                  R6_2.6.1                    lazyeval_0.2.2              uwot_0.2.4                  GetoptLong_1.1.0            withr_3.0.2                 gridExtra_2.3               GiottoUtils_0.2.5           progressr_0.18.0            cli_3.6.5                   Biobase_2.70.0              Cairo_1.7-0                 spatstat.explore_3.5-3      fastDummies_1.7.5           shinyjs_2.1.1               labeling_0.4.3              sass_0.4.10                 S7_0.2.0                    spatstat.data_3.1-9         ggridges_0.5.7              pbapply_1.7-4               yulab.utils_0.2.4           dichromat_2.0-0.1           parallelly_1.45.1           rstudioapi_0.18.0           shape_1.4.6.1               gridGraphics_0.5-1          generics_0.1.4              vroom_1.7.0                 gtools_3.9.5                ica_1.0-3                  
 ##  [43] spatstat.random_3.4-2       car_3.1-5                   Matrix_1.7-4                S4Vectors_0.48.0            abind_1.4-8                 terra_1.8-93                lifecycle_1.0.5             scatterplot3d_0.3-45        yaml_2.3.10                 carData_3.0-6               SummarizedExperiment_1.40.0 gplots_3.3.0                SparseArray_1.10.1          Rtsne_0.17                  promises_1.5.0              crayon_1.5.3                miniUI_0.1.2                lattice_0.22-7              beachmat_2.26.0             cowplot_1.2.0               magick_2.9.0                pillar_1.11.1               knitr_1.51                  GenomicRanges_1.62.0        rjson_0.2.23                future.apply_1.20.2         codetools_0.2-20            glue_1.8.0                  spatstat.univar_3.1-4       data.table_1.17.8           vctrs_0.6.5                 ids_1.0.1                   spam_2.11-1                 gtable_0.3.6                cachem_1.1.0                xfun_0.56                   S4Arrays_1.10.0             mime_0.13                   tidygraph_1.3.1             Seqinfo_1.0.0               survival_3.8-3              SingleCellExperiment_1.32.0
-##  [85] iterators_1.0.14            bluster_1.20.0              rgl_1.3.34                  fitdistrplus_1.2-6          ROCR_1.0-12                 colorsGen_1.0.0             nlme_3.1-168                bit64_4.6.0-1               RcppAnnoy_0.0.22            rprojroot_2.1.1             bslib_0.10.0                irlba_2.3.5.1               vipor_0.4.7                 KernSmooth_2.23-26          otel_0.2.0                  colorspace_2.1-2            BiocGenerics_0.56.0         tidyselect_1.2.1            bit_4.6.0                   compiler_4.5.2              BiocNeighbors_2.4.0         DelayedArray_0.36.0         plotly_4.12.0               checkmate_2.3.4             scales_1.4.0                caTools_1.18.3              lmtest_0.9-40               rappdirs_0.3.4              tiff_0.1-12                 SpatialExperiment_1.20.0    digest_0.6.38               goftest_1.2-3               fftwtools_0.9-11            spatstat.utils_3.2-0        rmarkdown_2.30              XVector_0.50.0              htmltools_0.5.8.1           GiottoVisuals_0.2.14        pkgconfig_2.0.3             jpeg_0.1-11                 base64enc_0.1-6             MatrixGenerics_1.22.0      
-## [127] fastmap_1.2.0               GlobalOptions_0.1.3         htmlwidgets_1.6.4           shiny_1.13.0                Rvcg_0.25                   farver_2.1.2                jquerylib_0.1.4             zoo_1.8-14                  jsonlite_2.0.0              BiocParallel_1.44.0         BiocSingular_1.26.0         RCurl_1.98-1.17             magrittr_2.0.4              Formula_1.2-5               dotCall64_1.2               RCDT_1.3.0                  Rcpp_1.1.0                  viridis_0.6.5               reticulate_1.44.0           stringi_1.8.7               ggraph_2.2.2                MASS_7.3-65                 plyr_1.8.9                  parallel_4.5.2              listenv_0.10.0              ggrepel_0.9.6               deldir_2.0-4                graphlayouts_1.2.2          splines_4.5.2               tensor_1.5.1                hms_1.1.4                   locfit_1.5-9.12             colorRamp2_0.1.0            igraph_2.2.1                uuid_1.2-2                  spatstat.geom_3.6-0         ggsignif_0.6.4              RcppHNSW_0.6.0              reshape2_1.4.5              stats4_4.5.2                ScaledMatrix_1.18.0         evaluate_1.0.5             
-## [169] foreach_1.5.2               tzdb_0.5.0                  tweenr_2.0.3                httpuv_1.6.16               RANN_2.6.2                  purrr_1.2.0                 polyclip_1.10-7             clue_0.3-67                 future_1.69.0               scattermore_1.2             ggforce_0.5.0               rsvd_1.0.5                  broom_1.0.12                xtable_1.8-8                RSpectra_0.16-2             later_1.4.4                 viridisLite_0.4.2           Polychrome_1.5.4            tibble_3.3.0                beeswarm_0.4.0              memoise_2.0.1               IRanges_2.44.0              cluster_2.1.8.1             globals_0.19.0              here_1.0.2
+##  [85] iterators_1.0.14            bluster_1.20.0              rgl_1.3.34                  fitdistrplus_1.2-6          ROCR_1.0-12                 colorsGen_1.0.0             nlme_3.1-168                bit64_4.6.0-1               RcppAnnoy_0.0.22            rprojroot_2.1.1             bslib_0.10.0                irlba_2.3.5.1               vipor_0.4.7                 KernSmooth_2.23-26          otel_0.2.0                  colorspace_2.1-2            BiocGenerics_0.56.0         tidyselect_1.2.1            bit_4.6.0                   compiler_4.5.2              BiocNeighbors_2.4.0         DelayedArray_0.36.0         plotly_4.12.0               checkmate_2.3.4             caTools_1.18.3              lmtest_0.9-40               rappdirs_0.3.4              tiff_0.1-12                 SpatialExperiment_1.20.0    digest_0.6.38               goftest_1.2-3               fftwtools_0.9-11            spatstat.utils_3.2-0        rmarkdown_2.30              XVector_0.50.0              htmltools_0.5.8.1           GiottoVisuals_0.2.14        pkgconfig_2.0.3             jpeg_0.1-11                 base64enc_0.1-6             MatrixGenerics_1.22.0       fastmap_1.2.0              
+## [127] GlobalOptions_0.1.3         htmlwidgets_1.6.4           shiny_1.13.0                Rvcg_0.25                   farver_2.1.2                jquerylib_0.1.4             zoo_1.8-14                  jsonlite_2.0.0              BiocParallel_1.44.0         BiocSingular_1.26.0         RCurl_1.98-1.17             magrittr_2.0.4              Formula_1.2-5               dotCall64_1.2               RCDT_1.3.0                  Rcpp_1.1.0                  viridis_0.6.5               reticulate_1.44.0           stringi_1.8.7               ggraph_2.2.2                MASS_7.3-65                 plyr_1.8.9                  parallel_4.5.2              listenv_0.10.0              ggrepel_0.9.6               deldir_2.0-4                graphlayouts_1.2.2          splines_4.5.2               tensor_1.5.1                hms_1.1.4                   locfit_1.5-9.12             colorRamp2_0.1.0            igraph_2.2.1                uuid_1.2-2                  spatstat.geom_3.6-0         ggsignif_0.6.4              RcppHNSW_0.6.0              reshape2_1.4.5              stats4_4.5.2                ScaledMatrix_1.18.0         evaluate_1.0.5              foreach_1.5.2              
+## [169] tzdb_0.5.0                  tweenr_2.0.3                httpuv_1.6.16               RANN_2.6.2                  purrr_1.2.0                 polyclip_1.10-7             clue_0.3-67                 future_1.69.0               scattermore_1.2             ggforce_0.5.0               rsvd_1.0.5                  broom_1.0.12                xtable_1.8-8                RSpectra_0.16-2             later_1.4.4                 viridisLite_0.4.2           Polychrome_1.5.4            tibble_3.3.0                beeswarm_0.4.0              memoise_2.0.1               IRanges_2.44.0              cluster_2.1.8.1             globals_0.19.0              here_1.0.2
 ```
