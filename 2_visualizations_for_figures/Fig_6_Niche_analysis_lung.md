@@ -1,7 +1,7 @@
 ---
 title: "Figure 6: Niche analysis mouse lung"
 author: "Sandy Kroh"
-date: "Mai 12, 2026"
+date: "Mai 13, 2026"
 output:
   html_document:
     toc: yes
@@ -2338,6 +2338,244 @@ for (current_niche in all_niches) {
 
 <img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-29-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-29-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-29-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-29-4.png" alt="" width="100%" style="display: block; margin: auto;" />
 
+## Marker expression across niches
+
+
+``` r
+df <- df_all
+
+CellIDs <- df$CellID
+# 2 TRANSPOSE DF -----
+df_markers <- df[1:(which(colnames(df) == "Loc_X"))-1] 
+df_markers <- sapply(df_markers, as.numeric)
+df_t <- t(df_markers)
+colnames(df_t) <- CellIDs 
+df_meta <- as.data.frame(df[(which(colnames(df) == "Loc_X")):(ncol(df))]) 
+rownames(df_meta) <- CellIDs 
+
+# define meta data format
+df_meta$CellID <- as.numeric(df_meta$CellID)
+df_meta$Loc_X <- as.numeric(df_meta$Loc_X)
+df_meta$Loc_Y <- as.numeric(df_meta$Loc_Y)
+df_meta$max_features <- NULL
+
+# create seurat object
+SO <- CreateSeuratObject(df_t,
+                         assay = "MELC", 
+                         meta.data = df_meta, 
+                         min.features = 2)
+
+features <- colnames(df_markers)
+num_features <- length(features)
+dim(SO)
+```
+
+```
+## [1]    33 64914
+```
+
+
+``` r
+library(Seurat)
+library(ComplexHeatmap)
+library(ggplotify) # Required for as.ggplot()
+
+set.seed(8)
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO, subset = AL3 %in% c("ILC2s"))
+SO.sub <- subset(SO.sub, subset = Tissue_Niche %in% c("Mixed Myeloid/LEC niche"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+SO.sub$Tissue_Niche <- droplevels(as.factor(SO.sub$Tissue_Niche))
+
+# --- 2. Direct Pseudo-bulk Aggregation ---
+ilc_markers <- c("KLRG1", 
+                 "ICOS", 
+                 "MHCII", "CD44", "Ki67")
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "Condition")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+colnames(mat_scaled) <- gsub("g", "D", colnames(mat_scaled))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat_ilc2s <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  # main = "ILC2s in\nmixed myeloid/LEC niche",
+  treeheight_col = 10,
+  treeheight_row = 20,
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_ilc2s_mixedmylec <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_ilc2s)))+
+  ggtitle("ILC2s in\nmixed myeloid/LEC niche")+
+  theme(
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 9),
+        plot.title = element_text(hjust = 0.3, size = 11, face = "bold"), 
+        plot.margin = margin(0.1, 0.5, 3, 0.5, "cm"),
+        legend.position = "right"
+      )
+
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+print(gg_heat_ilc2s_mixedmylec)
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-31-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+set.seed(8)
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO, subset = AL3 %in% c("ILC2s"))
+SO.sub <- subset(SO.sub, subset = Condition %in% c("CTRL"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+SO.sub$Condition <- droplevels(as.factor(SO.sub$Condition))
+
+# --- 2. Direct Pseudo-bulk Aggregation ---
+ilc_markers <- c("KLRG1", 
+                 "ICOS", 
+                 "MHCII", "CD44", "Ki67")
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "Tissue_Niche")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+colnames(mat_scaled) <- gsub("g", "D", colnames(mat_scaled))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat_ilc2s <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  treeheight_col = 10,
+  treeheight_row = 20,
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_ilc2s_ctrl <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_ilc2s)))+
+  ggtitle("ILC2s @ CTRL\n")+
+  theme(
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 9),
+        plot.title = element_text(hjust = 0.3, size = 11, face = "bold"), 
+        plot.margin = margin(0.1, 0.25, 0, 0.25, "cm"),
+        legend.position = "right"
+      )
+
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+print(gg_heat_ilc2s_ctrl)
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-32-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+set.seed(8)
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO, subset = AL3 %in% c("ILC2s"))
+SO.sub <- subset(SO.sub, subset = Condition %in% c("D3"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+SO.sub$Condition <- droplevels(as.factor(SO.sub$Condition))
+
+# --- 2. Direct Pseudo-bulk Aggregation ---
+ilc_markers <- c("KLRG1", 
+                 "ICOS", 
+                 "MHCII", "CD44", "Ki67")
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "Tissue_Niche")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+colnames(mat_scaled) <- gsub("g", "D", colnames(mat_scaled))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat_ilc2s <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  # main = "ILC2s @ D3",
+  treeheight_col = 10,
+  treeheight_row = 20,
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_ilc2s_d3 <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_ilc2s)))+
+  ggtitle("ILC2s @ D3\n")+
+  theme(
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 9),
+        plot.title = element_text(hjust = 0.3, size = 11, face = "bold"), 
+        plot.margin = margin(0.1, 0.25, 0, 0.25, "cm"),
+        legend.position = "right"
+      )
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+print(gg_heat_ilc2s_d3)
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-33-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+ggarrange(gg_heat_ilc2s_ctrl, gg_heat_ilc2s_d3, gg_heat_ilc2s_mixedmylec, 
+          ncol = 3)
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-34-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
 # Visualization for figures
 
 ## Figure 6
@@ -2348,7 +2586,7 @@ ggarrange(upper_fig, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(5.4, 0
           labels = c("", "", "D"), label.y = 1.06)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-30-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-35-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Supplementary figures
 
@@ -2372,7 +2610,7 @@ ggarrange(sup_upper, "NONE", lower_supp_plot, final_niche_freq_comparison,
           labels = c("","", "C", "D"))
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-31-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-36-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2443,7 +2681,7 @@ ggplot(cell_comp_per_niche, aes(x = FullInfo, y = Fraction, fill = CellType)) +
   )
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-32-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-37-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2529,7 +2767,7 @@ annotate_figure(
 )
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-33-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-38-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2585,7 +2823,7 @@ ggarrange(
   labels = "AUTO")
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-34-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-39-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2594,7 +2832,7 @@ ggarrange(final_niche_comparison_ilc2s,
           final_niche_comparison_ilc3s, nrow = 3, ncol = 1, labels = "AUTO")
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-35-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-40-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
 ggarrange(final_niche_freq_comparison, 
@@ -2602,7 +2840,7 @@ ggarrange(final_niche_freq_comparison,
           final_niche_ilc3_comp, nrow = 3, ncol = 1, labels = "AUTO")
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-35-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-40-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2611,7 +2849,7 @@ ggarrange(final_niche_comparison_ilc2s,
           nrow = 2, ncol = 1, labels = "AUTO")
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-36-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-41-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 
@@ -2636,13 +2874,13 @@ sessionInfo()
 ## tzcode source: internal
 ## 
 ## attached base packages:
-## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## [1] grid      stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-##  [1] dbscan_1.2.3       patchwork_1.3.2    tidyr_1.3.1        stringr_1.6.0      ggbeeswarm_0.7.3   readr_2.1.6        ggpubr_0.6.2       ggplot2_4.0.1      Seurat_5.3.1       rlang_1.1.6        rstatix_0.7.3      dplyr_1.1.4        SeuratObject_5.2.0 sp_2.2-0          
+##  [1] ggplotify_0.1.3       ComplexHeatmap_2.26.1 dbscan_1.2.3          patchwork_1.3.2       tidyr_1.3.1           stringr_1.6.0         ggbeeswarm_0.7.3      readr_2.1.6           ggpubr_0.6.2          ggplot2_4.0.1         Seurat_5.3.1          rlang_1.1.6           rstatix_0.7.3         dplyr_1.1.4           SeuratObject_5.2.0    sp_2.2-0             
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] RColorBrewer_1.1-3     rstudioapi_0.18.0      jsonlite_2.0.0         magrittr_2.0.4         spatstat.utils_3.2-0   farver_2.1.2           rmarkdown_2.30         vctrs_0.6.5            ROCR_1.0-12            spatstat.explore_3.5-3 htmltools_0.5.8.1      broom_1.0.12           Formula_1.2-5          sass_0.4.10            sctransform_0.4.2      parallelly_1.45.1      KernSmooth_2.23-26     bslib_0.10.0           htmlwidgets_1.6.4      ica_1.0-3              plyr_1.8.9             plotly_4.12.0          zoo_1.8-14             cachem_1.1.0           igraph_2.2.1           mime_0.13              lifecycle_1.0.5        pkgconfig_2.0.3        Matrix_1.7-4           R6_2.6.1               fastmap_1.2.0          fitdistrplus_1.2-6     future_1.69.0          shiny_1.13.0           digest_0.6.38          rprojroot_2.1.1        tensor_1.5.1           RSpectra_0.16-2        irlba_2.3.5.1          labeling_0.4.3         progressr_0.18.0       spatstat.sparse_3.1-0  httr_1.4.8             polyclip_1.10-7        abind_1.4-8            compiler_4.5.2         here_1.0.2             bit64_4.6.0-1          withr_3.0.2            S7_0.2.0               backports_1.5.0       
-##  [52] carData_3.0-6          fastDummies_1.7.5      ggsignif_0.6.4         MASS_7.3-65            tools_4.5.2            vipor_0.4.7            lmtest_0.9-40          otel_0.2.0             beeswarm_0.4.0         httpuv_1.6.16          future.apply_1.20.2    goftest_1.2-3          glue_1.8.0             nlme_3.1-168           promises_1.5.0         grid_4.5.2             Rtsne_0.17             cluster_2.1.8.1        reshape2_1.4.5         generics_0.1.4         gtable_0.3.6           spatstat.data_3.1-9    tzdb_0.5.0             data.table_1.17.8      hms_1.1.4              utf8_1.2.6             car_3.1-5              spatstat.geom_3.6-0    RcppAnnoy_0.0.22       ggrepel_0.9.6          RANN_2.6.2             pillar_1.11.1          vroom_1.7.0            spam_2.11-1            RcppHNSW_0.6.0         later_1.4.4            splines_4.5.2          lattice_0.22-7         bit_4.6.0              survival_3.8-3         deldir_2.0-4           tidyselect_1.2.1       miniUI_0.1.2           pbapply_1.7-4          knitr_1.51             gridExtra_2.3          scattermore_1.2        xfun_0.56              matrixStats_1.5.0      stringi_1.8.7          lazyeval_0.2.2        
-## [103] yaml_2.3.10            evaluate_1.0.5         codetools_0.2-20       tibble_3.3.0           cli_3.6.5              uwot_0.2.4             xtable_1.8-8           reticulate_1.44.0      jquerylib_0.1.4        dichromat_2.0-0.1      Rcpp_1.1.0             globals_0.19.0         spatstat.random_3.4-2  png_0.1-8              spatstat.univar_3.1-4  parallel_4.5.2         dotCall64_1.2          listenv_0.10.0         viridisLite_0.4.2      scales_1.4.0           ggridges_0.5.7         crayon_1.5.3           purrr_1.2.0            cowplot_1.2.0
+##   [1] RcppAnnoy_0.0.22       splines_4.5.2          later_1.4.4            tibble_3.3.0           polyclip_1.10-7        fastDummies_1.7.5      lifecycle_1.0.5        doParallel_1.0.17      rprojroot_2.1.1        globals_0.19.0         lattice_0.22-7         vroom_1.7.0            MASS_7.3-65            backports_1.5.0        magrittr_2.0.4         plotly_4.12.0          sass_0.4.10            rmarkdown_2.30         jquerylib_0.1.4        yaml_2.3.10            httpuv_1.6.16          otel_0.2.0             sctransform_0.4.2      spam_2.11-1            spatstat.sparse_3.1-0  reticulate_1.44.0      cowplot_1.2.0          pbapply_1.7-4          RColorBrewer_1.1-3     abind_1.4-8            Rtsne_0.17             purrr_1.2.0            BiocGenerics_0.56.0    yulab.utils_0.2.4      rappdirs_0.3.4         circlize_0.4.17        IRanges_2.44.0         S4Vectors_0.48.0       ggrepel_0.9.6          irlba_2.3.5.1          listenv_0.10.0         spatstat.utils_3.2-0   goftest_1.2-3          RSpectra_0.16-2        spatstat.random_3.4-2  fitdistrplus_1.2-6     parallelly_1.45.1      codetools_0.2-20       shape_1.4.6.1          tidyselect_1.2.1       farver_2.1.2          
+##  [52] matrixStats_1.5.0      stats4_4.5.2           spatstat.explore_3.5-3 jsonlite_2.0.0         GetoptLong_1.1.0       progressr_0.18.0       Formula_1.2-5          ggridges_0.5.7         survival_3.8-3         iterators_1.0.14       foreach_1.5.2          tools_4.5.2            ica_1.0-3              Rcpp_1.1.0             glue_1.8.0             gridExtra_2.3          xfun_0.56              here_1.0.2             withr_3.0.2            fastmap_1.2.0          digest_0.6.38          gridGraphics_0.5-1     R6_2.6.1               mime_0.13              colorspace_2.1-2       Cairo_1.7-0            scattermore_1.2        tensor_1.5.1           dichromat_2.0-0.1      spatstat.data_3.1-9    utf8_1.2.6             generics_0.1.4         data.table_1.17.8      httr_1.4.8             htmlwidgets_1.6.4      uwot_0.2.4             pkgconfig_2.0.3        gtable_0.3.6           lmtest_0.9-40          S7_0.2.0               htmltools_0.5.8.1      carData_3.0-6          dotCall64_1.2          clue_0.3-67            scales_1.4.0           png_0.1-8              spatstat.univar_3.1-4  knitr_1.51             rstudioapi_0.18.0      tzdb_0.5.0             reshape2_1.4.5        
+## [103] rjson_0.2.23           nlme_3.1-168           cachem_1.1.0           zoo_1.8-14             GlobalOptions_0.1.3    KernSmooth_2.23-26     parallel_4.5.2         miniUI_0.1.2           vipor_0.4.7            pillar_1.11.1          vctrs_0.6.5            RANN_2.6.2             promises_1.5.0         car_3.1-5              xtable_1.8-8           cluster_2.1.8.1        beeswarm_0.4.0         evaluate_1.0.5         magick_2.9.0           cli_3.6.5              compiler_4.5.2         crayon_1.5.3           future.apply_1.20.2    ggsignif_0.6.4         labeling_0.4.3         fs_1.6.6               plyr_1.8.9             stringi_1.8.7          viridisLite_0.4.2      deldir_2.0-4           lazyeval_0.2.2         spatstat.geom_3.6-0    Matrix_1.7-4           RcppHNSW_0.6.0         hms_1.1.4              bit64_4.6.0-1          future_1.69.0          shiny_1.13.0           ROCR_1.0-12            igraph_2.2.1           broom_1.0.12           bslib_0.10.0           bit_4.6.0
 ```
