@@ -1320,6 +1320,409 @@ ggarrange(plot_immune, plot_stroma, plot_epithelia,
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
 ```
 
+## Differential marker expression of ILCs across conditions
+
+```{r}
+
+SO.lung <- readRDS(paste0(here::here("1_data_tidying", "Lung_SI_all_cells_all_ALs_files"), "/lung_all_cells_all_ALs.rds"))
+dim(SO.lung)
+
+SO.lung$AL1 <- gsub("Vessels", "Stromal cells", SO.lung$AL1)
+
+# 1. Extract the current expression matrix from the active assay
+# Note: Using slot = "counts". If your MELC data is only stored in "data", change this.
+current_matrix <- GetAssayData(SO.lung, assay = "MELC", slot = "counts")
+
+# 2. Extract TBET from metadata and format it as a 1-row matrix
+tbet_values <- matrix(SO.lung$TBET, nrow = 1)
+rownames(tbet_values) <- "TBET"
+colnames(tbet_values) <- colnames(SO.lung) # Ensure cell names match perfectly
+
+# 3. Bind the TBET row to the bottom of the expression matrix
+new_matrix <- rbind(current_matrix, tbet_values)
+
+# 4. Overwrite the existing MELC assay with the updated matrix
+SO.lung[["MELC"]] <- CreateAssayObject(counts = new_matrix)
+
+# 5. Clean up: Remove TBET from the metadata so it doesn't cause confusion later
+SO.lung$TBET <- NULL
+
+# Verify the fix! TBET should now appear at the bottom of this list:
+rownames(SO.lung)
+```
+
+```{r, fig.height=4, fig.width=3}
+library(Seurat)
+library(ComplexHeatmap)
+library(ggplotify) # Required for as.ggplot()
+
+set.seed(8)
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO.lung, subset = AL3 %in% c("ILC2s"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+
+# --- 2. Direct Pseudo-bulk Aggregation ---
+ilc_markers <- c("KLRG1", #"CD127", "CD90",
+                 "ICOS", 
+                 "MHCII", "CD44", "Ki67")
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "Treatment")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+colnames(mat_scaled) <- gsub("g", "D", colnames(mat_scaled))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat_ilc2s <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  treeheight_col = 10,
+  treeheight_row = 20, 
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_ilc2s <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_ilc2s, heatmap_legend_side = "bottom")))+
+  ggtitle("ILC2s\nacross conditions\n")+
+  theme(
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+        plot.margin = margin(0.1, 0.25, 0, 0.25, "cm"),
+        legend.position = "bottom"
+      )
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+print(gg_heat_ilc2s)
+```
+
+```{r, fig.height=4, fig.width=3}
+set.seed(8)
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO.lung, subset = AL3 %in% c("NK cells/ILC1s"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+
+# --- 2. Direct Pseudo-bulk Aggregation ---
+ilc_markers <- c("KLRG1", "CD127", "CD90",
+                 "ICOS", "NKp46", "NK11",
+                 "MHCII", "CD44", "Ki67")
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "Treatment")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+colnames(mat_scaled) <- gsub("g", "D", colnames(mat_scaled))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat_ilc1s <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  treeheight_col = 10,
+  treeheight_row = 20, 
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_ilc1s <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_ilc1s, heatmap_legend_side = "bottom")))+
+  ggtitle("NK cells/ILC1s\nacross conditions\n")+
+  theme(
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+        plot.margin = margin(0.1, 0.25, 0, 0.25, "cm"),
+        legend.position = "bottom"
+      )
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+print(gg_heat_ilc1s)
+
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO.lung, subset = AL3 %in% c("ILC3s"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+
+# --- 2. Direct Pseudo-bulk Aggregation ---
+ilc_markers <- c("KLRG1", "CD127", "CD90", "CD3", "CD4",
+                 "ICOS", "NKp46", "NK11",
+                 "MHCII", "CD44", "Ki67")
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "Treatment")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+colnames(mat_scaled) <- gsub("g", "D", colnames(mat_scaled))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat_ilc3s <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  treeheight_col = 10,
+  treeheight_row = 20, 
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_ilc3s <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_ilc3s, heatmap_legend_side = "bottom")))+
+  ggtitle("ILC3s\nacross conditions\n")+
+  theme(
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+        plot.margin = margin(0.1, 0.25, 0, 0.25, "cm"),
+        legend.position = "bottom"
+      )
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+print(gg_heat_ilc3s)
+
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO.lung, subset = AL3 %in% c("ILC3s"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+
+# --- 2. Direct Pseudo-bulk Aggregation ---
+ilc_markers <- c("ICOS", "CD11c", "CD68", "SiglecF", "CD4",
+                 "MHCII", "CD44", "Ki67")
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "Treatment")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+colnames(mat_scaled) <- gsub("g", "D", colnames(mat_scaled))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat_my <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  treeheight_col = 10,
+  treeheight_row = 20, 
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_my <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_my, heatmap_legend_side = "bottom")))+
+  ggtitle("Myeloid cells\nacross conditions\n")+
+  theme(
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+        plot.margin = margin(0.1, 0.25, 0, 0.25, "cm"),
+        legend.position = "bottom"
+      )
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+print(gg_heat_my)
+```
+
+```{r, fig.height=4, fig.width=9}
+set.seed(8)
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO.lung, subset = AL3 %in% c("NK cells/ILC1s", "ILC2s", "ILC3s"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+
+SO.sub <- subset(SO.sub, subset = Treatment %in% c("CTRL"))
+SO.sub$Treatment <- droplevels(as.factor(SO.sub$Treatment))
+
+# --- 2. Direct Pseudo-bulk Aggregation ---
+ilc_markers <- c("KLRG1",   
+                 "ICOS", 
+                 "MHCII", "CD44", "Ki67", "NKp46")
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "AL3")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+colnames(mat_scaled) <- gsub("g", "D", colnames(mat_scaled))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat_ctrl <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  treeheight_col = 10,
+  treeheight_row = 20, 
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_ctrl <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_ctrl, heatmap_legend_side = "right")))+
+  ggtitle("ILC subtypes\n@ CTRL\n")+
+  theme(
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+        plot.margin = margin(0.1, 0.5, 0, 0.5, "cm"),
+        legend.position = "bottom"
+      )
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO.lung, subset = AL3 %in% c("NK cells/ILC1s", "ILC2s", "ILC3s"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+
+SO.sub <- subset(SO.sub, subset = Treatment %in% c("3"))
+SO.sub$Treatment <- droplevels(as.factor(SO.sub$Treatment))
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "AL3")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+colnames(mat_scaled) <- gsub("g", "D", colnames(mat_scaled))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat_d3 <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  treeheight_col = 10,
+  treeheight_row = 20, 
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_d3 <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_d3, heatmap_legend_side = "right")))+
+  ggtitle("ILC subtypes\n@ D3\n")+
+  theme(
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+        plot.margin = margin(0.1, 0.5, 0, 0.5, "cm"),
+        legend.position = "bottom"
+      )
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+
+ggarrange(gg_heat_ctrl, gg_heat_d3, ncol = 2)
+```
+
+## MHCII expression by ILC2s
+
+```{r, fig.height=5, fig.width=7}
+library(Seurat)
+library(ggplot2)
+library(dplyr)
+library(rstatix)
+library(ggpubr)
+
+# --- 1. Subset for ILC2s ---
+SO.ilc2 <- subset(SO.lung, subset = AL3 == "ILC2s")
+SO.ilc2$Treatment <- paste0("D", SO.ilc2$Treatment)
+SO.ilc2$Treatment <- gsub("DCTRL", "CTRL", SO.ilc2$Treatment)
+SO.ilc2$Treatment <- factor(SO.ilc2$Treatment, levels = c("CTRL", "D1", "D2", "D3"))
+MHCII_threshold <- 2.3
+
+# --- 2. Ridge Plot with Threshold Line ---
+# Fetch MHCII expression and metadata
+plot_data <- FetchData(SO.ilc2, vars = c("MHCII", "Treatment"))
+
+ggplot(plot_data, aes(x = MHCII, y = Treatment, fill = Treatment)) +
+  ggridges::geom_density_ridges(scale = 1.2, alpha = 0.7) +
+  geom_vline(xintercept = MHCII_threshold, linetype = "dashed", color = "red", linewidth = 1) +
+  scale_fill_manual(values = cols_treat) +
+  theme_classic() +
+  labs(title = "MHCII Expression in ILC2s",
+       subtitle = paste0("Red line indicates threshold (> ", MHCII_threshold, ")"),
+       x = "Expression Level") +
+  theme(legend.position = "none")
+```
+
+```{r}
+
+```
+
 ## Combine plots for figure
 
 ```{r, fig.width=9, fig.height=9}
@@ -1339,6 +1742,46 @@ middle_figure <- ggarrange(
           label.x = 0.1)+
   theme(plot.margin = margin(0, 0, 0, 0, "cm"))
 
+
+
+final_figure <- ggarrange(top_figure, middle_figure, 
+          ncol = 1, nrow = 2, heights = c(3, 4.5))+
+  theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
+
+final_figure
+
+annotate_figure(final_figure,
+               bottom = text_grob("N: CTRL/D1/D2 = 9 FOVs, D3 = 8 FOVs; Kruskal-Wallis-test & Dunn’s test; Significance levels of adjusted p-values: **** = 1e-04, *** = 0.001, ** = 0.01, * = 0.05", 
+                                  color = "black", 
+                                  # hjust = -1,
+                                  face = "italic", size = 8))
+```
+
+```{r, fig.width=9, fig.height=9}
+top_figure <- ggarrange(plot_prop, plot_freq_immune, plot_freq, 
+          ncol = 3, nrow = 1, 
+          labels = c("AUTO"), 
+          label.x = 0.1)+
+  theme(plot.margin = margin(0, 0, 0.2, 0, "cm"))
+
+
+middle_figure_right <- ggarrange(
+          plot_count_all, plot_count_immune, plot_count_ilc,
+          plot_count_ilc2, 
+          ncol = 2, nrow = 2, 
+          labels = c("D", "E", "F",
+                     "G"),
+          label.x = 0.1)+
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+
+middle_figure <- ggarrange(
+          middle_figure_right,
+          gg_heat_ilc2s, 
+          ncol = 2, nrow = 1, 
+          widths = c(2, 1),
+          labels = c("", "H"),
+          label.x = 0.1)+
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
 
 
 final_figure <- ggarrange(top_figure, middle_figure, 

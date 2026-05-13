@@ -1,7 +1,7 @@
 ---
 title: "Figure 4: Immune cells, ILCs and ILC subtypes in lung"
 author: "Sandy Kroh"
-date: "Mai 06, 2026"
+date: "Mai 13, 2026"
 output:
   html_document:
     toc: yes
@@ -307,6 +307,70 @@ print(gg_heat)
 
 <img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
+
+``` r
+library(Seurat)
+library(ComplexHeatmap)
+library(ggplotify) # Required for as.ggplot()
+
+set.seed(8)
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO.lung, subset = AL3 %in% c("ILC2s"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+
+# --- 2. Direct Pseudo-bulk Aggregation ---
+ilc_markers <- c("KLRG1", "CD127", "CD90",
+                 "ICOS", 
+                 "MHCII", "CD44", "Ki67")
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "Treatment")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+colnames(mat_scaled) <- gsub("g", "D", colnames(mat_scaled))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat_ilc2s <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  treeheight_col = 10,
+  treeheight_row = 20, 
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_ilc2s <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_ilc2s, heatmap_legend_side = "bottom")))+
+  ggtitle("ILC2s across conditions")+
+  theme(
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+        plot.margin = margin(0.1, 0.25, 0, 0.25, "cm"),
+        legend.position = "bottom"
+      )
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+print(gg_heat_ilc2s)
+```
+
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
 # IF overlays
 
 ## Export TIFF images
@@ -484,7 +548,7 @@ img_plot_bec <- ggplot() +
 img_plot_bec
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-15-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Lymphatics
 
@@ -512,7 +576,7 @@ img_plot_ly <- ggplot() +
 img_plot_ly
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Visualizations for figures
 
@@ -527,7 +591,7 @@ figure <- ggarrange(dot_plot, gg_heat,
 ggarrange(figure, "NONE", img_plot_ilc2s, ncol = 1, nrow = 3, heights = c(5, 0.3, 6.6), labels = c("", "C"))
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Suppl. Figure
 
@@ -536,7 +600,7 @@ ggarrange(figure, "NONE", img_plot_ilc2s, ncol = 1, nrow = 3, heights = c(5, 0.3
 ggarrange(img_plot_nkilc1, img_plot_ilc3s, ncol = 1, nrow = 2, heights = c(8.6, 6.47), labels = c("A", "B"))
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -545,14 +609,14 @@ ggarrange(empty, img_plot_tcells, ncol = 1, nrow = 2,
                      heights = c(0.2, 7.2))
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
 img_plot_bpc
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -560,14 +624,14 @@ img_plot_bpc
 print(img_plot_mye)
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
 ggarrange(img_plot_bec, "NONE", img_plot_ly, ncol = 1, nrow = 3, heights = c(8.1, 0.2, 4.9), labels = c("A", "",  "B"))
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -615,7 +679,7 @@ Seurat::DotPlot(SO.lung,
                             high = "blue", space = "Lab" )
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 
