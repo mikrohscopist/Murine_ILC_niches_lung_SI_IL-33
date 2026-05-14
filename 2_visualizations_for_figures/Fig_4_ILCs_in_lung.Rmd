@@ -169,6 +169,69 @@ dot_plot <- Seurat::DotPlot(subset(SO.lung, subset = AL1 == "Immune cells"),
 dot_plot
 ```
 
+```{r, fig.height=5, fig.width=4.5}
+library(scater)
+library(SpatialExperiment)
+set.seed(8)
+
+SO.sub <- subset(SO.lung, subset = AL1 %in% c("Immune cells"))
+
+general_markers <- c(
+                    # "ICOS",
+                    "CD90", 
+                    "CD127", 
+                    "GATA3eGFP", 
+                    "KLRG1",
+                    # "RORgt", 
+                    "CD4", 
+                    "CD3", 
+                    "CD8a", 
+                    "CD68",
+                    "CD11c",
+                    "MHCII",
+                    "B220", 
+                    "Kappa"
+                  )
+
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = general_markers, slot = "counts", group.by = "AL2")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  main = "Immune cells",
+  treeheight_col = 10,
+  treeheight_row = 20,
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_immune <- ggplotify::as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat)))
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+print(gg_heat_immune)
+```
+
 # Differential expression ILC subtypes
 
 ```{r, fig.height=3, fig.width=9}

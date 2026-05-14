@@ -1,7 +1,7 @@
 ---
 title: "Figure 1: MELC panel and sample prep workflow"
 author: "Sandy Kroh"
-date: "Mai 11, 2026"
+date: "Mai 14, 2026"
 output:
   html_document:
     toc: yes
@@ -186,8 +186,36 @@ img_plot_workflow <- ggplot() +
   # Optional: adds a tiny margin to ensure the edges aren't clipped
   scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
-  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+img_plot_workflow
 ```
+
+<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+# 1. Define the path
+img_path <- paste0(input_dir, "/spatial_analyses@4x.png")
+
+# 2. Read the image and get dimensions
+img <- readPNG(img_path)
+h <- nrow(img)
+w <- ncol(img)
+
+# 3. Create the ggplot object
+# We use coord_fixed to ensure the image doesn't stretch
+img_plot_spatial <- ggplot() +
+  annotation_raster(img, xmin = 0, xmax = w, ymin = 0, ymax = h) +
+  coord_fixed() +
+  theme_void() +
+  # Optional: adds a tiny margin to ensure the edges aren't clipped
+  scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
+  theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
+img_plot_spatial
+```
+
+<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Visualization for figures
 
@@ -201,17 +229,17 @@ ggarrange(img_plot_melc_panel, img_plot_coloc,
           labels = "AUTO")
 ```
 
-<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-10-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Supplementary Figures
 
 
 ``` r
-# Display the plot
-print(img_plot_workflow)
+ggarrange(img_plot_workflow, img_plot_spatial, nrow = 2, ncol = 1, 
+          heights = c(8.8, 3.5), labels = "AUTO")
 ```
 
-<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-10-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-11-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -221,7 +249,7 @@ ggarrange(img_plot_coloc_imm, img_plot_coloc_endo, img_plot_coloc_epi,
           labels = "AUTO")
 ```
 
-<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-11-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-12-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 
