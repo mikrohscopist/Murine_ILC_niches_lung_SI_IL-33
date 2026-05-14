@@ -1,7 +1,7 @@
 ---
 title: "Additional visualizations"
 author: "Sandy Kroh"
-date: "`r format(Sys.Date(), '%B %d, %Y')`"
+date: "Mai 14, 2026"
 output:
   html_document:
     toc: yes
@@ -17,18 +17,12 @@ editor_options:
   chunk_output_type: inline
 ---
 
-```{r setup, include=FALSE}
-# knitr::opts_knit$set(root.dir = "..")
-knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
-                      fig.align='center', dpi = 600, 
-                      set.seed(8),
-                      message = FALSE, warning = FALSE)
-options(width = 1200)
-```
+
 
 ## Libraries
 
-```{r}
+
+``` r
 library(SeuratObject)
 library(dplyr)
 library(rstatix)
@@ -60,7 +54,8 @@ library(stringr)
 
 ## Parameters
 
-```{r}
+
+``` r
 set.seed(123)
 
 output_dir <- here::here("2_visualizations_for_figures", "Additional_visualizations_files")
@@ -140,7 +135,8 @@ celltype_order_al4 <- c(
 
 Load spatial objects of Giotto and VoltRon for AL2:
 
-```{r, fig.width=9, fig.height=6}
+
+``` r
 set.seed(8)
 
 # from import_Giotto.Rmd
@@ -175,7 +171,14 @@ metadatax <- metadatax %>%
   AL4 = CellType)
 
 unique(metadatax$CellType)
+```
 
+```
+##  [1] Epithelia          Blood vessels      LYVE1 CD31 vessels Lymphatics         Myeloid cells      B cells & P cells  NK cells/ILC1s     ILC3s              Other Tc           Tc2                Th17               Other Th           Th2                Th1                ILC2s             
+## Levels: NK cells/ILC1s ILC2s ILC3s Th1 Th2 Th17 Other Th Tc2 Other Tc B cells & P cells Myeloid cells Lymphatics LYVE1 CD31 vessels Blood vessels Epithelia
+```
+
+``` r
 vr_list_names <- unique(metadatax$Sample)
 
 
@@ -190,16 +193,67 @@ for(samp in vr_list_names){
     number_of_simulations = 1000)
   cell_proximities_list[[samp]] <- cell_proximities_list[[samp]]$enrichm_res
 }
+```
 
+```
+## [1] "20210910_1_lu_ctrl"
+## [1] "20210914_1_lu_ctrl"
+## [1] "20210922_1_lu_ctrl"
+## [1] "20210910_2_lu_ctrl"
+## [1] "20210914_2_lu_ctrl"
+## [1] "20210922_2_lu_ctrl"
+## [1] "20210910_3_lu_ctrl"
+## [1] "20210914_3_lu_ctrl"
+## [1] "20210922_3_lu_ctrl"
+## [1] "20220311_1"
+## [1] "20220316_1"
+## [1] "20220321_1"
+## [1] "20220311_2"
+## [1] "20220316_2"
+## [1] "20220321_2"
+## [1] "20220311_3"
+## [1] "20220316_3"
+## [1] "20220321_3"
+## [1] "20220325_1"
+## [1] "20220421_1"
+## [1] "20220502_1"
+## [1] "20220325_2"
+## [1] "20220421_2"
+## [1] "20220502_2"
+## [1] "20220325_3"
+## [1] "20220421_3"
+## [1] "20220502_3"
+## [1] "20210902_1_lu_d3"
+## [1] "20210906_1_lu_d3"
+## [1] "20210928_1_lu_d3"
+## [1] "20210902_2_lu_d3"
+## [1] "20210906_2_lu_d3"
+## [1] "20210928_2_lu_d3"
+## [1] "20210902_3_lu_d3"
+## [1] "20210928_3_lu_d3"
+```
+
+``` r
 vr_merged <- merge(vr_list[[1]], vr_list[-1])
 vrImageNames(vr_merged)
-unique(vr_merged$CellType)
+```
 
+```
+## [1] "image_1"
+```
+
+``` r
+unique(vr_merged$CellType)
+```
+
+```
+##  [1] "Epithelia"          "Blood vessels"      "LYVE1 CD31 vessels" "Lymphatics"         "Myeloid cells"      "B cells & P cells"  "NK cells/ILC1s"     "Other Tc"           "Tc2"                "Th17"               "Other Th"           "Th2"                "ILC2s"              "Th1"                "ILC3s"
 ```
 
 Calculate co-enrichment scores and plot them:
 
-```{r, fig.height=4, fig.width=9}
+
+``` r
 set.seed(8)
 
 # FOVs for representative overview images
@@ -227,15 +281,14 @@ ColorsCellType <-  list(
 uni_celltypes <- unique(vr_merged$CellType)
 backgroundlist <- list("EpCAM","CD31","LYVE1","LYVE1","CD11c","B220","CD45", "CD8a", "GATA3eGFP", "RORgt", "CD4", "GATA3eGFP", "GATA3eGFP", "TBET", "RORgt")
 names(backgroundlist) <- uni_celltypes
-
 ```
 
 # Visualization
 
 ## Coenrichment plots
 
-```{r, fig.height=3, fig.width=9}
 
+``` r
 library(ComplexHeatmap)
 library(circlize)
 library(dplyr)
@@ -347,9 +400,12 @@ for (ct in target_cell_types) {
 }
 ```
 
+<img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-5-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-5-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-5-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-5-4.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-5-5.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-5-6.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-5-7.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-5-8.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-5-9.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-5-10.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-5-11.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-5-12.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-5-13.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-5-14.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-5-15.png" alt="" width="100%" style="display: block; margin: auto;" />
+
 Coenrichment barplots
 
-```{r}
+
+``` r
 # FOVs for representative overview images
 fovs <- vr_list_names
 
@@ -376,10 +432,10 @@ uni_celltypes <- unique(vr_merged$CellType)
 backgroundlist <- list("EpCAM","CD31","LYVE1","LYVE1","CD11c","B220","EOMES", "CD8a", "CD8a", "CD4","CD4", "CD4", "CD4", "GATA3eGFP", "CD4", "RORgt")
 names(backgroundlist) <- uni_celltypes
 uni_celltypes <- uni_celltypes[!uni_celltypes %in% "ILC2s"]
-
 ```
 
-```{r, fig.height=3, fig.width=9}
+
+``` r
 library(ggplot2)
 library(dplyr)
 
@@ -457,7 +513,11 @@ plot_coenrichment_lymp <- ggplot(interaction_celltypes,
         panel.grid.major.y = element_line())
 
 print(plot_coenrichment_lymp)
+```
 
+<img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+``` r
 # --- SECTION 1: ILC2s around ILC2s ---
 interactions_ilc2 <- "ILC2s--ILC2s"
 interaction_ilc2_df <- NULL
@@ -608,6 +668,11 @@ plot_coenrichment_th <- ggplot(interaction_ilc2_th_df,
         panel.grid.major.y = element_line())
 
 print(plot_coenrichment_th)
+```
+
+<img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-7-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+``` r
 # --- SECTION 3: Final Arrangement ---
 # (Assumes plot_coenrichment_lymp was created using the same corrected logic previously)
 
@@ -623,8 +688,10 @@ coenrichment_fig_ann <- annotate_figure(coenrichment_fig,
 print(coenrichment_fig_ann)
 ```
 
-```{r, fig.height=6, fig.width=9}
+<img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-7-3.png" alt="" width="100%" style="display: block; margin: auto;" />
 
+
+``` r
 coenrichment_fig <- ggarrange(plot_coenrichment_ilc2, 
                               plot_coenrichment_my, 
                               plot_coenrichment_lymp, 
@@ -638,10 +705,12 @@ coenrichment_fig_ann_tcells <- annotate_figure(coenrichment_fig,
 coenrichment_fig_ann_tcells
 ```
 
+<img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
 Quantification
 
-```{r, fig.height=6, fig.width=9}
 
+``` r
 library(dplyr)
 library(tidyr)
 library(ggplot2)
@@ -710,7 +779,10 @@ plot_counts <- ggplot(df_counts, aes(x = Condition, y = Count)) +
 print(plot_counts)
 ```
 
-```{r, fig.height=4.5, fig.width=9}
+<img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
 library(dplyr)
 library(tidyr)
 library(ggpubr)
@@ -742,9 +814,10 @@ table_plot <- ggtexttable(median_table_data,
 print(table_plot)
 ```
 
-```{r, fig.height=4.5, fig.width=9}
+<img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-10-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
+``` r
 # Calculate the Median Counts per FOV
 median_table_data <- metadatax %>%
   # 1. Filter for the immune compartment first
@@ -777,7 +850,10 @@ table_plot <- ggtexttable(median_table_data, rows = NULL)
 print(table_plot)
 ```
 
-```{r, fig.height=3.4, fig.width=9}
+<img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-11-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
 library(dplyr)
 library(tidyr)
 library(ggpubr)
@@ -831,13 +907,16 @@ table_plot <- ggtexttable(median_table_data,
 print(table_plot)
 ```
 
+<img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-12-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
 ## Combine plots for figure
 
 Additional plots
 
 Frequency of cell types per FOV/condition:
 
-```{r, fig.height=5, fig.width=9}
+
+``` r
 library(ggpubr)
 library(janitor)
 library(dplyr)
@@ -867,7 +946,10 @@ table_plot_vertical <- ggtexttable(df_freq_transposed,
 print(table_plot_vertical)
 ```
 
-```{r, fig.height=4, fig.width=9}
+<img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-13-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
 library(ggpubr)
 library(janitor)
 library(dplyr)
@@ -898,41 +980,40 @@ table_plot_vertical <- ggtexttable(df_freq_transposed,
 print(table_plot_vertical)
 ```
 
-```{r, fig.height=5, fig.width=6}
-library(ggpubr)
-library(janitor)
-library(dplyr)
-
-# 1. Generate a 1-way tabyl for global frequencies
-df_freq_global <- metadatax %>%
-  mutate(CellType = AL3) %>%
-  # tabyl on one variable gives n and percent automatically
-  janitor::tabyl(CellType) %>%
-  # Add a total row at the bottom
-  janitor::adorn_totals("row") %>%
-  # Format percentages to 2 decimal places
-  janitor::adorn_pct_formatting(digits = 2) %>%
-  # Rename columns for a professional look
-  rename(
-    `Cell Type` = CellType,
-    `Count [n]` = n,
-    `Frequency [%]` = percent
-  )
-
-# 2. Plot as ggtexttable
-table_plot_global <- ggtexttable(df_freq_global, 
-                                rows = NULL, 
-                                theme = ttheme(base_size = 10)) %>%
-  tab_add_title(text = "Global AL3 Cell Type Distribution", 
-                face = "bold", size = 12)
-
-# 3. Print
-print(table_plot_global)
-```
+<img src="Additional_visualizations_AL4_Tcells_files/figure-html/unnamed-chunk-14-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 
-```{r}
+
+``` r
 save.image(paste0(output_dir, "/environment.RData"))
 sessionInfo()
+```
+
+```
+## R version 4.5.2 (2025-10-31 ucrt)
+## Platform: x86_64-w64-mingw32/x64
+## Running under: Windows 11 x64 (build 26200)
+## 
+## Matrix products: default
+##   LAPACK version 3.12.1
+## 
+## locale:
+## [1] LC_COLLATE=German_Germany.utf8  LC_CTYPE=German_Germany.utf8    LC_MONETARY=German_Germany.utf8 LC_NUMERIC=C                    LC_TIME=German_Germany.utf8    
+## 
+## time zone: Europe/Berlin
+## tzcode source: internal
+## 
+## attached base packages:
+## [1] grid      stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+##  [1] janitor_2.2.1         ggplotify_0.1.3       tidyr_1.3.1           circlize_0.4.17       ComplexHeatmap_2.26.1 stringr_1.6.0         ggbeeswarm_0.7.3      readr_2.1.6           ggpubr_0.6.2          ggplot2_4.0.1         VoltRon_0.2.3         Seurat_5.3.1          Giotto_4.2.2          GiottoClass_0.4.10    rlang_1.1.6           rstatix_0.7.3         dplyr_1.1.4           SeuratObject_5.2.0    sp_2.2-0             
+## 
+## loaded via a namespace (and not attached):
+##   [1] fs_1.6.6                    matrixStats_1.5.0           spatstat.sparse_3.1-0       bitops_1.0-9                lubridate_1.9.4             EBImage_4.52.0              doParallel_1.0.17           httr_1.4.8                  RColorBrewer_1.1-3          tools_4.5.2                 sctransform_0.4.2           backports_1.5.0             R6_2.6.1                    lazyeval_0.2.2              uwot_0.2.4                  GetoptLong_1.1.0            withr_3.0.2                 gridExtra_2.3               GiottoUtils_0.2.5           progressr_0.18.0            cli_3.6.5                   Biobase_2.70.0              Cairo_1.7-0                 spatstat.explore_3.5-3      fastDummies_1.7.5           shinyjs_2.1.1               labeling_0.4.3              sass_0.4.10                 S7_0.2.0                    spatstat.data_3.1-9         ggridges_0.5.7              pbapply_1.7-4               yulab.utils_0.2.4           dichromat_2.0-0.1           parallelly_1.45.1           rstudioapi_0.18.0           gridGraphics_0.5-1          shape_1.4.6.1               generics_0.1.4              vroom_1.7.0                 gtools_3.9.5                ica_1.0-3                  
+##  [43] spatstat.random_3.4-2       car_3.1-5                   Matrix_1.7-4                S4Vectors_0.48.0            abind_1.4-8                 terra_1.8-93                lifecycle_1.0.5             scatterplot3d_0.3-45        yaml_2.3.10                 snakecase_0.11.1            carData_3.0-6               SummarizedExperiment_1.40.0 gplots_3.3.0                SparseArray_1.10.1          Rtsne_0.17                  promises_1.5.0              crayon_1.5.3                miniUI_0.1.2                lattice_0.22-7              beachmat_2.26.0             cowplot_1.2.0               magick_2.9.0                pillar_1.11.1               knitr_1.51                  GenomicRanges_1.62.0        rjson_0.2.23                future.apply_1.20.2         codetools_0.2-20            glue_1.8.0                  spatstat.univar_3.1-4       data.table_1.17.8           vctrs_0.6.5                 png_0.1-8                   ids_1.0.1                   spam_2.11-1                 gtable_0.3.6                cachem_1.1.0                xfun_0.56                   S4Arrays_1.10.0             mime_0.13                   tidygraph_1.3.1             Seqinfo_1.0.0              
+##  [85] survival_3.8-3              SingleCellExperiment_1.32.0 iterators_1.0.14            bluster_1.20.0              rgl_1.3.34                  fitdistrplus_1.2-6          ROCR_1.0-12                 colorsGen_1.0.0             nlme_3.1-168                bit64_4.6.0-1               RcppAnnoy_0.0.22            rprojroot_2.1.1             bslib_0.10.0                irlba_2.3.5.1               vipor_0.4.7                 KernSmooth_2.23-26          otel_0.2.0                  colorspace_2.1-2            BiocGenerics_0.56.0         tidyselect_1.2.1            bit_4.6.0                   compiler_4.5.2              BiocNeighbors_2.4.0         DelayedArray_0.36.0         plotly_4.12.0               checkmate_2.3.4             scales_1.4.0                caTools_1.18.3              lmtest_0.9-40               rappdirs_0.3.4              tiff_0.1-12                 SpatialExperiment_1.20.0    digest_0.6.38               goftest_1.2-3               fftwtools_0.9-11            spatstat.utils_3.2-0        rmarkdown_2.30              XVector_0.50.0              htmltools_0.5.8.1           GiottoVisuals_0.2.14        pkgconfig_2.0.3             jpeg_0.1-11                
+## [127] base64enc_0.1-6             MatrixGenerics_1.22.0       fastmap_1.2.0               GlobalOptions_0.1.3         htmlwidgets_1.6.4           shiny_1.13.0                Rvcg_0.25                   farver_2.1.2                jquerylib_0.1.4             zoo_1.8-14                  jsonlite_2.0.0              BiocParallel_1.44.0         BiocSingular_1.26.0         RCurl_1.98-1.17             magrittr_2.0.4              Formula_1.2-5               dotCall64_1.2               patchwork_1.3.2             RCDT_1.3.0                  Rcpp_1.1.0                  viridis_0.6.5               reticulate_1.44.0           stringi_1.8.7               ggraph_2.2.2                MASS_7.3-65                 plyr_1.8.9                  parallel_4.5.2              listenv_0.10.0              ggrepel_0.9.6               deldir_2.0-4                graphlayouts_1.2.2          splines_4.5.2               tensor_1.5.1                hms_1.1.4                   locfit_1.5-9.12             colorRamp2_0.1.0            igraph_2.2.1                uuid_1.2-2                  spatstat.geom_3.6-0         ggsignif_0.6.4              RcppHNSW_0.6.0              reshape2_1.4.5             
+## [169] stats4_4.5.2                ScaledMatrix_1.18.0         evaluate_1.0.5              foreach_1.5.2               tzdb_0.5.0                  tweenr_2.0.3                httpuv_1.6.16               RANN_2.6.2                  purrr_1.2.0                 polyclip_1.10-7             clue_0.3-67                 future_1.69.0               scattermore_1.2             ggforce_0.5.0               rsvd_1.0.5                  broom_1.0.12                xtable_1.8-8                RSpectra_0.16-2             later_1.4.4                 viridisLite_0.4.2           Polychrome_1.5.4            tibble_3.3.0                beeswarm_0.4.0              memoise_2.0.1               IRanges_2.44.0              cluster_2.1.8.1             timechange_0.3.0            globals_0.19.0              here_1.0.2
 ```

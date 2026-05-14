@@ -1,7 +1,7 @@
 ---
 title: "Figure 4: Immune cells, ILCs and ILC subtypes in lung"
 author: "Sandy Kroh"
-date: "Mai 13, 2026"
+date: "Mai 14, 2026"
 output:
   html_document:
     toc: yes
@@ -224,7 +224,7 @@ print(spe)
 library(scuttle) # required for aggregateAcrossCells
 
 ilc_markers <- c("CD127", "CD90","GATA3eGFP", "KLRG1", "EOMES", "TBET",  
-                 "CD3", "CD8a", "CD4", "RORgt", "ICOS", 
+                 "CD3", "CD4", "RORgt", "ICOS", "CD8a",
                  "MHCII", "CD44", "Ki67", "NKp46")
 
 pbs_annotated <- aggregateAcrossCells(spe, 
