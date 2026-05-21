@@ -19,9 +19,19 @@ editor_options:
 
 ```{r setup, include=FALSE}
 # knitr::opts_knit$set(root.dir = "..")
-knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
-                      fig.align='center', dpi = 600, 
-                      message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  out.width = "100%", 
+  fig.align = 'center', 
+  dpi = 600, 
+  set.seed = 8,
+  message = FALSE, 
+  warning = FALSE,
+  # New options added below for EJI publication export:
+  dev = 'cairo_pdf',
+  colormodel = 'cmyk', # Automatically formats colors for journal printing
+  fig.path = "D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/"
+)
 options(width = 1200)
 ```
 
@@ -166,7 +176,7 @@ dot_plot <- Seurat::DotPlot(subset(SO.lung, subset = AL1 == "Immune cells"),
   scale_color_gradient2(midpoint = 0, low = "gold", 
                             high = "blue", space = "Lab" )
 
-dot_plot
+# dot_plot
 ```
 
 ```{r, fig.height=5, fig.width=4.5}
@@ -229,7 +239,7 @@ gg_heat_immune <- ggplotify::as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat_immune)
+# print(gg_heat_immune)
 ```
 
 # Differential expression ILC subtypes
@@ -333,12 +343,12 @@ plot_heat <- ComplexHeatmap::pheatmap(
 # --- 5. Convert to ggplot object for arrangement ---
 # Using grid.grabExpr(draw()) ensures that all the internal sizing, 
 # legends, and dendrograms from ComplexHeatmap are captured perfectly.
-gg_heat <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat)))
+gg_heat <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat)))+ theme(plot.title = element_text(size = 11))
 
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat)
+# print(gg_heat)
 ```
 
 ```{r, fig.height=4, fig.width=3}
@@ -399,7 +409,7 @@ gg_heat_ilc2s <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_il
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat_ilc2s)
+# print(gg_heat_ilc2s)
 ```
 
 # IF overlays
@@ -687,7 +697,7 @@ img_plot_bec <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
 
-img_plot_bec
+# img_plot_bec
 ```
 
 ## Lymphatics
@@ -713,14 +723,14 @@ img_plot_ly <- ggplot() +
   scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
-img_plot_ly
+# img_plot_ly
 ```
 
 # Visualizations for figures
 
 ## Figure 4
 
-```{r, fig.width=9, fig.height=11.9}
+```{r Figure_4_Main, fig.width=9, fig.height=11.9}
 figure <- ggarrange(dot_plot, gg_heat, 
           ncol = 2, nrow = 1, labels = c("A", "B"), widths = c(3, 2))+
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
@@ -730,35 +740,35 @@ ggarrange(figure, "NONE", img_plot_ilc2s, ncol = 1, nrow = 3, heights = c(5, 0.3
 
 ## Suppl. Figure
 
-```{r, fig.width=9, fig.height=15}
+```{r Suppl_Figure_6, fig.width=9, fig.height=15}
 
 ggarrange(img_plot_nkilc1, img_plot_ilc3s, ncol = 1, nrow = 2, heights = c(8.6, 6.47), labels = c("A", "B"))
 ```
 
-```{r fig.height=7.4, fig.width=9}
+```{r Suppl_Figure_5, fig.height=7.4, fig.width=9}
 
 empty <- ggarrange("NONE", "NONE", labels = "AUTO", widths = c(10, 9.6))
 ggarrange(empty, img_plot_tcells, ncol = 1, nrow = 2, 
                      heights = c(0.2, 7.2))
 ```
 
-```{r fig.height=8.35, fig.width=9}
+```{r Suppl_Figure_3, fig.height=8.35, fig.width=9}
 
 img_plot_bpc
 ```
 
-```{r fig.height=8.5, fig.width=9}
+```{r Suppl_Figure_4, fig.height=8.5, fig.width=9}
 
 # Display the plot
 print(img_plot_mye)
 ```
 
-```{r, fig.width=9, fig.height=13.2}
+```{r Suppl_Figure_7, fig.width=9, fig.height=13.2}
 
 ggarrange(img_plot_bec, "NONE", img_plot_ly, ncol = 1, nrow = 3, heights = c(8.1, 0.2, 4.9), labels = c("A", "",  "B"))
 ```
 
-```{r, fig.width=9, fig.height=4}
+```{r Suppl_Figure_8, fig.width=9, fig.height=4}
 Seurat::DotPlot(SO.lung, 
                 group.by = "AL3",
                   features = c(

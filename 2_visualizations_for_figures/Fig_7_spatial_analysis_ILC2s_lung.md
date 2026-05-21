@@ -1,7 +1,7 @@
 ---
 title: "Figure 7: ILC2s localize together with lymphatics and myeloid cells"
 author: "Sandy Kroh"
-date: "Mai 14, 2026"
+date: "Mai 21, 2026"
 output:
   html_document:
     toc: yes
@@ -424,10 +424,8 @@ img_plot_if_ilc2s <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
 # Display the plot
-print(img_plot_if_ilc2s)
+# print(img_plot_if_ilc2s)
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-5-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -455,10 +453,8 @@ img_plot_if_ilc2s_roi <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
 # Display the plot
-print(img_plot_if_ilc2s_roi)
+# print(img_plot_if_ilc2s_roi)
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-6-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -486,10 +482,8 @@ img_plot_if_ilc2s_my <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
 # Display the plot
-print(img_plot_if_ilc2s_my)
+# print(img_plot_if_ilc2s_my)
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -517,10 +511,8 @@ img_plot_if_ilc2s_icos <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
 # Display the plot
-print(img_plot_if_ilc2s_icos)
+# print(img_plot_if_ilc2s_icos)
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Coenrichment analysis
 
@@ -668,11 +660,8 @@ final_plot_ILC2s <- gg_heat +
     plot.margin = margin(0, 0, 0.5, 0.2, "cm")
   )
 
-# Print your beautiful, perfectly aligned plot!
-print(final_plot_ILC2s)
+# print(final_plot_ILC2s)
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-10-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -786,11 +775,8 @@ final_plot_nkilc1 <- gg_heat +
     plot.margin = margin(0, 0, 0.5, 0.2, "cm")
   )
 
-# Print your beautiful, perfectly aligned plot!
-print(final_plot_nkilc1)
+# print(final_plot_nkilc1)
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-11-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Coenrichment barplots
 
@@ -874,12 +860,8 @@ plot_coenrichment_lymp <- ggplot(interaction_celltypes,
         strip.text.x = element_text(size = 1, color = "white"),
         panel.grid.major.y = element_line())
 
-print(plot_coenrichment_lymp)
-```
+# print(plot_coenrichment_lymp)
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-12-1.png" alt="" width="100%" style="display: block; margin: auto;" />
-
-``` r
 # --- SECTION 1: ILC2s around ILC2s ---
 interactions_ilc2 <- "ILC2s--ILC2s"
 interaction_ilc2_df <- NULL
@@ -1029,12 +1011,7 @@ plot_coenrichment_th <- ggplot(interaction_ilc2_th_df,
         strip.text.x = element_text(size = 1, color = "white"),
         panel.grid.major.y = element_line())
 
-print(plot_coenrichment_th)
-```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-12-2.png" alt="" width="100%" style="display: block; margin: auto;" />
-
-``` r
+# print(plot_coenrichment_th)
 # --- SECTION 3: Final Arrangement ---
 # (Assumes plot_coenrichment_lymp was created using the same corrected logic previously)
 
@@ -1047,10 +1024,8 @@ coenrichment_fig_ann <- annotate_figure(coenrichment_fig,
                                         left = text_grob("Coenrichment score", 
                                                          color = "black", rot = 90, size = 9))
 
-print(coenrichment_fig_ann)
+# print(coenrichment_fig_ann)
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-12-3.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 
@@ -1068,10 +1043,8 @@ coenrichment_fig_ann_tcells <- annotate_figure(coenrichment_fig,
                 left = text_grob("Coenrichment score", color = "black", rot = 90, 
                                  size = 11))
 
-coenrichment_fig_ann_tcells
+# coenrichment_fig_ann_tcells
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-14-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### NK cells/ILC1s
 
@@ -1231,10 +1204,8 @@ coenrichment_fig_supp_ann <- annotate_figure(coenrichment_fig_supp,
                                                               size = 10)) +
   theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"))
 
-print(coenrichment_fig_supp_ann)
+# print(coenrichment_fig_supp_ann)
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-15-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 
@@ -1449,13 +1420,11 @@ for (set_radius in all_radii) {
         )
       
       message("Printing grid for: ", ref_type, " at ", set_radius)
-      print(final_cin_grid)
+      # print(final_cin_grid)
     }
   }
 }
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-4.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-5.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-6.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-7.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-8.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-9.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-10.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-11.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-12.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-13.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-14.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-15.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-16.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-17.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-18.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-19.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-20.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-21.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-22.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-23.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-24.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-25.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-26.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-27.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-28.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-29.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-30.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-31.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-32.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-33.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-34.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-35.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-36.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-37.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-38.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-39.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-40.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-41.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-42.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-43.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-18-44.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### ILC2s
 
@@ -1506,10 +1475,8 @@ plot_cin <- ggarrange(cin_ilc, cin_my, cin_ly,
                       ncol = 1, nrow = 3, labels = c("E", "", ""))+
   theme(plot.margin = margin(0, 0, 0, 0, "cm"))
 
-plot_cin
+# plot_cin
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### NK cells/ILC1s
 
@@ -1560,10 +1527,8 @@ plot_cin_nkilc1 <- ggarrange(cin_nkilc1, cin_bec, cin_bpc,
                       ncol = 1, nrow = 3)+
   theme(plot.margin = margin(0, 0.5, 0, 0.5, "cm"))
 
-plot_cin_nkilc1
+# plot_cin_nkilc1
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1629,7 +1594,7 @@ ggplot(niche_composition_cin, aes(x = Reference, y = MeanProportion, fill = Targ
   )
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/unnamed-chunk-21-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 
 ``` r
@@ -1706,7 +1671,7 @@ ggplot(niche_comp_dodged, aes(x = Reference, y = MedianProportion, fill = Target
   )
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/unnamed-chunk-22-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 
 ``` r
@@ -1760,7 +1725,7 @@ ggplot(plot_data_lymph, aes(x = Reference, y = MeanProportion, fill = "Lymphatic
   )
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/unnamed-chunk-23-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 # Minimum distance
 
@@ -1913,25 +1878,21 @@ for (condition in c("CTRL", "D1", "D2", "D3")) {
 ggarrange(plotlist = my_plot_list[c(1:4)], nrow = 1, ncol = 4)
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-25-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/unnamed-chunk-25-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 ``` r
 dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 1, ncol = 2, labels = c("C", "D"))
 
-dist_lymph
+# dist_lymph
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-25-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
 dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 2, ncol = 1, labels = c("D"))+
   theme(plot.margin = margin(0, 1, 0, 0, "cm"))
 
-dist_lymph
+# dist_lymph
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-26-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2030,11 +1991,9 @@ if (length(grid_plot_list) > 0) {
         plot.title = element_text(size = 12, face = "bold", hjust = 0.5))
     )
   
-  print(final_grid_dist_immune)
+  # print(final_grid_dist_immune)
 }
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-27-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### NK cells/ILC1s
 
@@ -2136,7 +2095,7 @@ for (condition in c("CTRL", "D1", "D2", "D3")) {
     geom_text(aes(y = 80 , #lab_pos, 
                   label = lab_text, vjust = -0.5), angle = 30,
               data = Labs, size=3)
-  plot
+  # plot
   
   assigned_name <- gsub(" ", "", paste0(celltype_of_interest, "_", condition))
   assign(assigned_name, plot )
@@ -2150,10 +2109,8 @@ for (condition in c("CTRL", "D1", "D2", "D3")) {
 dist_bec <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 2, ncol = 1)+
   theme(plot.margin = margin(0, 0, 0, 0.5, "cm"))
 
-dist_bec
+# dist_bec
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-28-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2252,21 +2209,17 @@ if (length(grid_plot_list) > 0) {
         plot.title = element_text(size = 12, face = "bold", hjust = 0.5))
     )
   
-  print(final_grid_dist_immune_nkilc1)
+  # print(final_grid_dist_immune_nkilc1)
 }
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-29-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
 supp_middle_plot <- ggarrange(dist_bec, final_grid_dist_immune_nkilc1, ncol = 2, nrow = 1, 
           widths = c(3, 7), labels = c("C", "D"))
 
-supp_middle_plot
+# supp_middle_plot
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-30-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Visualization for figures
 
@@ -2277,26 +2230,22 @@ supp_middle_plot
 top_figure <- ggarrange(final_plot_ILC2s, img_plot_if_ilc2s, img_plot_if_ilc2s_roi, ncol = 1, nrow = 3, heights = c(3, 3.6, 3.6), labels = c("A", "B", "C"))+
   theme(plot.margin = margin(0, 0, 0.5, 0, "cm"))
 
-top_figure
+# top_figure
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-31-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
 bottom_figure <- ggarrange(dist_lymph, plot_cin, ncol = 2, widths = c(1, 2))
 
-bottom_figure
+# bottom_figure
 ```
-
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-32-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
 ggarrange(top_figure, bottom_figure, nrow = 2, ncol = 1, heights = c(10.2, 5.5))
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-33-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Figure_7_Main-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 ## Supplementary figures
 
@@ -2310,14 +2259,14 @@ ggarrange(coenrichment_fig_ann, "NONE",
           labels = c("A","", "B", "C", "D"))
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-34-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Suppl_Figure_13-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 
 ``` r
 ggarrange(final_plot_nkilc1, coenrichment_fig_supp_ann, "NONE",  supp_middle_plot, "NONE", plot_cin_nkilc1, nrow = 6, ncol = 1, heights = c(1.6, 1, 0.1, 2.6, 0.1, 2.7), labels = c("A", "B", "", "", "", "E"))
 ```
 
-<img src="Fig_7_spatial_analysis_ILC2s_lung_files/figure-html/unnamed-chunk-35-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Suppl_Figure_14-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 ## Session Information
 

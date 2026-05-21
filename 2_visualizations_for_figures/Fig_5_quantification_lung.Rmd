@@ -19,9 +19,19 @@ editor_options:
 
 ```{r setup, include=FALSE}
 # knitr::opts_knit$set(root.dir = "..")
-knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
-                      fig.align='center', dpi = 600, 
-                      message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  out.width = "100%", 
+  fig.align = 'center', 
+  dpi = 600, 
+  set.seed = 8,
+  message = FALSE, 
+  warning = FALSE,
+  # New options added below for EJI publication export:
+  dev = 'cairo_pdf',
+  colormodel = 'cmyk', # Automatically formats colors for journal printing
+  fig.path = "D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/"
+)
 options(width = 1200)
 ```
 
@@ -166,7 +176,7 @@ plot_prop <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
     #        size = 10/.pt)+
   NoLegend()
 
-plot_prop
+# plot_prop
 
 ```
 
@@ -236,7 +246,7 @@ plot_d3 <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
     #        size = 10/.pt)+
   NoLegend()
 
-plot_d3
+# plot_d3
 
 ```
 
@@ -303,7 +313,7 @@ plot_freq <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
   NoLegend()
 
 
-plot_freq
+# plot_freq
 ```
 
 ```{r, fig.width=3, fig.height=4}
@@ -369,7 +379,7 @@ plot_freq_d3 <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
   NoLegend()
 
 
-plot_freq_d3
+# plot_freq_d3
 ```
 
 ## 4B - Frequency of ILCs within immune compartment \@ CTRL
@@ -434,7 +444,7 @@ plot_freq_immune <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
   scale_y_continuous(expand = c(0, 0), limits = c(0,14))+
   NoLegend()
 
-plot_freq_immune
+# plot_freq_immune
 ```
 
 ```{r, fig.width=3, fig.height=4}
@@ -499,7 +509,7 @@ plot_freq_immune_d3 <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))
   scale_y_continuous(expand = c(0, 0), limits = c(0,20))+
   NoLegend()
 
-plot_freq_immune_d3
+# plot_freq_immune_d3
 ```
 
 ## Total cell count IL-33
@@ -569,7 +579,7 @@ plot_count_all <- ggplot(df, aes(x = Treatment, y = TotalCellCountFOV, fill = "T
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_count_all
+# plot_count_all
 ```
 
 ## Total immune count IL-33
@@ -639,7 +649,7 @@ plot_count_immune <- ggplot(df, aes(x = Treatment, y = `Immune cells`, fill = "T
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_count_immune
+# plot_count_immune
 ```
 
 ## Total ILC count IL-33
@@ -709,7 +719,7 @@ plot_count_ilc <- ggplot(df, aes(x = Treatment, y = ILCs, fill = "Treatment"))+
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_count_ilc
+# plot_count_ilc
 ```
 
 ## Total count ILC1s/NK cells
@@ -779,7 +789,7 @@ plot_count_ilc1 <- ggplot(df, aes(x = Treatment, y = `NK cells/ILC1s`, fill = "T
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_count_ilc1
+# plot_count_ilc1
 ```
 
 ## Total count ILC2s
@@ -849,7 +859,7 @@ plot_count_ilc2 <- ggplot(df, aes(x = Treatment, y = `ILC2s`, fill = "Treatment"
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_count_ilc2
+# plot_count_ilc2
 ```
 
 ## Total count ILC3s
@@ -919,7 +929,7 @@ plot_count_ilc3 <- ggplot(df, aes(x = Treatment, y = `ILC3s`, fill = "Treatment"
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_count_ilc3
+# plot_count_ilc3
 ```
 
 ## Freq ILC1s of ILC compartment
@@ -991,7 +1001,7 @@ plot_freq_ilc1 <- ggplot(df, aes(x = Treatment, y = `NK cells/ILC1s`, fill = "Tr
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_freq_ilc1
+# plot_freq_ilc1
 ```
 
 ## Freq ILC2s of ILC compartment
@@ -1062,7 +1072,7 @@ plot_freq_ilc2 <- ggplot(df, aes(x = Treatment, y = `ILC2s`, fill = "Treatment")
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_freq_ilc2
+# plot_freq_ilc2
 ```
 
 ## Freq ILC3s of ILC compartment
@@ -1133,7 +1143,7 @@ plot_freq_ilc3 <- ggplot(df, aes(x = Treatment, y = `ILC3s`, fill = "Treatment")
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_freq_ilc3
+# plot_freq_ilc3
 ```
 
 ## Freq of immune cells, Endothelia & stroma and epithelia within total cells
@@ -1314,7 +1324,7 @@ plot_epithelia <- ggplot(df, aes(x = Treatment, y = `cells_of_interest`, fill = 
   NoLegend()
 
 
-ggarrange(plot_immune, plot_stroma, plot_epithelia, 
+plot_major <- ggarrange(plot_immune, plot_stroma, plot_epithelia, 
           ncol = 3, nrow = 1, 
           labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I"))+
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
@@ -1409,7 +1419,7 @@ gg_heat_ilc2s <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_il
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat_ilc2s)
+# print(gg_heat_ilc2s)
 ```
 
 ```{r, fig.height=4, fig.width=3}
@@ -1466,7 +1476,7 @@ gg_heat_ilc1s <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_il
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat_ilc1s)
+# print(gg_heat_ilc1s)
 
 
 # --- 1. Subsetting ---
@@ -1520,7 +1530,7 @@ gg_heat_ilc3s <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_il
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat_ilc3s)
+# print(gg_heat_ilc3s)
 
 
 # --- 1. Subsetting ---
@@ -1573,7 +1583,7 @@ gg_heat_my <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_my, h
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat_my)
+# print(gg_heat_my)
 ```
 
 ```{r, fig.height=4, fig.width=9}
@@ -1685,79 +1695,12 @@ gg_heat_d3 <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_d3, h
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
 
-ggarrange(gg_heat_ctrl, gg_heat_d3, ncol = 2)
-```
-
-## MHCII expression by ILC2s
-
-```{r, fig.height=5, fig.width=7}
-library(Seurat)
-library(ggplot2)
-library(dplyr)
-library(rstatix)
-library(ggpubr)
-
-# --- 1. Subset for ILC2s ---
-SO.ilc2 <- subset(SO.lung, subset = AL3 == "ILC2s")
-SO.ilc2$Treatment <- paste0("D", SO.ilc2$Treatment)
-SO.ilc2$Treatment <- gsub("DCTRL", "CTRL", SO.ilc2$Treatment)
-SO.ilc2$Treatment <- factor(SO.ilc2$Treatment, levels = c("CTRL", "D1", "D2", "D3"))
-MHCII_threshold <- 2.3
-
-# --- 2. Ridge Plot with Threshold Line ---
-# Fetch MHCII expression and metadata
-plot_data <- FetchData(SO.ilc2, vars = c("MHCII", "Treatment"))
-
-ggplot(plot_data, aes(x = MHCII, y = Treatment, fill = Treatment)) +
-  ggridges::geom_density_ridges(scale = 1.2, alpha = 0.7) +
-  geom_vline(xintercept = MHCII_threshold, linetype = "dashed", color = "red", linewidth = 1) +
-  scale_fill_manual(values = cols_treat) +
-  theme_classic() +
-  labs(title = "MHCII Expression in ILC2s",
-       subtitle = paste0("Red line indicates threshold (> ", MHCII_threshold, ")"),
-       x = "Expression Level") +
-  theme(legend.position = "none")
-```
-
-```{r}
-
+# ggarrange(gg_heat_ctrl, gg_heat_d3, ncol = 2)
 ```
 
 ## Combine plots for figure
 
-```{r, fig.width=9, fig.height=9}
-top_figure <- ggarrange(plot_prop, plot_freq_immune, plot_freq, 
-          ncol = 3, nrow = 1, 
-          labels = c("AUTO"), 
-          label.x = 0.1)+
-  theme(plot.margin = margin(0, 0, 0.2, 0, "cm"))
-
-
-middle_figure <- ggarrange(
-          plot_count_all, plot_count_immune, plot_count_ilc,
-          plot_count_ilc2, 
-          ncol = 2, nrow = 2, 
-          labels = c("D", "E", "F",
-                     "G"),
-          label.x = 0.1)+
-  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
-
-
-
-final_figure <- ggarrange(top_figure, middle_figure, 
-          ncol = 1, nrow = 2, heights = c(3, 4.5))+
-  theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
-
-final_figure
-
-annotate_figure(final_figure,
-               bottom = text_grob("N: CTRL/D1/D2 = 9 FOVs, D3 = 8 FOVs; Kruskal-Wallis-test & Dunn’s test; Significance levels of adjusted p-values: **** = 1e-04, *** = 0.001, ** = 0.01, * = 0.05", 
-                                  color = "black", 
-                                  # hjust = -1,
-                                  face = "italic", size = 8))
-```
-
-```{r, fig.width=9, fig.height=9}
+```{r Figure_5_Main, fig.width=9, fig.height=9}
 top_figure <- ggarrange(plot_prop, plot_freq_immune, plot_freq, 
           ncol = 3, nrow = 1, 
           labels = c("AUTO"), 
@@ -1790,14 +1733,14 @@ final_figure <- ggarrange(top_figure, middle_figure,
 
 final_figure
 
-annotate_figure(final_figure,
-               bottom = text_grob("N: CTRL/D1/D2 = 9 FOVs, D3 = 8 FOVs; Kruskal-Wallis-test & Dunn’s test; Significance levels of adjusted p-values: **** = 1e-04, *** = 0.001, ** = 0.01, * = 0.05", 
-                                  color = "black", 
-                                  # hjust = -1,
-                                  face = "italic", size = 8))
+# annotate_figure(final_figure,
+#                bottom = text_grob("N: CTRL/D1/D2 = 9 FOVs, D3 = 8 FOVs; Kruskal-Wallis-test & Dunn’s test; Significance levels of adjusted p-values: **** = 1e-04, *** = 0.001, ** = 0.01, * = 0.05", 
+#                                   color = "black", 
+#                                   # hjust = -1,
+#                                   face = "italic", size = 8))
 ```
 
-```{r, fig.width=9, fig.height=7}
+```{r Suppl_Figure_9, fig.width=9, fig.height=7}
 suppl_figure <- ggarrange(plot_count_ilc1, plot_count_ilc3, plot_freq_immune_d3, plot_freq_d3,
           ncol = 2, nrow = 2, 
           heights = c(3, 4),
@@ -1807,18 +1750,11 @@ suppl_figure <- ggarrange(plot_count_ilc1, plot_count_ilc3, plot_freq_immune_d3,
 
 suppl_figure
 
-annotate_figure(suppl_figure,
-               bottom = text_grob("N: CTRL/D1/D2 = 9 FOVs, D3 = 8 FOVs; Kruskal-Wallis-test & Dunn’s test; Significance levels of adjusted p-values: **** = 1e-04, *** = 0.001, ** = 0.01, * = 0.05",
-                                  color = "black",
-                                  # hjust = -1,
-                                  face = "italic", size = 8))
-```
-
-```{r, fig.width=9, fig.height=3}
-ggarrange(plot_freq_ilc1, plot_freq_ilc2, plot_freq_ilc3, 
-          ncol = 3, nrow = 1, 
-          labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I"))+
-  theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
+# annotate_figure(suppl_figure,
+#                bottom = text_grob("N: CTRL/D1/D2 = 9 FOVs, D3 = 8 FOVs; Kruskal-Wallis-test & Dunn’s test; Significance levels of adjusted p-values: **** = 1e-04, *** = 0.001, ** = 0.01, * = 0.05",
+#                                   color = "black",
+#                                   # hjust = -1,
+#                                   face = "italic", size = 8))
 ```
 
 ## Session Information

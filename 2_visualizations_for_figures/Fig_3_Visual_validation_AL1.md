@@ -132,7 +132,7 @@ ggarrange(img_plot_immune, img_plot_vessels, img_plot_epithelia,
           labels = "AUTO")
 ```
 
-<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Figure_3_Main-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
+<img src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Figure_3_Main-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 

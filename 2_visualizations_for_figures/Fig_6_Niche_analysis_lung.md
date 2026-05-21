@@ -1,7 +1,7 @@
 ---
 title: "Figure 6: Niche analysis mouse lung"
 author: "Sandy Kroh"
-date: "Mai 15, 2026"
+date: "Mai 21, 2026"
 output:
   html_document:
     toc: yes
@@ -372,10 +372,8 @@ plot_comp_al3 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, f
     plot.title = element_text(face = "bold", hjust = 0.75, size = 12), 
     plot.margin = margin(0.2, 0, 0.5, 1, "cm"))
 
-print(plot_comp_al3)
+# print(plot_comp_al3)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-5-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -413,10 +411,8 @@ plot_comp_al1 <- ggplot(niche_composition, aes(x = Tissue_Niche, y = Fraction, f
     plot.margin = margin(0, 0, 0, 0.6, "cm"))+
   guides(fill = guide_legend(ncol = 1))
 
-print(plot_comp_al1)
+# print(plot_comp_al1)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-6-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -470,10 +466,8 @@ plot_comp_ilc <- ggplot(niche_composition,
     plot.margin = margin(0.2, 0, 0.5, 1, "cm"))
 
 
-print(plot_comp_ilc)
+# print(plot_comp_ilc)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -508,12 +502,9 @@ niche_composition_al3 <- df_all %>%
 # Create the table plot
 table_plot_al3 <- ggtexttable(niche_composition_al3, 
                               rows = NULL) # Optional: added a blue theme for readability
-print(table_plot_al3)
-```
+# print(table_plot_al3)
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
-``` r
 # AL1 ---------------------------------------------------------------------------
 niche_composition_al1 <- df_all %>%
   group_by(Tissue_Niche, AL1) %>%
@@ -529,12 +520,11 @@ niche_composition_al1 <- df_all %>%
 table_plot_al1 <- ggtexttable(niche_composition_al1, 
                               rows = NULL) # Optional: added a blue theme for readability
 
-print(table_plot_al1)
-```
+# print(table_plot_al1)
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-8-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
-``` r
+
+
 # AL3 ILCs ---------------------------------------------------------------------------
 niche_composition_ilc <- df_all %>%
   filter(AL2 == "ILCs") %>%
@@ -564,10 +554,8 @@ niche_composition_ilc <- df_all %>%
 table_plot_ilc <- ggtexttable(niche_composition_ilc, 
                               rows = NULL) # Optional: added a blue theme for readability
 
-print(table_plot_ilc)
+# print(table_plot_ilc)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-8-3.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -619,10 +607,8 @@ lower_supp_plot <- ggplot(fov_composition, aes(x = FullInfo, y = Fraction, fill 
   )+
   guides(fill = guide_legend(ncol = 4))
 
-lower_supp_plot
+# lower_supp_plot
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Niche abundance
 
@@ -731,11 +717,9 @@ if (length(niche_plot_list) > 0) {
         )
     )
   
-  print(final_niche_grid)
+  # print(final_niche_grid)
 }
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-10-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -747,10 +731,8 @@ upper_fig <- ggarrange(plot_comp_al3, plot_comp_ilc,
 upper_fig <- ggarrange(upper_fig, final_niche_grid, ncol = 1, nrow = 2,
           heights = c(6, 3) , labels = c("", "C"))
 
-upper_fig
+# upper_fig
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-11-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Cellular composition across conditions
 
@@ -847,12 +829,10 @@ for (current_niche in all_niches) {
         theme = theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
       )
     
-    print(combined_grid)
+    # print(combined_grid)
   }
 }
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-12-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-12-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-12-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-12-4.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -927,7 +907,7 @@ annotate_figure(
   )
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-13-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/unnamed-chunk-13-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 
 ``` r
@@ -987,10 +967,8 @@ plot_cell_comp_niche <- annotate_figure(
                    size = 14, rot = 90)
 )
 
-plot_cell_comp_niche
+# plot_cell_comp_niche
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-14-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### Total counts
 
@@ -1078,12 +1056,10 @@ for (current_niche in all_niches) {
         )
       )
     
-    print(combined_grid_abundance)
+    # print(combined_grid_abundance)
   }
 }
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-15-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-15-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-15-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-15-4.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Counts and frequencies per niche
 
@@ -1171,10 +1147,8 @@ final_niche_comparison_ilc2s <- wrap_plots(individual_plots, ncol = 4) +
     theme = theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
                   plot.margin = margin(0.5, 0, 0, 1.2, "cm")))
 
-print(final_niche_comparison_ilc2s)
+# print(final_niche_comparison_ilc2s)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### NK cells/ILC1s
 
@@ -1252,10 +1226,8 @@ final_niche_comparison_nkilc1 <- wrap_plots(nk_plots, ncol = 4) +
     theme = theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
                   plot.margin = margin(0.5, 0, 0, 1.2, "cm")))
 
-final_niche_comparison_nkilc1
+# final_niche_comparison_nkilc1
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### ILC3s
 
@@ -1325,10 +1297,8 @@ final_niche_comparison_ilc3s <- wrap_plots(ilc3_plots, ncol = 4) +
     theme = theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
                   plot.margin = margin(0.5, 0, 0, 1.2, "cm")))
 
-final_niche_comparison_ilc3s
+# final_niche_comparison_ilc3s
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### T helper cells
 
@@ -1414,10 +1384,8 @@ final_niche_comparison_th <- wrap_plots(th_plots, ncol = 4) +
     theme = theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
                   plot.margin = margin(0.5, 0, 0, 1.2, "cm")))
 
-print(final_niche_comparison_th)
+# print(final_niche_comparison_th)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### ILC2 frequency
 
@@ -1502,10 +1470,8 @@ final_niche_freq_comparison <- wrap_plots(individual_plots, ncol = 4) +
     theme = theme(plot.title = element_text(size = 11, face = "bold", hjust = 0.5),
                   plot.margin = margin(0.5, 0, 0, 1.2, "cm")))
 
-print(final_niche_freq_comparison)
+# print(final_niche_freq_comparison)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### NK cells/ILC1s frequency
 
@@ -1589,10 +1555,8 @@ final_niche_nk_comp <- wrap_plots(individual_plots, ncol = 4) +
     theme = theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
                   plot.margin = margin(0.5, 0, 0, 1.2, "cm")))
 
-print(final_niche_nk_comp)
+# print(final_niche_nk_comp)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### ILC3s frequency
 
@@ -1662,10 +1626,8 @@ final_niche_ilc3_comp <- wrap_plots(individual_plots, ncol = 4) +
     theme = theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
                   plot.margin = margin(0.5, 0, 0, 1.2, "cm")))
 
-print(final_niche_ilc3_comp)
+# print(final_niche_ilc3_comp)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ### T helper cells
 
@@ -1745,10 +1707,8 @@ final_niche_th_comp <- wrap_plots(individual_plots, ncol = 4) +
     theme = theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
                   plot.margin = margin(0.5, 0, 0, 1.2, "cm")))
 
-print(final_niche_th_comp)
+# print(final_niche_th_comp)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 All ILC subtypes
 
@@ -1832,10 +1792,8 @@ final_ilc_niche_comparison <- wrap_plots(ilc_summary_plots, ncol = 4) +
     )
   )
 
-print(final_ilc_niche_comparison)
+# print(final_ilc_niche_comparison)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -1918,7 +1876,7 @@ wrap_plots(summary_plots_niches, ncol = 4) +
   )
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-25-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/unnamed-chunk-25-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 ## Spatial distribution of identified niches
 
@@ -2012,10 +1970,8 @@ niche_map_grid <- wrap_plots(final_plot_list, ncol = 9) +
   )
 
 # Render the atlas
-print(niche_map_grid)
+# print(niche_map_grid)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-26-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2132,211 +2088,11 @@ final_atlas <- (grid_ctrl | grid_d3) / legend_plot +
     )
   ) & theme(plot.background = element_rect(fill = "black", color = NA))
 
-print(final_atlas)
+# print(final_atlas)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-27-1.png" alt="" width="100%" style="display: block; margin: auto;" />
-
-## Proliferation
-
-
-``` r
-library(dplyr)
-library(ggplot2)
-library(ggbeeswarm)
-library(rstatix)
-library(patchwork)
-library(ggpubr)
-
-# --- 1. DATA PREPARATION ---
-# Filter for target cells and calculate Mean Ki67 per FOV
-ki67_df <- df_all %>%
-  filter(CellType %in% c("NK cells/ILC1s", "ILC2s", "ILC3s")) %>%
-  group_by(Filename, Condition, CellType) %>%
-  summarise(Mean_Ki67 = mean(Ki67, na.rm = TRUE), .groups = "drop")
-
-# Ensure Condition order
-ki67_df$Condition <- factor(ki67_df$Condition, levels = c("CTRL", "D1", "D2", "D3"))
-
-# --- 2. STATISTICAL TESTING ---
-# Pairwise comparisons between conditions for each cell type
-stat.test <- ki67_df %>%
-  group_by(CellType) %>%
-  wilcox_test(Mean_Ki67 ~ Condition) %>%
-  add_significance() %>%
-  add_xy_position(x = "Condition", dodge = 0.8)
-
-# --- 3. PLOTTING LOOP ---
-ki67_plots <- list()
-target_cells <- c("NK cells/ILC1s", "ILC2s", "ILC3s")
-
-for (ct in target_cells) {
-  
-  # Filter data for specific cell type
-  stats_df <- ki67_df %>% filter(CellType == ct)
-  
-  # Filter stats for specific cell type
-  curr_stat <- stat.test %>% filter(CellType == ct)
-  
-  # Detect correct p-value label
-  sig_label <- if("p.adj.signif" %in% colnames(curr_stat)) "p.adj.signif" else "p.signif"
-  
-  # Build Plot
-  p <- ggplot(stats_df, aes(x = Condition, y = Mean_Ki67)) +
-    geom_boxplot(outlier.colour = NA, fill = "white", alpha = 0.5) +
-    geom_beeswarm(aes(color = Condition), size = 1.5, cex = 2, alpha = 0.7) +
-    
-    # Add stats
-    stat_pvalue_manual(curr_stat, 
-                       label = sig_label, 
-                       hide.ns = TRUE, 
-                       step.increase = 0.1, 
-                       size = 4) +
-    
-    # Aesthetic settings
-    scale_y_continuous(expand = expansion(mult = c(0.1, 0.4))) +
-    scale_color_manual(values = cols_treat) +
-    ggtitle(ct) +
-    theme_classic() +
-    theme(
-      axis.text.x = element_text(angle = 45, size = 9, face = "bold", hjust = 1),
-      axis.title.x = element_blank(),
-      axis.text.y = element_text(size = 9),
-      axis.title.y = element_text(size = 9),
-      plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
-      plot.margin = margin(0.2, 0.2, 0.3, 0.2, "cm"),
-      legend.position = "none"
-    ) +
-    ylab("Mean Ki67 Intensity per FOV")
-
-  ki67_plots[[ct]] <- p
-}
-
-# --- 4. ASSEMBLE ---
-final_ki67_plot <- wrap_plots(ki67_plots, ncol = 3) +
-  plot_annotation(
-    title = "Ki67 Expression Proliferation Analysis",
-    subtitle = "Points represent mean intensity per FOV; Wilcoxon pairwise test",
-    theme = theme(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
-                  plot.subtitle = element_text(hjust = 0.5))
-  )
-
-print(final_ki67_plot)
+```{}
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-28-1.png" alt="" width="100%" style="display: block; margin: auto;" />
-
-
-``` r
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(ggbeeswarm)
-library(rstatix)
-library(patchwork)
-library(ggpubr)
-
-# --- 1. SETTINGS & PARAMETERS ---
-target_markers <- c("Ki67", "GATA3eGFP", "EOMES", "TBET", "MHCII", "KLRG1", "ICOS")
-target_cells   <- c("NK cells/ILC1s", "ILC2s", "ILC3s", "T helper cells", "T cytotox cells")
-
-# --- 2. DATA AGGREGATION ---
-# Calculate mean intensity for each marker per cell type per niche per FOV
-niche_marker_data <- df_all %>%
-  filter(CellType %in% target_cells) %>%
-  group_by(Filename, Condition, Tissue_Niche, CellType) %>%
-  summarise(across(all_of(target_markers), \(x) mean(x, na.rm = TRUE)), .groups = "drop") %>%
-  # Pivot markers to long format for easier looping
-  pivot_longer(cols = all_of(target_markers), names_to = "Marker", values_to = "Intensity")
-
-niche_marker_data$Condition <- factor(niche_marker_data$Condition, levels = c("CTRL", "D1", "D2", "D3"))
-all_niches <- unique(niche_marker_data$Tissue_Niche)
-
-# --- 3. PLOTTING LOOP ---
-for (current_niche in all_niches) {
-  
-  message("Processing Niche: ", current_niche)
-  
-  # Filter for the current niche
-  niche_sub <- niche_marker_data %>% filter(Tissue_Niche == current_niche)
-  
-  # This list will hold plots in the order: Row 1 (all cells), Row 2 (all cells), etc.
-  grid_plots <- list()
-  
-  for (marker in target_markers) {
-    for (cell in target_cells) {
-      
-      # Subset data for this specific panel
-      stats_df <- niche_sub %>% filter(Marker == marker, CellType == cell)
-      
-      # Check if we have enough data to plot
-      if(nrow(stats_df) < 2 || all(is.na(stats_df$Intensity))) {
-        # Create an empty placeholder plot to maintain grid alignment
-        p <- ggplot() + theme_void() 
-      } else {
-        
-        # Statistical Testing (Pairwise Wilcoxon)
-        stat.test <- tryCatch({
-          stats_df %>%
-            wilcox_test(Intensity ~ Condition) %>%
-            add_significance() %>%
-            add_xy_position(x = "Condition")
-        }, error = function(e) NULL)
-        
-        # Build Panel
-        p <- ggplot(stats_df, aes(x = Condition, y = Intensity)) +
-          geom_boxplot(outlier.colour = NA, fill = "white", alpha = 0.5) +
-          geom_beeswarm(aes(color = Condition), size = 0.8, cex = 1.2, alpha = 0.6) +
-          scale_y_continuous(expand = expansion(mult = c(0.1, 0.4))) +
-          scale_color_manual(values = cols_treat) +
-          # Title logic: Only show CellType on top row and Marker on left column (optional)
-          # Here we keep both for clarity in large grids
-          labs(title = marker, subtitle = cell, 
-               y = "Mean Intensity") +
-          theme_classic() +
-          theme(
-            axis.text.x = element_text(angle = 45, size = 7, face = "bold", hjust = 1),
-            axis.title.x = element_blank(),
-            axis.text.y = element_text(size = 7),
-            axis.title.y = element_text(size = 7),
-            plot.title = element_text(hjust = 0.5, size = 10, face = "bold"), 
-            plot.subtitle = element_text(hjust = 0.5, size = 8),
-            plot.margin = margin(2, 2, 2, 2, "pt"),
-            legend.position = "none"
-          )
-        
-        # Add Stats
-        if (!is.null(stat.test) && nrow(stat.test) > 0) {
-          sig_col <- if("p.adj.signif" %in% colnames(stat.test)) "p.adj.signif" else "p.signif"
-          p <- p + stat_pvalue_manual(stat.test, label = sig_col, hide.ns = TRUE, 
-                                      tip.length = 0.01, step.increase = 0.1, size = 2.5)
-        }
-      }
-      grid_plots[[paste(marker, cell)]] <- p
-    }
-  }
-  
-  # --- 4. ASSEMBLE NICHE GRID ---
-  # ncol = number of cell types (columns)
-  if (length(grid_plots) > 0) {
-    combined_grid <- wrap_plots(grid_plots, ncol = length(target_cells)) +
-      plot_annotation(
-        title = paste("Niche Protein Profile:", current_niche),
-        subtitle = "Rows: Markers | Columns: Cell Types | Stats: Wilcoxon vs CTRL",
-        theme = theme(
-          plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
-          plot.subtitle = element_text(size = 11, hjust = 0.5)
-        )
-      )
-    
-    # Recommend saving as a large PDF or printing
-    # {r fig.height=12, fig.width=15}
-    print(combined_grid)
-  }
-}
-```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-29-1.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-29-2.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-29-3.png" alt="" width="100%" style="display: block; margin: auto;" /><img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-29-4.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Marker expression across niches
 
@@ -2437,10 +2193,8 @@ gg_heat_ilc2s_mixedmylec <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(p
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat_ilc2s_mixedmylec)
+# print(gg_heat_ilc2s_mixedmylec)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-31-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2503,7 +2257,7 @@ gg_heat_ilc2s_ctrl <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_he
 print(gg_heat_ilc2s_ctrl)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-32-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/unnamed-chunk-30-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 ``` r
 set.seed(8)
@@ -2557,10 +2311,8 @@ gg_heat_ilc2s_d3 <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat_ilc2s_d3)
+# print(gg_heat_ilc2s_d3)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-32-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2625,10 +2377,8 @@ gg_heat_my_mixedmylec <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat_my_mixedmylec)
+# print(gg_heat_my_mixedmylec)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-33-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2693,10 +2443,8 @@ gg_heat_ly_mixedmylec <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat_ly_mixedmylec)
+# print(gg_heat_ly_mixedmylec)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-34-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2759,7 +2507,7 @@ gg_heat_ilc2s_ctrl <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_he
 print(gg_heat_ilc2s_ctrl)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-35-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/unnamed-chunk-33-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 ``` r
 set.seed(8)
@@ -2813,18 +2561,8 @@ gg_heat_ilc2s_d3 <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat_ilc2s_d3)
+# print(gg_heat_ilc2s_d3)
 ```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-35-2.png" alt="" width="100%" style="display: block; margin: auto;" />
-
-
-``` r
-ggarrange(gg_heat_ilc2s_ctrl, gg_heat_ilc2s_d3, gg_heat_ilc2s_mixedmylec, 
-          ncol = 3)
-```
-
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-36-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Visualization for figures
 
@@ -2836,7 +2574,7 @@ ggarrange(upper_fig, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(5.4, 0
           labels = c("", "", "D"), label.y = 1.06)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-37-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Figure_6_Main-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 ## Supplementary figures
 
@@ -2860,7 +2598,7 @@ ggarrange(sup_upper, "NONE", lower_supp_plot, final_niche_freq_comparison,
           labels = c("","", "C", "D"))
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-38-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/unnamed-chunk-34-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 
 ``` r
@@ -2931,7 +2669,7 @@ ggplot(cell_comp_per_niche, aes(x = FullInfo, y = Fraction, fill = CellType)) +
   )
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-39-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/unnamed-chunk-35-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 
 ``` r
@@ -3017,7 +2755,7 @@ annotate_figure(
 )
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-40-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/unnamed-chunk-36-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 
 ``` r
@@ -3073,7 +2811,7 @@ ggarrange(
   labels = "AUTO")
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-41-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/unnamed-chunk-37-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 
 ``` r
@@ -3082,7 +2820,7 @@ ggarrange(final_niche_comparison_ilc2s,
           final_niche_comparison_ilc3s, nrow = 3, ncol = 1, labels = "AUTO")
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-42-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/unnamed-chunk-38-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 ``` r
 ggarrange(final_niche_freq_comparison, 
@@ -3090,7 +2828,7 @@ ggarrange(final_niche_freq_comparison,
           final_niche_ilc3_comp, nrow = 3, ncol = 1, labels = "AUTO")
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-42-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/unnamed-chunk-38-2.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 
 ``` r
@@ -3099,7 +2837,7 @@ ggarrange(final_niche_comparison_ilc2s,
           nrow = 2, ncol = 1, labels = "AUTO")
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-43-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/unnamed-chunk-39-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 ## Session Information
 

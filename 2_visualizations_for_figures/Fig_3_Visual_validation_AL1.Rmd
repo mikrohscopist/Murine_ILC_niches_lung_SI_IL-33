@@ -28,7 +28,7 @@ knitr::opts_chunk$set(
   message = FALSE, 
   warning = FALSE,
   # New options added below for EJI publication export:
-  dev = 'pdf', 
+  dev = c('png', 'cairo_pdf'),
   colormodel = 'cmyk', # Automatically formats colors for journal printing
   fig.path = "D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/"
 )
