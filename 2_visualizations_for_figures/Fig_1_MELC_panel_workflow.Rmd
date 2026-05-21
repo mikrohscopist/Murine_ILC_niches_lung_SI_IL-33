@@ -19,10 +19,19 @@ editor_options:
 
 ```{r setup, include=FALSE}
 # knitr::opts_knit$set(root.dir = "..")
-knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
-                      fig.align='center', dpi = 600, 
-                      set.seed(8),
-                      message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  out.width = "100%", 
+  fig.align = 'center', 
+  dpi = 600, 
+  set.seed = 8,
+  message = FALSE, 
+  warning = FALSE,
+  # New options added below for EJI publication export:
+  dev = 'pdf', 
+  colormodel = 'cmyk', # Automatically formats colors for journal printing
+  fig.path = "D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/"
+)
 options(width = 1200)
 ```
 
@@ -199,7 +208,7 @@ img_plot_workflow <- ggplot() +
   scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
-img_plot_workflow
+
 ```
 
 ```{r fig.height=3.5, fig.width=9}
@@ -222,14 +231,14 @@ img_plot_spatial <- ggplot() +
   scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
-img_plot_spatial
+
 ```
 
 # Visualization for figures
 
 ## Figure 1
 
-```{r, fig.width=9, fig.height=13.4}
+```{r Figure_1_Main, fig.width=9, fig.height=13.4}
 ggarrange(img_plot_melc_panel, img_plot_coloc, 
           nrow = 2, ncol = 1, 
           heights = c(6.9, 6.5), 
@@ -238,18 +247,18 @@ ggarrange(img_plot_melc_panel, img_plot_coloc,
 
 ## Supplementary Figures
 
-```{r fig.height=12.3, fig.width=9}
-
-ggarrange(img_plot_workflow, img_plot_spatial, nrow = 2, ncol = 1, 
-          heights = c(8.8, 3.5), labels = "AUTO")
-
-```
-
-```{r, fig.width=9, fig.height=16.8}
+```{r Suppl_Figure_1, fig.width=9, fig.height=16.8}
 ggarrange(img_plot_coloc_imm, img_plot_coloc_endo, img_plot_coloc_epi, 
           nrow = 3, ncol = 1, 
           heights = c(4.9, 8.2, 3.7), 
           labels = "AUTO")
+```
+
+```{r Suppl_Figure_2, fig.height=12.3, fig.width=9}
+
+ggarrange(img_plot_workflow, img_plot_spatial, nrow = 2, ncol = 1, 
+          heights = c(8.8, 3.5), labels = "AUTO")
+
 ```
 
 ## Session Information
