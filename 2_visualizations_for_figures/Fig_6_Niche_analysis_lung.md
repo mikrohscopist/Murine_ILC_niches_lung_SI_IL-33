@@ -1,7 +1,7 @@
 ---
 title: "Figure 6: Niche analysis mouse lung"
 author: "Sandy Kroh"
-date: "Mai 13, 2026"
+date: "Mai 15, 2026"
 output:
   html_document:
     toc: yes
@@ -2505,7 +2505,6 @@ print(gg_heat_ilc2s_ctrl)
 
 <img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-32-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
-
 ``` r
 set.seed(8)
 
@@ -2514,11 +2513,6 @@ SO.sub <- subset(SO, subset = AL3 %in% c("ILC2s"))
 SO.sub <- subset(SO.sub, subset = Condition %in% c("D3"))
 SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
 SO.sub$Condition <- droplevels(as.factor(SO.sub$Condition))
-
-# --- 2. Direct Pseudo-bulk Aggregation ---
-ilc_markers <- c("KLRG1", 
-                 "ICOS", 
-                 "MHCII", "CD44", "Ki67")
 
 # Calculate the mean directly from Seurat
 avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "Tissue_Niche")
@@ -2566,7 +2560,263 @@ gg_heat_ilc2s_d3 <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat
 print(gg_heat_ilc2s_d3)
 ```
 
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-32-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+library(Seurat)
+library(ComplexHeatmap)
+library(ggplotify) # Required for as.ggplot()
+
+set.seed(8)
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO, subset = AL3 %in% c("Myeloid cells"))
+SO.sub <- subset(SO.sub, subset = Tissue_Niche %in% c("Mixed Myeloid/LEC niche"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+SO.sub$Tissue_Niche <- droplevels(as.factor(SO.sub$Tissue_Niche))
+
+# --- 2. Direct Pseudo-bulk Aggregation ---
+ilc_markers <- c("CD11c", "CD68",
+                 "ICOS", 
+                 "MHCII", "CD44", "Ki67")
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "Condition")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+colnames(mat_scaled) <- gsub("g", "D", colnames(mat_scaled))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat_my <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  # main = "ILC2s in\nmixed myeloid/LEC niche",
+  treeheight_col = 10,
+  treeheight_row = 20,
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_my_mixedmylec <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_my)))+
+  ggtitle("Myeloid cells in\nmixed myeloid/LEC niche")+
+  theme(
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 9),
+        plot.title = element_text(hjust = 0.3, size = 11, face = "bold"), 
+        plot.margin = margin(0.1, 0.5, 3, 0.5, "cm"),
+        legend.position = "right"
+      )
+
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+print(gg_heat_my_mixedmylec)
+```
+
 <img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-33-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+library(Seurat)
+library(ComplexHeatmap)
+library(ggplotify) # Required for as.ggplot()
+
+set.seed(8)
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO, subset = AL3 %in% c("LYVE1 CD90 Lymphatics"))
+SO.sub <- subset(SO.sub, subset = Tissue_Niche %in% c("Mixed Myeloid/LEC niche"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+SO.sub$Tissue_Niche <- droplevels(as.factor(SO.sub$Tissue_Niche))
+
+# --- 2. Direct Pseudo-bulk Aggregation ---
+ilc_markers <- c("LYVE1", "CD90",
+                 "CD31", 
+                 "PDGFRa", "Ki67", "Sca1", "PDPN")
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "Condition")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+colnames(mat_scaled) <- gsub("g", "D", colnames(mat_scaled))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat_ly <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  # main = "ILC2s in\nmixed myeloid/LEC niche",
+  treeheight_col = 10,
+  treeheight_row = 20,
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_ly_mixedmylec <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_ly)))+
+  ggtitle("Lymphatics in\nmixed myeloid/LEC niche")+
+  theme(
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 9),
+        plot.title = element_text(hjust = 0.3, size = 11, face = "bold"), 
+        plot.margin = margin(0.1, 0.5, 3, 0.5, "cm"),
+        legend.position = "right"
+      )
+
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+print(gg_heat_ly_mixedmylec)
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-34-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+
+``` r
+set.seed(8)
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO, subset = AL3 %in% c("ILC2s"))
+SO.sub <- subset(SO.sub, subset = Condition %in% c("CTRL"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+SO.sub$Condition <- droplevels(as.factor(SO.sub$Condition))
+
+# --- 2. Direct Pseudo-bulk Aggregation ---
+ilc_markers <- c("KLRG1", 
+                 "ICOS", 
+                 "MHCII", "CD44", "Ki67")
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "Tissue_Niche")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+colnames(mat_scaled) <- gsub("g", "D", colnames(mat_scaled))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat_ilc2s <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  treeheight_col = 10,
+  treeheight_row = 20,
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_ilc2s_ctrl <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_ilc2s)))+
+  ggtitle("ILC2s @ CTRL\n")+
+  theme(
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 9),
+        plot.title = element_text(hjust = 0.3, size = 11, face = "bold"), 
+        plot.margin = margin(0.1, 0.25, 0, 0.25, "cm"),
+        legend.position = "right"
+      )
+
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+print(gg_heat_ilc2s_ctrl)
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-35-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+``` r
+set.seed(8)
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO, subset = AL3 %in% c("ILC2s"))
+SO.sub <- subset(SO.sub, subset = Condition %in% c("D3"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+SO.sub$Condition <- droplevels(as.factor(SO.sub$Condition))
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "Tissue_Niche")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+colnames(mat_scaled) <- gsub("g", "D", colnames(mat_scaled))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat_ilc2s <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  # main = "ILC2s @ D3",
+  treeheight_col = 10,
+  treeheight_row = 20,
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_ilc2s_d3 <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_ilc2s)))+
+  ggtitle("ILC2s @ D3\n")+
+  theme(
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 9),
+        plot.title = element_text(hjust = 0.3, size = 11, face = "bold"), 
+        plot.margin = margin(0.1, 0.25, 0, 0.25, "cm"),
+        legend.position = "right"
+      )
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+print(gg_heat_ilc2s_d3)
+```
+
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-35-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2574,7 +2824,7 @@ ggarrange(gg_heat_ilc2s_ctrl, gg_heat_ilc2s_d3, gg_heat_ilc2s_mixedmylec,
           ncol = 3)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-34-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-36-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Visualization for figures
 
@@ -2586,7 +2836,7 @@ ggarrange(upper_fig, "NONE", final_atlas, ncol = 1, nrow = 3, heights = c(5.4, 0
           labels = c("", "", "D"), label.y = 1.06)
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-35-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-37-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Supplementary figures
 
@@ -2610,7 +2860,7 @@ ggarrange(sup_upper, "NONE", lower_supp_plot, final_niche_freq_comparison,
           labels = c("","", "C", "D"))
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-36-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-38-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2681,7 +2931,7 @@ ggplot(cell_comp_per_niche, aes(x = FullInfo, y = Fraction, fill = CellType)) +
   )
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-37-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-39-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2767,7 +3017,7 @@ annotate_figure(
 )
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-38-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-40-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2823,7 +3073,7 @@ ggarrange(
   labels = "AUTO")
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-39-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-41-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2832,7 +3082,7 @@ ggarrange(final_niche_comparison_ilc2s,
           final_niche_comparison_ilc3s, nrow = 3, ncol = 1, labels = "AUTO")
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-40-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-42-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ``` r
 ggarrange(final_niche_freq_comparison, 
@@ -2840,7 +3090,7 @@ ggarrange(final_niche_freq_comparison,
           final_niche_ilc3_comp, nrow = 3, ncol = 1, labels = "AUTO")
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-40-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-42-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2849,7 +3099,7 @@ ggarrange(final_niche_comparison_ilc2s,
           nrow = 2, ncol = 1, labels = "AUTO")
 ```
 
-<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-41-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_6_Niche_analysis_lung_files/figure-html/unnamed-chunk-43-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 

@@ -1,7 +1,7 @@
 ---
 title: "Figure 4: Immune cells, ILCs and ILC subtypes in lung"
 author: "Sandy Kroh"
-date: "Mai 13, 2026"
+date: "Mai 14, 2026"
 output:
   html_document:
     toc: yes
@@ -175,6 +175,72 @@ dot_plot
 
 <img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-5-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
+
+``` r
+library(scater)
+library(SpatialExperiment)
+set.seed(8)
+
+SO.sub <- subset(SO.lung, subset = AL1 %in% c("Immune cells"))
+
+general_markers <- c(
+                    # "ICOS",
+                    "CD90", 
+                    "CD127", 
+                    "GATA3eGFP", 
+                    # "KLRG1", 
+                    # "RORgt", 
+                    "CD4", 
+                    "CD3", 
+                    "CD8a", 
+                    "CD68",
+                    "CD11c",
+                    "MHCII",
+                    "B220", 
+                    "Kappa"
+                  )
+
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = general_markers, slot = "counts", group.by = "AL2")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  main = "Immune cells",
+  treeheight_col = 10,
+  treeheight_row = 20,
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_immune <- ggplotify::as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat)))
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+print(gg_heat_immune)
+```
+
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-6-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+
 # Differential expression ILC subtypes
 
 
@@ -224,7 +290,7 @@ print(spe)
 library(scuttle) # required for aggregateAcrossCells
 
 ilc_markers <- c("CD127", "CD90","GATA3eGFP", "KLRG1", "EOMES", "TBET",  
-                 "CD3", "CD8a", "CD4", "RORgt", "ICOS", 
+                 "CD3", "CD4", "RORgt", "ICOS", "CD8a",
                  "MHCII", "CD44", "Ki67", "NKp46")
 
 pbs_annotated <- aggregateAcrossCells(spe, 
@@ -248,7 +314,7 @@ pheatmap(mat = mat_annotated,
          main = "Aggregated Lineage Signatures (Z-scored)")
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-6-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -305,7 +371,7 @@ gg_heat <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat)))
 print(gg_heat)
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -369,7 +435,7 @@ gg_heat_ilc2s <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_il
 print(gg_heat_ilc2s)
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # IF overlays
 
@@ -548,7 +614,7 @@ img_plot_bec <- ggplot() +
 img_plot_bec
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Lymphatics
 
@@ -576,7 +642,7 @@ img_plot_ly <- ggplot() +
 img_plot_ly
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Visualizations for figures
 
@@ -591,7 +657,7 @@ figure <- ggarrange(dot_plot, gg_heat,
 ggarrange(figure, "NONE", img_plot_ilc2s, ncol = 1, nrow = 3, heights = c(5, 0.3, 6.6), labels = c("", "C"))
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Suppl. Figure
 
@@ -600,7 +666,7 @@ ggarrange(figure, "NONE", img_plot_ilc2s, ncol = 1, nrow = 3, heights = c(5, 0.3
 ggarrange(img_plot_nkilc1, img_plot_ilc3s, ncol = 1, nrow = 2, heights = c(8.6, 6.47), labels = c("A", "B"))
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -609,14 +675,14 @@ ggarrange(empty, img_plot_tcells, ncol = 1, nrow = 2,
                      heights = c(0.2, 7.2))
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
 img_plot_bpc
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -624,14 +690,14 @@ img_plot_bpc
 print(img_plot_mye)
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
 ggarrange(img_plot_bec, "NONE", img_plot_ly, ncol = 1, nrow = 3, heights = c(8.1, 0.2, 4.9), labels = c("A", "",  "B"))
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -679,7 +745,7 @@ Seurat::DotPlot(SO.lung,
                             high = "blue", space = "Lab" )
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-25-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 

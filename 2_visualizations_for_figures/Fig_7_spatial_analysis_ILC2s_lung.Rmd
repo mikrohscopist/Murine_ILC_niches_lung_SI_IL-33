@@ -734,6 +734,250 @@ print(final_plot_nkilc1)
 ### ILC2s
 
 ```{r, fig.height=3, fig.width=9}
+library(ggplot2)
+library(dplyr)
+
+# --- 1. Data Preparation Loop ---
+interactions <- "ILC2s--LYVE1 CD90 Lymphatics"
+interaction_celltypes <- NULL
+
+for(samp in vr_list_names){
+    # Extract proximity data for current sample
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions, ]
+    
+    # Get metadata info
+    sample_info <- unique(metadatax$FullInfo[metadatax$Sample == samp])
+    
+    # Filter and bind (excluding the specific outlier FOV mentioned)
+    if(nrow(cur_cell_proximities) > 0 && sample_info != "20210906_FOV3_D3"){
+        # Split string for metadata columns
+        info_split <- strsplit(sample_info, split = "_")[[1]]
+        
+        tmp_df <- data.frame(
+            cur_cell_proximities,
+            experiment = info_split[1],
+            fov        = info_split[2],
+            condition  = info_split[3]
+        )
+        interaction_celltypes <- rbind(interaction_celltypes, tmp_df)
+    }
+}
+
+# --- 2. Statistical Labeling (Fixed: Assigning to Dataframe) ---
+interaction_celltypes <- interaction_celltypes %>%
+  mutate(
+    # Determine p-value based on enrichment direction
+    p.adj = ifelse(enrichm > 0, p.adj_higher, p.adj_lower),
+    # Create significance label column
+    sig_label = ifelse(p.adj < 0.1, "*", "")
+  )
+
+# --- 3. Plotting ---
+plot_coenrichment_lymp <- ggplot(interaction_celltypes, 
+                                 aes(x = condition, y = enrichm, fill = condition, group = fov)) +
+  # Draw bars
+  geom_bar(stat = "identity", 
+           position = position_dodge2(width = 0.9, preserve = "single"), 
+           color = "black", 
+           linewidth = 0.2) +
+  # Draw asterisks (Fixed: Positioned per FOV and Condition)
+  geom_text(aes(label = sig_label), 
+            position = position_dodge2(width = 0.9, preserve = "single"), 
+            vjust = -0.2, # Sits slightly above the bar
+            size = 4, 
+            fontface = "bold") +
+  # Faceting logic
+  facet_grid(. ~ condition, scales = "free_x") +
+  # Limits and Colors
+  ylim(-2, 4) +
+  scale_fill_manual(values = cols_fov) +
+  # Titles and Labels
+  ggtitle(gsub("LYVE1 CD90 ", "", interactions)) +
+  ylab("Enrichment Score") +
+  theme_classic() +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 9, hjust = 0.5
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 9),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_text(size =10, hjust = 0.5, face = "bold"),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())
+
+print(plot_coenrichment_lymp)
+
+# --- SECTION 1: ILC2s around ILC2s ---
+interactions_ilc2 <- "ILC2s--ILC2s"
+interaction_ilc2_df <- NULL
+
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions_ilc2,]
+    sample_info <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+    
+    if(nrow(cur_cell_proximities) > 0 && sample_info != "20210906_FOV3_D3"){
+        info_split <- strsplit(sample_info, split = "_")[[1]]
+        interaction_ilc2_df <- rbind(interaction_ilc2_df,
+                                     data.frame(cur_cell_proximities, 
+                                                experiment = info_split[1], 
+                                                fov = info_split[2], 
+                                                condition = info_split[3]))
+    }
+}
+
+interaction_ilc2_df <- interaction_ilc2_df %>%
+  mutate(p.adj = ifelse(enrichm > 0, p.adj_higher, p.adj_lower),
+         sig_label = ifelse(p.adj < 0.1, "*", ""))
+
+plot_coenrichment_ilc2 <- ggplot(interaction_ilc2_df, aes(x = condition, y = enrichm, fill = condition, group = fov)) +
+  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single"), color = "black", linewidth = 0.2) +
+  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), vjust = -0.2, size = 4, fontface = "bold") +
+  facet_grid(.~condition, scales = "free_x") +
+  ylim(-2, 4) +
+  scale_fill_manual(values = cols_fov) +
+  theme_classic() +
+  ggtitle("ILC2s -- ILC2s") +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 9, hjust = 0.5
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 9),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_text(size =10, hjust = 0.5, face = "bold"),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())
+
+# --- SECTION 2: ILC2s around Myeloid cells ---
+interactions_my <- "ILC2s--Myeloid cells"
+interaction_my_df <- NULL
+
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions_my,]
+    sample_info <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+    
+    if(nrow(cur_cell_proximities) > 0 && sample_info != "20210906_FOV3_D3"){
+        info_split <- strsplit(sample_info, split = "_")[[1]]
+        interaction_my_df <- rbind(interaction_my_df,
+                                   data.frame(cur_cell_proximities, 
+                                              experiment = info_split[1], 
+                                              fov = info_split[2], 
+                                              condition = info_split[3]))
+    }
+}
+
+interaction_my_df <- interaction_my_df %>%
+  mutate(p.adj = ifelse(enrichm > 0, p.adj_higher, p.adj_lower),
+         sig_label = ifelse(p.adj < 0.1, "*", ""))
+
+plot_coenrichment_my <- ggplot(interaction_my_df, aes(x = condition, y = enrichm, fill = condition, group = fov)) +
+  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single"), color = "black", linewidth = 0.2) +
+  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), vjust = -0.2, size = 4, fontface = "bold") +
+  facet_grid(.~condition, scales = "free_x") +
+  ylim(-2, 4) +
+  scale_fill_manual(values = cols_fov) +
+  theme_classic() +
+  ggtitle("ILC2s -- Myeloid") +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 9, hjust = 0.5
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 9),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_text(size =10, hjust = 0.5, face = "bold"),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())
+
+
+# --- SECTION 4: ILC2s around T helper cells ---
+# Updated interaction string
+interactions_ilc2_th <- "ILC2s--T helper cells"
+interaction_ilc2_th_df <- NULL
+
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    # Filter for the ILC2-Th interaction
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions_ilc2_th, ]
+    sample_info <- unique(metadatax$FullInfo[metadatax$Sample == samp])
+    
+    if(nrow(cur_cell_proximities) > 0 && sample_info != "20210906_FOV3_D3"){
+        info_split <- strsplit(sample_info, split = "_")[[1]]
+        
+        interaction_ilc2_th_df <- rbind(interaction_ilc2_th_df,
+                                        data.frame(cur_cell_proximities, 
+                                                   experiment = info_split[1], 
+                                                   fov = info_split[2], 
+                                                   condition = info_split[3]))
+    }
+}
+
+# --- Statistical Labeling ---
+interaction_ilc2_th_df <- interaction_ilc2_th_df %>%
+  mutate(p.adj = ifelse(enrichm > 0, p.adj_higher, p.adj_lower),
+         sig_label = ifelse(p.adj < 0.1, "*", ""))
+
+# --- Plotting ---
+plot_coenrichment_th <- ggplot(interaction_ilc2_th_df, 
+                                    aes(x = condition, y = enrichm, fill = condition, group = fov)) +
+  geom_bar(stat = "identity", 
+           position = position_dodge2(width = 0.9, preserve = "single"), 
+           color = "black", 
+           linewidth = 0.2) +
+  geom_text(aes(label = sig_label), 
+            position = position_dodge2(width = 0.9, preserve = "single"), 
+            vjust = -0.2, 
+            size = 4, 
+            fontface = "bold") +
+  facet_grid(. ~ condition, scales = "free_x") +
+  ylim(-2, 4) +
+  scale_fill_manual(values = cols_fov) +
+  theme_classic() +
+  ggtitle("ILC2s -- T helper cells") +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 9, hjust = 0.5
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 9),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_text(size =10, hjust = 0.5, face = "bold"),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())
+
+print(plot_coenrichment_th)
+# --- SECTION 3: Final Arrangement ---
+# (Assumes plot_coenrichment_lymp was created using the same corrected logic previously)
+
+coenrichment_fig <- ggarrange(plot_coenrichment_ilc2, 
+                              plot_coenrichment_my, 
+                              plot_coenrichment_lymp, 
+                              ncol = 3, nrow = 1)
+
+coenrichment_fig_ann <- annotate_figure(coenrichment_fig, 
+                                        left = text_grob("Coenrichment score", 
+                                                         color = "black", rot = 90, size = 9))
+
+print(coenrichment_fig_ann)
+```
+
+```{r eval=FALSE, fig.height=3, fig.width=9, include=FALSE}
 
 # fine tune the co-enrichment plot
 # ILC2s around lymphatics -----------------------------------------
@@ -865,7 +1109,7 @@ plot_coenrichment_my <- ggplot(interaction_celltypes, aes(x = condition, y = enr
         axis.text.y = element_text(hjust = 0.5, size = 9),
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        plot.title = element_text(size =11, hjust = 0.5, face = "bold"),
+        plot.title = element_text(size =10, hjust = 0.5, face = "bold"),
         plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
         legend.position = "none",
         strip.background=element_blank(),
@@ -879,14 +1123,189 @@ coenrichment_fig <- ggarrange(plot_coenrichment_ilc2, plot_coenrichment_my, plot
 
 coenrichment_fig_ann <- annotate_figure(coenrichment_fig, 
                 left = text_grob("Coenrichment score", color = "black", rot = 90, 
-                                 size = 11))
+                                 size = 9))
 
 coenrichment_fig_ann
+```
+
+Additional visualization including T helper cells:
+
+```{r, fig.height=6, fig.width=9}
+
+coenrichment_fig <- ggarrange(plot_coenrichment_ilc2, 
+                              plot_coenrichment_my, 
+                              plot_coenrichment_lymp, 
+                              plot_coenrichment_th, 
+                              ncol = 2, nrow = 2)
+
+coenrichment_fig_ann_tcells <- annotate_figure(coenrichment_fig, 
+                left = text_grob("Coenrichment score", color = "black", rot = 90, 
+                                 size = 11))
+
+coenrichment_fig_ann_tcells
 ```
 
 ### NK cells/ILC1s
 
 ```{r, fig.height=3, fig.width=9}
+library(ggplot2)
+library(dplyr)
+library(ggpubr)
+
+# --- SECTION 1: NK cells/ILC1s around NK cells/ILC1s ---
+interactions_nk_self <- "NK cells/ILC1s--NK cells/ILC1s"
+interaction_nk_self_df <- NULL
+
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions_nk_self,]
+    sample_info <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+    
+    if(nrow(cur_cell_proximities) > 0 && sample_info != "20210906_FOV3_D3"){
+        info_split <- strsplit(sample_info, split = "_")[[1]]
+        interaction_nk_self_df <- rbind(interaction_nk_self_df,
+                                        data.frame(cur_cell_proximities, 
+                                                   experiment = info_split[1], 
+                                                   fov = info_split[2], 
+                                                   condition = info_split[3]))
+    }
+}
+
+interaction_nk_self_df <- interaction_nk_self_df %>%
+  mutate(p.adj = ifelse(enrichm > 0, p.adj_higher, p.adj_lower),
+         sig_label = ifelse(p.adj < 0.1, "*", ""))
+
+plot_coenrichment_nkilc1 <- ggplot(interaction_nk_self_df, aes(x = condition, y = enrichm, fill = condition, group = fov)) +
+  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single"), color = "black", linewidth = 0.2) +
+  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), vjust = -0.2, size = 4, fontface = "bold") +
+  facet_grid(.~condition, scales = "free_x") +
+  ylim(-1.6, 4) +
+  scale_fill_manual(values = cols_fov) +
+  theme_classic() +
+  ggtitle("NK cells/ILC1s -- NK cells/ILC1s") +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 9, hjust = 0.5
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 9),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_text(size =10, hjust = 0.5, face = "bold"),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())
+
+
+# --- SECTION 2: NK cells/ILC1s around B cells & Plasma cells ---
+interactions_nk_bpc <- "B cells & Plasma cells--NK cells/ILC1s"
+interaction_nk_bpc_df <- NULL
+
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions_nk_bpc,]
+    sample_info <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+    
+    if(nrow(cur_cell_proximities) > 0 && sample_info != "20210906_FOV3_D3"){
+        info_split <- strsplit(sample_info, split = "_")[[1]]
+        interaction_nk_bpc_df <- rbind(interaction_nk_bpc_df,
+                                       data.frame(cur_cell_proximities, 
+                                                  experiment = info_split[1], 
+                                                  fov = info_split[2], 
+                                                  condition = info_split[3]))
+    }
+}
+
+interaction_nk_bpc_df <- interaction_nk_bpc_df %>%
+  mutate(p.adj = ifelse(enrichm > 0, p.adj_higher, p.adj_lower),
+         sig_label = ifelse(p.adj < 0.1, "*", ""))
+
+plot_coenrichment_bpc <- ggplot(interaction_nk_bpc_df, aes(x = condition, y = enrichm, fill = condition, group = fov)) +
+  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single"), color = "black", linewidth = 0.2) +
+  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), vjust = -0.2, size = 4, fontface = "bold") +
+  facet_grid(.~condition, scales = "free_x") +
+  ylim(-1.6, 4) +
+  scale_fill_manual(values = cols_fov) +
+  theme_classic() +
+  ggtitle("NK cells/ILC1s -- B cells & Plasma cells") +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 9, hjust = 0.5
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 9),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_text(size =10, hjust = 0.5, face = "bold"),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())
+
+
+# --- SECTION 3: NK cells/ILC1s around Blood Vessels ---
+interactions_nk_bec <- "EMCN CD31 Blood vessels--NK cells/ILC1s"
+interaction_nk_bec_df <- NULL
+
+for(samp in vr_list_names){
+    cur_cell_proximities <- cell_proximities_list[[samp]]
+    cur_cell_proximities <- cur_cell_proximities[cur_cell_proximities$unified_int %in% interactions_nk_bec,]
+    sample_info <- unique(metadatax$FullInfo[metadatax$Sample==samp])
+    
+    if(nrow(cur_cell_proximities) > 0 && sample_info != "20210906_FOV3_D3"){
+        info_split <- strsplit(sample_info, split = "_")[[1]]
+        interaction_nk_bec_df <- rbind(interaction_nk_bec_df,
+                                       data.frame(cur_cell_proximities, 
+                                                  experiment = info_split[1], 
+                                                  fov = info_split[2], 
+                                                  condition = info_split[3]))
+    }
+}
+
+interaction_nk_bec_df <- interaction_nk_bec_df %>%
+  mutate(p.adj = ifelse(enrichm > 0, p.adj_higher, p.adj_lower),
+         sig_label = ifelse(p.adj < 0.1, "*", ""))
+
+plot_coenrichment_bec <- ggplot(interaction_nk_bec_df, aes(x = condition, y = enrichm, fill = condition, group = fov)) +
+  geom_bar(stat = "identity", position = position_dodge2(width=0.9, preserve = "single"), color = "black", linewidth = 0.2) +
+  geom_text(aes(label=sig_label), position=position_dodge2(width=0.9, preserve = "single"), vjust = -0.2, size = 4, fontface = "bold") +
+  facet_grid(.~condition, scales = "free_x") +
+  ylim(-1.6, 4) +
+  scale_fill_manual(values = cols_fov) +
+  theme_classic() +
+  ggtitle("NK cells/ILC1s -- Blood vessels") +
+  theme(axis.text.x = element_text(#angle = 50,
+                                   vjust = 1, size = 9, hjust = 0.5
+                                   ),
+        axis.text.y = element_text(hjust = 0.5, size = 9),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_text(size =10, hjust = 0.5, face = "bold"),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
+        legend.position = "none",
+        strip.background=element_blank(),
+        strip.background.x= element_blank(),
+        strip.text.x = element_text(size = 1, color = "white"),
+        panel.grid.major.y = element_line())
+
+
+# --- SECTION 4: Final Arrangement ---
+coenrichment_fig_supp <- ggarrange(plot_coenrichment_nkilc1, 
+                                   plot_coenrichment_bpc, 
+                                   plot_coenrichment_bec, 
+                                   ncol = 3, nrow = 1)
+
+coenrichment_fig_supp_ann <- annotate_figure(coenrichment_fig_supp, 
+                                             left = text_grob("Co-enrichment Score", 
+                                                              color = "black", rot = 90, 
+                                                              size = 10)) +
+  theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"))
+
+print(coenrichment_fig_supp_ann)
+```
+
+```{r eval=FALSE, fig.height=3, fig.width=9, include=FALSE}
 
 # fine tune the co-enrichment plot
 # ILC2s around lymphatics -----------------------------------------
