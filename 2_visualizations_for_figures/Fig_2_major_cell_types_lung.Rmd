@@ -19,9 +19,19 @@ editor_options:
 
 ```{r setup, include=FALSE}
 # knitr::opts_knit$set(root.dir = "..")
-knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
-                      fig.align='center', dpi = 600, 
-                      message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  out.width = "100%", 
+  fig.align = 'center', 
+  dpi = 600, 
+  set.seed = 8,
+  message = FALSE, 
+  warning = FALSE,
+  # New options added below for EJI publication export:
+  dev = 'pdf', 
+  colormodel = 'cmyk', # Automatically formats colors for journal printing
+  fig.path = "D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/"
+)
 options(width = 1200)
 ```
 
@@ -140,7 +150,6 @@ dot_plot <- Seurat::DotPlot(SO.lung,
   scale_color_gradient2(midpoint = 0, low = "gold", 
                             high = "blue", space = "Lab" )
 
-dot_plot
 ```
 
 ## Comparison annotation & IF overlay
@@ -304,11 +313,8 @@ p_right_overlay <- ggplot() +
     legend.margin = margin(t = 10, b = 10)
   )
 
-print(p_left_plot)
-print(p_right_overlay)
 plot_middle <- ggarrange(p_left_plot, p_right_overlay, ncol = 2, nrow = 1)
 
-plot_middle
 ```
 
 ## UMAP AL1
@@ -342,8 +348,6 @@ umap_plot <- ggplot(df_all_cells, aes(x=UMAP_1, y=UMAP_2, color=AL1)) +
         legend.text = element_text(size=14), 
         legend.title = element_blank())
 
-
-umap_plot
 ```
 
 ## Single marker channels
@@ -451,7 +455,7 @@ combined_images_plot <- wrap_plots(plot_list, nrow = 1)
 
 # You can now print this plot, or combine it further!
 # Example: combined_images_plot / my_umap_plot 
-print(combined_images_plot)
+# print(combined_images_plot)
 ```
 
 Combine plots for figure
@@ -462,10 +466,10 @@ upper_part <- ggarrange(umap_plot, dot_plot,
                         labels = c("A", ""))+
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
 
-upper_part
+# upper_part
 ```
 
-```{r, fig.width=9, fig.height=12}
+```{r Figure_2_Main, fig.width=9, fig.height=12}
 ggarrange(upper_part, plot_middle, combined_images_plot, ncol = 1, nrow = 3, 
           heights = c(4.5, 4.9, 2.6), labels = c("","B", "C"), label.y = 1.05)
 ```

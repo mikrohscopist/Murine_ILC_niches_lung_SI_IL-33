@@ -1,7 +1,7 @@
 ---
 title: "Figure 3: Visual validation AL1"
 author: "Sandy Kroh"
-date: "April 22, 2026"
+date: "Mai 21, 2026"
 output:
   html_document:
     toc: yes
@@ -67,10 +67,8 @@ img_plot_immune <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
 # Display the plot
-print(img_plot_immune)
+# print(img_plot_immune)
 ```
-
-<img src="Fig_3_Visual_validation_AL1_files/figure-html/unnamed-chunk-3-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -94,10 +92,8 @@ img_plot_vessels <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
 # Display the plot
-print(img_plot_vessels)
+# print(img_plot_vessels)
 ```
-
-<img src="Fig_3_Visual_validation_AL1_files/figure-html/unnamed-chunk-4-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -121,14 +117,12 @@ img_plot_epithelia <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
 # Display the plot
-print(img_plot_epithelia)
+# print(img_plot_epithelia)
 ```
-
-<img src="Fig_3_Visual_validation_AL1_files/figure-html/unnamed-chunk-5-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Visualization for figures
 
-## Figure 1
+## Figure 3
 
 
 ``` r
@@ -138,7 +132,7 @@ ggarrange(img_plot_immune, img_plot_vessels, img_plot_epithelia,
           labels = "AUTO")
 ```
 
-<img src="Fig_3_Visual_validation_AL1_files/figure-html/unnamed-chunk-6-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<img src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Figure_3_Main-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 

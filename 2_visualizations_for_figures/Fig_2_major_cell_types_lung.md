@@ -1,7 +1,7 @@
 ---
 title: "Figure 2: major immune and non-immune cell types lung"
 author: "Sandy Kroh"
-date: "April 23, 2026"
+date: "Mai 21, 2026"
 output:
   html_document:
     toc: yes
@@ -140,11 +140,7 @@ dot_plot <- Seurat::DotPlot(SO.lung,
           plot.title = element_blank())+ 
   scale_color_gradient2(midpoint = 0, low = "gold", 
                             high = "blue", space = "Lab" )
-
-dot_plot
 ```
-
-<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-4-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Comparison annotation & IF overlay
 
@@ -308,24 +304,8 @@ p_right_overlay <- ggplot() +
     legend.margin = margin(t = 10, b = 10)
   )
 
-print(p_left_plot)
-```
-
-<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-5-1.png" alt="" width="100%" style="display: block; margin: auto;" />
-
-``` r
-print(p_right_overlay)
-```
-
-<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-5-2.png" alt="" width="100%" style="display: block; margin: auto;" />
-
-``` r
 plot_middle <- ggarrange(p_left_plot, p_right_overlay, ncol = 2, nrow = 1)
-
-plot_middle
 ```
-
-<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-5-3.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## UMAP AL1
 
@@ -357,12 +337,7 @@ umap_plot <- ggplot(df_all_cells, aes(x=UMAP_1, y=UMAP_2, color=AL1)) +
         legend.position = "bottom", 
         legend.text = element_text(size=14), 
         legend.title = element_blank())
-
-
-umap_plot
 ```
-
-<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-6-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Single marker channels
 
@@ -470,10 +445,8 @@ combined_images_plot <- wrap_plots(plot_list, nrow = 1)
 
 # You can now print this plot, or combine it further!
 # Example: combined_images_plot / my_umap_plot 
-print(combined_images_plot)
+# print(combined_images_plot)
 ```
-
-<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 Combine plots for figure
 
@@ -484,10 +457,8 @@ upper_part <- ggarrange(umap_plot, dot_plot,
                         labels = c("A", ""))+
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
 
-upper_part
+# upper_part
 ```
-
-<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -495,7 +466,7 @@ ggarrange(upper_part, plot_middle, combined_images_plot, ncol = 1, nrow = 3,
           heights = c(4.5, 4.9, 2.6), labels = c("","B", "C"), label.y = 1.05)
 ```
 
-<img src="Fig_2_major_cell_types_lung_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Figure_2_Main-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 ## Session Information
 

@@ -1,7 +1,7 @@
 ---
 title: "Figure 5: Quantification lung"
 author: "Sandy Kroh"
-date: "Mai 13, 2026"
+date: "Mai 21, 2026"
 output:
   html_document:
     toc: yes
@@ -228,10 +228,8 @@ plot_prop <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
     #        size = 10/.pt)+
   NoLegend()
 
-plot_prop
+# plot_prop
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-4-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -368,10 +366,8 @@ plot_d3 <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
     #        size = 10/.pt)+
   NoLegend()
 
-plot_d3
+# plot_d3
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-5-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## 4C - Frequencies of ILCs within ILC compartment \@ CTRL conditions
 
@@ -505,10 +501,8 @@ plot_freq <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
   NoLegend()
 
 
-plot_freq
+# plot_freq
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-6-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -642,10 +636,8 @@ plot_freq_d3 <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
   NoLegend()
 
 
-plot_freq_d3
+# plot_freq_d3
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## 4B - Frequency of ILCs within immune compartment \@ CTRL
 
@@ -778,10 +770,8 @@ plot_freq_immune <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))+
   scale_y_continuous(expand = c(0, 0), limits = c(0,14))+
   NoLegend()
 
-plot_freq_immune
+# plot_freq_immune
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -914,10 +904,8 @@ plot_freq_immune_d3 <- ggplot(df, aes(x = ILCtype, y = value, fill = "ILCtype"))
   scale_y_continuous(expand = c(0, 0), limits = c(0,20))+
   NoLegend()
 
-plot_freq_immune_d3
+# plot_freq_immune_d3
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Total cell count IL-33
 
@@ -1040,10 +1028,8 @@ plot_count_all <- ggplot(df, aes(x = Treatment, y = TotalCellCountFOV, fill = "T
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_count_all
+# plot_count_all
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-10-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Total immune count IL-33
 
@@ -1166,10 +1152,8 @@ plot_count_immune <- ggplot(df, aes(x = Treatment, y = `Immune cells`, fill = "T
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_count_immune
+# plot_count_immune
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-11-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Total ILC count IL-33
 
@@ -1292,10 +1276,8 @@ plot_count_ilc <- ggplot(df, aes(x = Treatment, y = ILCs, fill = "Treatment"))+
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_count_ilc
+# plot_count_ilc
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-12-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Total count ILC1s/NK cells
 
@@ -1418,10 +1400,8 @@ plot_count_ilc1 <- ggplot(df, aes(x = Treatment, y = `NK cells/ILC1s`, fill = "T
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_count_ilc1
+# plot_count_ilc1
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-13-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Total count ILC2s
 
@@ -1544,10 +1524,8 @@ plot_count_ilc2 <- ggplot(df, aes(x = Treatment, y = `ILC2s`, fill = "Treatment"
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_count_ilc2
+# plot_count_ilc2
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-14-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Total count ILC3s
 
@@ -1670,10 +1648,8 @@ plot_count_ilc3 <- ggplot(df, aes(x = Treatment, y = `ILC3s`, fill = "Treatment"
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_count_ilc3
+# plot_count_ilc3
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-15-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Freq ILC1s of ILC compartment
 
@@ -1798,10 +1774,8 @@ plot_freq_ilc1 <- ggplot(df, aes(x = Treatment, y = `NK cells/ILC1s`, fill = "Tr
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_freq_ilc1
+# plot_freq_ilc1
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-16-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Freq ILC2s of ILC compartment
 
@@ -1925,10 +1899,8 @@ plot_freq_ilc2 <- ggplot(df, aes(x = Treatment, y = `ILC2s`, fill = "Treatment")
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_freq_ilc2
+# plot_freq_ilc2
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Freq ILC3s of ILC compartment
 
@@ -2052,10 +2024,8 @@ plot_freq_ilc3 <- ggplot(df, aes(x = Treatment, y = `ILC3s`, fill = "Treatment")
 #            #angle = 90, 
 #            size = 10/.pt)
 
-plot_freq_ilc3
+# plot_freq_ilc3
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Freq of immune cells, Endothelia & stroma and epithelia within total cells
 
@@ -2397,13 +2367,11 @@ plot_epithelia <- ggplot(df, aes(x = Treatment, y = `cells_of_interest`, fill = 
   NoLegend()
 
 
-ggarrange(plot_immune, plot_stroma, plot_epithelia, 
+plot_major <- ggarrange(plot_immune, plot_stroma, plot_epithelia, 
           ncol = 3, nrow = 1, 
           labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I"))+
   theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Differential marker expression of ILCs across conditions
 
@@ -2505,10 +2473,8 @@ gg_heat_ilc2s <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_il
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat_ilc2s)
+# print(gg_heat_ilc2s)
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2565,12 +2531,9 @@ gg_heat_ilc1s <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_il
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat_ilc1s)
-```
+# print(gg_heat_ilc1s)
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
-``` r
 # --- 1. Subsetting ---
 SO.sub <- subset(SO.lung, subset = AL3 %in% c("ILC3s"))
 SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
@@ -2622,10 +2585,61 @@ gg_heat_ilc3s <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_il
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat_ilc3s)
-```
+# print(gg_heat_ilc3s)
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-22-2.png" alt="" width="100%" style="display: block; margin: auto;" />
+
+# --- 1. Subsetting ---
+SO.sub <- subset(SO.lung, subset = AL3 %in% c("ILC3s"))
+SO.sub$AL3 <- droplevels(as.factor(SO.sub$AL3))
+
+# --- 2. Direct Pseudo-bulk Aggregation ---
+ilc_markers <- c("ICOS", "CD11c", "CD68", "SiglecF", "CD4",
+                 "MHCII", "CD44", "Ki67")
+
+# Calculate the mean directly from Seurat
+avg_exp <- AverageExpression(SO.sub, features = ilc_markers, slot = "counts", group.by = "Treatment")
+mat_annotated <- avg_exp[[DefaultAssay(SO.sub)]]
+# --- 3. Manually Scale (Z-score) the Matrix ---
+mat_scaled <- t(scale(t(mat_annotated)))
+colnames(mat_scaled) <- gsub("g", "D", colnames(mat_scaled))
+
+# Clean up math errors and cap outliers
+mat_scaled[is.na(mat_scaled)] <- 0
+mat_scaled[mat_scaled > 2] <- 2
+mat_scaled[mat_scaled < -2] <- -2
+
+# --- 4. Plot Heatmap using ComplexHeatmap ---
+plot_heat_my <- ComplexHeatmap::pheatmap(
+  mat = mat_scaled, 
+  scale = "none", 
+  clustering_method = "ward.D2",
+  color = colorRampPalette(c("#648FFF", "white", "#FFB000"))(101), 
+  breaks = seq(-2, 2, length.out = 102), 
+  display_numbers = round(mat_scaled, 2), 
+  number_color = "black",
+  treeheight_col = 10,
+  treeheight_row = 20, 
+  name = "Z-Score" 
+)
+
+# --- 5. Convert to ggplot object for arrangement ---
+# Using grid.grabExpr(draw()) ensures that all the internal sizing, 
+# legends, and dendrograms from ComplexHeatmap are captured perfectly.
+gg_heat_my <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_my, heatmap_legend_side = "bottom")))+
+  ggtitle("Myeloid cells\nacross conditions\n")+
+  theme(
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5, size = 11, face = "bold"), 
+        plot.margin = margin(0.1, 0.25, 0, 0.25, "cm"),
+        legend.position = "bottom"
+      )
+
+# 'gg_heat' is now a standard ggplot object! 
+# You can now combine it using patchwork, e.g.:
+# combined_plot <- spatial_scatter_plot + gg_heat
+# print(gg_heat_my)
+```
 
 
 ``` r
@@ -2737,51 +2751,10 @@ gg_heat_d3 <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_d3, h
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
 
-ggarrange(gg_heat_ctrl, gg_heat_d3, ncol = 2)
+# ggarrange(gg_heat_ctrl, gg_heat_d3, ncol = 2)
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Combine plots for figure
-
-
-``` r
-top_figure <- ggarrange(plot_prop, plot_freq_immune, plot_freq, 
-          ncol = 3, nrow = 1, 
-          labels = c("AUTO"), 
-          label.x = 0.1)+
-  theme(plot.margin = margin(0, 0, 0.2, 0, "cm"))
-
-
-middle_figure <- ggarrange(
-          plot_count_all, plot_count_immune, plot_count_ilc,
-          plot_count_ilc2, 
-          ncol = 2, nrow = 2, 
-          labels = c("D", "E", "F",
-                     "G"),
-          label.x = 0.1)+
-  theme(plot.margin = margin(0, 0, 0, 0, "cm"))
-
-
-
-final_figure <- ggarrange(top_figure, middle_figure, 
-          ncol = 1, nrow = 2, heights = c(3, 4.5))+
-  theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
-
-final_figure
-```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" style="display: block; margin: auto;" />
-
-``` r
-annotate_figure(final_figure,
-               bottom = text_grob("N: CTRL/D1/D2 = 9 FOVs, D3 = 8 FOVs; Kruskal-Wallis-test & Dunn’s test; Significance levels of adjusted p-values: **** = 1e-04, *** = 0.001, ** = 0.01, * = 0.05", 
-                                  color = "black", 
-                                  # hjust = -1,
-                                  face = "italic", size = 8))
-```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-24-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2818,17 +2791,15 @@ final_figure <- ggarrange(top_figure, middle_figure,
 final_figure
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-25-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Figure_5_Main-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 ``` r
-annotate_figure(final_figure,
-               bottom = text_grob("N: CTRL/D1/D2 = 9 FOVs, D3 = 8 FOVs; Kruskal-Wallis-test & Dunn’s test; Significance levels of adjusted p-values: **** = 1e-04, *** = 0.001, ** = 0.01, * = 0.05", 
-                                  color = "black", 
-                                  # hjust = -1,
-                                  face = "italic", size = 8))
+# annotate_figure(final_figure,
+#                bottom = text_grob("N: CTRL/D1/D2 = 9 FOVs, D3 = 8 FOVs; Kruskal-Wallis-test & Dunn’s test; Significance levels of adjusted p-values: **** = 1e-04, *** = 0.001, ** = 0.01, * = 0.05", 
+#                                   color = "black", 
+#                                   # hjust = -1,
+#                                   face = "italic", size = 8))
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-25-2.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -2842,27 +2813,15 @@ suppl_figure <- ggarrange(plot_count_ilc1, plot_count_ilc3, plot_freq_immune_d3,
 suppl_figure
 ```
 
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-26-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Suppl_Figure_9-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 ``` r
-annotate_figure(suppl_figure,
-               bottom = text_grob("N: CTRL/D1/D2 = 9 FOVs, D3 = 8 FOVs; Kruskal-Wallis-test & Dunn’s test; Significance levels of adjusted p-values: **** = 1e-04, *** = 0.001, ** = 0.01, * = 0.05",
-                                  color = "black",
-                                  # hjust = -1,
-                                  face = "italic", size = 8))
+# annotate_figure(suppl_figure,
+#                bottom = text_grob("N: CTRL/D1/D2 = 9 FOVs, D3 = 8 FOVs; Kruskal-Wallis-test & Dunn’s test; Significance levels of adjusted p-values: **** = 1e-04, *** = 0.001, ** = 0.01, * = 0.05",
+#                                   color = "black",
+#                                   # hjust = -1,
+#                                   face = "italic", size = 8))
 ```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-26-2.png" alt="" width="100%" style="display: block; margin: auto;" />
-
-
-``` r
-ggarrange(plot_freq_ilc1, plot_freq_ilc2, plot_freq_ilc3, 
-          ncol = 3, nrow = 1, 
-          labels = c("A", "B", "C", "D", "E", "F", "G", "H", "I"))+
-  theme(plot.margin = margin(0, 0.1, 0, 0, "cm"))
-```
-
-<img src="Fig_5_quantification_lung_files/figure-html/unnamed-chunk-27-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Session Information
 

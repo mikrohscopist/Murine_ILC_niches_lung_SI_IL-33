@@ -1,7 +1,7 @@
 ---
 title: "Figure 1: MELC panel and sample prep workflow"
 author: "Sandy Kroh"
-date: "Mai 15, 2026"
+date: "Mai 21, 2026"
 output:
   html_document:
     toc: yes
@@ -187,10 +187,7 @@ img_plot_workflow <- ggplot() +
   scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
-img_plot_workflow
 ```
-
-<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -212,10 +209,7 @@ img_plot_spatial <- ggplot() +
   scale_x_continuous(expand = c(0, 0), limits = c(0, w)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
-img_plot_spatial
 ```
-
-<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Visualization for figures
 
@@ -229,17 +223,9 @@ ggarrange(img_plot_melc_panel, img_plot_coloc,
           labels = "AUTO")
 ```
 
-<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-10-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Figure_1_Main-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 ## Supplementary Figures
-
-
-``` r
-ggarrange(img_plot_workflow, img_plot_spatial, nrow = 2, ncol = 1, 
-          heights = c(8.8, 3.5), labels = "AUTO")
-```
-
-<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-11-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -249,7 +235,15 @@ ggarrange(img_plot_coloc_imm, img_plot_coloc_endo, img_plot_coloc_epi,
           labels = "AUTO")
 ```
 
-<img src="Fig_1_MELC_panel_workflow_files/figure-html/unnamed-chunk-12-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Suppl_Figure_1-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
+
+
+``` r
+ggarrange(img_plot_workflow, img_plot_spatial, nrow = 2, ncol = 1, 
+          heights = c(8.8, 3.5), labels = "AUTO")
+```
+
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Suppl_Figure_2-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 ## Session Information
 

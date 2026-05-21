@@ -1,7 +1,7 @@
 ---
 title: "Figure 4: Immune cells, ILCs and ILC subtypes in lung"
 author: "Sandy Kroh"
-date: "Mai 14, 2026"
+date: "Mai 21, 2026"
 output:
   html_document:
     toc: yes
@@ -170,10 +170,8 @@ dot_plot <- Seurat::DotPlot(subset(SO.lung, subset = AL1 == "Immune cells"),
   scale_color_gradient2(midpoint = 0, low = "gold", 
                             high = "blue", space = "Lab" )
 
-dot_plot
+# dot_plot
 ```
-
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-5-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -188,7 +186,7 @@ general_markers <- c(
                     "CD90", 
                     "CD127", 
                     "GATA3eGFP", 
-                    # "KLRG1", 
+                    "KLRG1",
                     # "RORgt", 
                     "CD4", 
                     "CD3", 
@@ -236,10 +234,8 @@ gg_heat_immune <- ggplotify::as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat_immune)
+# print(gg_heat_immune)
 ```
-
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-6-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Differential expression ILC subtypes
 
@@ -314,7 +310,7 @@ pheatmap(mat = mat_annotated,
          main = "Aggregated Lineage Signatures (Z-scored)")
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/unnamed-chunk-7-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 
 ``` r
@@ -363,15 +359,13 @@ plot_heat <- ComplexHeatmap::pheatmap(
 # --- 5. Convert to ggplot object for arrangement ---
 # Using grid.grabExpr(draw()) ensures that all the internal sizing, 
 # legends, and dendrograms from ComplexHeatmap are captured perfectly.
-gg_heat <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat)))
+gg_heat <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat)))+ theme(plot.title = element_text(size = 11))
 
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat)
+# print(gg_heat)
 ```
-
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 
 ``` r
@@ -432,10 +426,8 @@ gg_heat_ilc2s <- as.ggplot(grid::grid.grabExpr(ComplexHeatmap::draw(plot_heat_il
 # 'gg_heat' is now a standard ggplot object! 
 # You can now combine it using patchwork, e.g.:
 # combined_plot <- spatial_scatter_plot + gg_heat
-print(gg_heat_ilc2s)
+# print(gg_heat_ilc2s)
 ```
-
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # IF overlays
 
@@ -611,10 +603,8 @@ img_plot_bec <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
 
-img_plot_bec
+# img_plot_bec
 ```
-
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-17-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 ## Lymphatics
 
@@ -639,10 +629,8 @@ img_plot_ly <- ggplot() +
   scale_y_continuous(expand = c(0, 0), limits = c(0, h)) +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
-img_plot_ly
+# img_plot_ly
 ```
-
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-18-1.png" alt="" width="100%" style="display: block; margin: auto;" />
 
 # Visualizations for figures
 
@@ -657,7 +645,7 @@ figure <- ggarrange(dot_plot, gg_heat,
 ggarrange(figure, "NONE", img_plot_ilc2s, ncol = 1, nrow = 3, heights = c(5, 0.3, 6.6), labels = c("", "C"))
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-19-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Figure_4_Main-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 ## Suppl. Figure
 
@@ -666,7 +654,7 @@ ggarrange(figure, "NONE", img_plot_ilc2s, ncol = 1, nrow = 3, heights = c(5, 0.3
 ggarrange(img_plot_nkilc1, img_plot_ilc3s, ncol = 1, nrow = 2, heights = c(8.6, 6.47), labels = c("A", "B"))
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-20-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Suppl_Figure_6-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 
 ``` r
@@ -675,14 +663,14 @@ ggarrange(empty, img_plot_tcells, ncol = 1, nrow = 2,
                      heights = c(0.2, 7.2))
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-21-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Suppl_Figure_5-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 
 ``` r
 img_plot_bpc
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-22-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Suppl_Figure_3-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 
 ``` r
@@ -690,14 +678,14 @@ img_plot_bpc
 print(img_plot_mye)
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-23-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Suppl_Figure_4-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 
 ``` r
 ggarrange(img_plot_bec, "NONE", img_plot_ly, ncol = 1, nrow = 3, heights = c(8.1, 0.2, 4.9), labels = c("A", "",  "B"))
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-24-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Suppl_Figure_7-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 
 ``` r
@@ -745,7 +733,7 @@ Seurat::DotPlot(SO.lung,
                             high = "blue", space = "Lab" )
 ```
 
-<img src="Fig_4_ILCs_in_lung_files/figure-html/unnamed-chunk-25-1.png" alt="" width="100%" style="display: block; margin: auto;" />
+<embed src="D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/Suppl_Figure_8-1.pdf" width="100%" style="display: block; margin: auto;" type="application/pdf" />
 
 ## Session Information
 
@@ -776,7 +764,7 @@ sessionInfo()
 ##  [1] ggplotify_0.1.3             ComplexHeatmap_2.26.1       pheatmap_1.0.13             SpatialExperiment_1.20.0    scater_1.38.0               scuttle_1.20.0              SingleCellExperiment_1.32.0 SummarizedExperiment_1.40.0 Biobase_2.70.0              GenomicRanges_1.62.0        Seqinfo_1.0.0               IRanges_2.44.0              S4Vectors_0.48.0            BiocGenerics_0.56.0         generics_0.1.4              MatrixGenerics_1.22.0       matrixStats_1.5.0           ggpubr_0.6.2                ggplot2_4.0.1               png_0.1-8                   dplyr_1.1.4                 Seurat_5.3.1                SeuratObject_5.2.0          sp_2.2-0                   
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] RcppAnnoy_0.0.22       splines_4.5.2          later_1.4.4            tibble_3.3.0           polyclip_1.10-7        fastDummies_1.7.5      lifecycle_1.0.5        rstatix_0.7.3          doParallel_1.0.17      rprojroot_2.1.1        globals_0.19.0         lattice_0.22-7         MASS_7.3-65            backports_1.5.0        magrittr_2.0.4         plotly_4.12.0          sass_0.4.10            rmarkdown_2.30         jquerylib_0.1.4        yaml_2.3.10            httpuv_1.6.16          otel_0.2.0             sctransform_0.4.2      spam_2.11-1            spatstat.sparse_3.1-0  reticulate_1.44.0      cowplot_1.2.0          pbapply_1.7-4          RColorBrewer_1.1-3     abind_1.4-8            Rtsne_0.17             purrr_1.2.0            yulab.utils_0.2.4      rappdirs_0.3.4         circlize_0.4.17        ggrepel_0.9.6          irlba_2.3.5.1          listenv_0.10.0         spatstat.utils_3.2-0   goftest_1.2-3          RSpectra_0.16-2        spatstat.random_3.4-2  fitdistrplus_1.2-6     parallelly_1.45.1      codetools_0.2-20       DelayedArray_0.36.0    shape_1.4.6.1          tidyselect_1.2.1       farver_2.1.2           viridis_0.6.5          ScaledMatrix_1.18.0   
+##   [1] RcppAnnoy_0.0.22       splines_4.5.2          later_1.4.4            tibble_3.3.0           polyclip_1.10-7        fastDummies_1.7.5      lifecycle_1.0.5        rstatix_0.7.3          doParallel_1.0.17      rprojroot_2.1.1        globals_0.19.0         lattice_0.22-7         MASS_7.3-65            backports_1.5.0        magrittr_2.0.4         plotly_4.12.0          sass_0.4.10            rmarkdown_2.30         jquerylib_0.1.4        yaml_2.3.10            httpuv_1.6.16          otel_0.2.0             sctransform_0.4.2      spam_2.11-1            spatstat.sparse_3.1-0  reticulate_1.44.0      cowplot_1.2.0          pbapply_1.7-4          RColorBrewer_1.1-3     abind_1.4-8            Rtsne_0.17             purrr_1.2.0            yulab.utils_0.2.4      rappdirs_0.3.4         circlize_0.4.17        ggrepel_0.9.6          irlba_2.3.5.1          listenv_0.10.0         spatstat.utils_3.2-0   goftest_1.2-3          RSpectra_0.16-2        spatstat.random_3.4-2  fitdistrplus_1.2-6     parallelly_1.45.1      codetools_0.2-20       DelayedArray_0.36.0    shape_1.4.6.1          tidyselect_1.2.1       farver_2.1.2           ScaledMatrix_1.18.0    viridis_0.6.5         
 ##  [52] spatstat.explore_3.5-3 jsonlite_2.0.0         GetoptLong_1.1.0       BiocNeighbors_2.4.0    progressr_0.18.0       Formula_1.2-5          iterators_1.0.14       ggridges_0.5.7         survival_3.8-3         foreach_1.5.2          tools_4.5.2            ica_1.0-3              Rcpp_1.1.0             glue_1.8.0             gridExtra_2.3          SparseArray_1.10.1     xfun_0.56              here_1.0.2             withr_3.0.2            fastmap_1.2.0          digest_0.6.38          rsvd_1.0.5             gridGraphics_0.5-1     R6_2.6.1               mime_0.13              colorspace_2.1-2       Cairo_1.7-0            scattermore_1.2        tensor_1.5.1           dichromat_2.0-0.1      spatstat.data_3.1-9    tidyr_1.3.1            data.table_1.17.8      httr_1.4.8             htmlwidgets_1.6.4      S4Arrays_1.10.0        uwot_0.2.4             pkgconfig_2.0.3        gtable_0.3.6           lmtest_0.9-40          S7_0.2.0               XVector_0.50.0         htmltools_0.5.8.1      carData_3.0-6          dotCall64_1.2          clue_0.3-67            scales_1.4.0           spatstat.univar_3.1-4  knitr_1.51             rstudioapi_0.18.0      rjson_0.2.23          
-## [103] reshape2_1.4.5         nlme_3.1-168           GlobalOptions_0.1.3    cachem_1.1.0           zoo_1.8-14             stringr_1.6.0          KernSmooth_2.23-26     vipor_0.4.7            parallel_4.5.2         miniUI_0.1.2           pillar_1.11.1          vctrs_0.6.5            RANN_2.6.2             promises_1.5.0         car_3.1-5              BiocSingular_1.26.0    beachmat_2.26.0        xtable_1.8-8           cluster_2.1.8.1        beeswarm_0.4.0         evaluate_1.0.5         magick_2.9.0           cli_3.6.5              compiler_4.5.2         crayon_1.5.3           rlang_1.1.6            future.apply_1.20.2    ggsignif_0.6.4         labeling_0.4.3         fs_1.6.6               plyr_1.8.9             ggbeeswarm_0.7.3       stringi_1.8.7          viridisLite_0.4.2      deldir_2.0-4           BiocParallel_1.44.0    lazyeval_0.2.2         spatstat.geom_3.6-0    Matrix_1.7-4           RcppHNSW_0.6.0         patchwork_1.3.2        future_1.69.0          shiny_1.13.0           ROCR_1.0-12            igraph_2.2.1           broom_1.0.12           bslib_0.10.0
+## [103] reshape2_1.4.5         nlme_3.1-168           GlobalOptions_0.1.3    cachem_1.1.0           zoo_1.8-14             stringr_1.6.0          KernSmooth_2.23-26     parallel_4.5.2         miniUI_0.1.2           vipor_0.4.7            pillar_1.11.1          vctrs_0.6.5            RANN_2.6.2             promises_1.5.0         car_3.1-5              BiocSingular_1.26.0    beachmat_2.26.0        xtable_1.8-8           cluster_2.1.8.1        beeswarm_0.4.0         evaluate_1.0.5         magick_2.9.0           cli_3.6.5              compiler_4.5.2         crayon_1.5.3           rlang_1.1.6            future.apply_1.20.2    ggsignif_0.6.4         labeling_0.4.3         fs_1.6.6               plyr_1.8.9             ggbeeswarm_0.7.3       stringi_1.8.7          viridisLite_0.4.2      deldir_2.0-4           BiocParallel_1.44.0    lazyeval_0.2.2         spatstat.geom_3.6-0    Matrix_1.7-4           RcppHNSW_0.6.0         patchwork_1.3.2        future_1.69.0          shiny_1.13.0           ROCR_1.0-12            igraph_2.2.1           broom_1.0.12           bslib_0.10.0
 ```

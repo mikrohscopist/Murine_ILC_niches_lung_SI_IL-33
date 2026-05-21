@@ -19,10 +19,19 @@ editor_options:
 
 ```{r setup, include=FALSE}
 # knitr::opts_knit$set(root.dir = "..")
-knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
-                      fig.align='center', dpi = 600, 
-                      set.seed(8),
-                      message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  out.width = "100%", 
+  fig.align = 'center', 
+  dpi = 600, 
+  set.seed = 8,
+  message = FALSE, 
+  warning = FALSE,
+  # New options added below for EJI publication export:
+  dev = 'cairo_pdf',
+  colormodel = 'cmyk', # Automatically formats colors for journal printing
+  fig.path = "D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/"
+)
 options(width = 1200)
 ```
 
@@ -376,7 +385,7 @@ img_plot_if_ilc2s <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
 # Display the plot
-print(img_plot_if_ilc2s)
+# print(img_plot_if_ilc2s)
 ```
 
 ```{r fig.height=3.6, fig.width=9}
@@ -404,7 +413,7 @@ img_plot_if_ilc2s_roi <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
 # Display the plot
-print(img_plot_if_ilc2s_roi)
+# print(img_plot_if_ilc2s_roi)
 ```
 
 ```{r fig.height=4.5, fig.width=9}
@@ -432,7 +441,7 @@ img_plot_if_ilc2s_my <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
 # Display the plot
-print(img_plot_if_ilc2s_my)
+# print(img_plot_if_ilc2s_my)
 ```
 
 ```{r fig.height=5.5, fig.width=9}
@@ -460,7 +469,7 @@ img_plot_if_ilc2s_icos <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
 # Display the plot
-print(img_plot_if_ilc2s_icos)
+# print(img_plot_if_ilc2s_icos)
 ```
 
 # Coenrichment analysis
@@ -609,8 +618,7 @@ final_plot_ILC2s <- gg_heat +
     plot.margin = margin(0, 0, 0.5, 0.2, "cm")
   )
 
-# Print your beautiful, perfectly aligned plot!
-print(final_plot_ILC2s)
+# print(final_plot_ILC2s)
 ```
 
 ```{r, fig.height=2.8, fig.width=9}
@@ -725,8 +733,7 @@ final_plot_nkilc1 <- gg_heat +
     plot.margin = margin(0, 0, 0.5, 0.2, "cm")
   )
 
-# Print your beautiful, perfectly aligned plot!
-print(final_plot_nkilc1)
+# print(final_plot_nkilc1)
 ```
 
 ## Coenrichment barplots
@@ -810,7 +817,7 @@ plot_coenrichment_lymp <- ggplot(interaction_celltypes,
         strip.text.x = element_text(size = 1, color = "white"),
         panel.grid.major.y = element_line())
 
-print(plot_coenrichment_lymp)
+# print(plot_coenrichment_lymp)
 
 # --- SECTION 1: ILC2s around ILC2s ---
 interactions_ilc2 <- "ILC2s--ILC2s"
@@ -961,7 +968,7 @@ plot_coenrichment_th <- ggplot(interaction_ilc2_th_df,
         strip.text.x = element_text(size = 1, color = "white"),
         panel.grid.major.y = element_line())
 
-print(plot_coenrichment_th)
+# print(plot_coenrichment_th)
 # --- SECTION 3: Final Arrangement ---
 # (Assumes plot_coenrichment_lymp was created using the same corrected logic previously)
 
@@ -974,7 +981,7 @@ coenrichment_fig_ann <- annotate_figure(coenrichment_fig,
                                         left = text_grob("Coenrichment score", 
                                                          color = "black", rot = 90, size = 9))
 
-print(coenrichment_fig_ann)
+# print(coenrichment_fig_ann)
 ```
 
 ```{r eval=FALSE, fig.height=3, fig.width=9, include=FALSE}
@@ -1125,7 +1132,7 @@ coenrichment_fig_ann <- annotate_figure(coenrichment_fig,
                 left = text_grob("Coenrichment score", color = "black", rot = 90, 
                                  size = 9))
 
-coenrichment_fig_ann
+# coenrichment_fig_ann
 ```
 
 Additional visualization including T helper cells:
@@ -1142,7 +1149,7 @@ coenrichment_fig_ann_tcells <- annotate_figure(coenrichment_fig,
                 left = text_grob("Coenrichment score", color = "black", rot = 90, 
                                  size = 11))
 
-coenrichment_fig_ann_tcells
+# coenrichment_fig_ann_tcells
 ```
 
 ### NK cells/ILC1s
@@ -1302,7 +1309,7 @@ coenrichment_fig_supp_ann <- annotate_figure(coenrichment_fig_supp,
                                                               size = 10)) +
   theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"))
 
-print(coenrichment_fig_supp_ann)
+# print(coenrichment_fig_supp_ann)
 ```
 
 ```{r eval=FALSE, fig.height=3, fig.width=9, include=FALSE}
@@ -1454,7 +1461,7 @@ coenrichment_fig_supp_ann <- annotate_figure(coenrichment_fig_supp,
                                  size = 11))+
     theme(plot.margin = margin(0, 0.5, 0, 0.5, "cm"))
 
-coenrichment_fig_supp_ann
+# coenrichment_fig_supp_ann
 ```
 
 # CIN analysis
@@ -1625,7 +1632,7 @@ for (set_radius in all_radii) {
         )
       
       message("Printing grid for: ", ref_type, " at ", set_radius)
-      print(final_cin_grid)
+      # print(final_cin_grid)
     }
   }
 }
@@ -1679,7 +1686,7 @@ plot_cin <- ggarrange(cin_ilc, cin_my, cin_ly,
                       ncol = 1, nrow = 3, labels = c("E", "", ""))+
   theme(plot.margin = margin(0, 0, 0, 0, "cm"))
 
-plot_cin
+# plot_cin
 ```
 
 ### NK cells/ILC1s
@@ -1730,7 +1737,7 @@ plot_cin_nkilc1 <- ggarrange(cin_nkilc1, cin_bec, cin_bpc,
                       ncol = 1, nrow = 3)+
   theme(plot.margin = margin(0, 0.5, 0, 0.5, "cm"))
 
-plot_cin_nkilc1
+# plot_cin_nkilc1
 ```
 
 ```{r, fig.width=9, fig.height=6}
@@ -2048,7 +2055,7 @@ ggarrange(plotlist = my_plot_list[c(1:4)], nrow = 1, ncol = 4)
 
 dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 1, ncol = 2, labels = c("C", "D"))
 
-dist_lymph
+# dist_lymph
 
 ```
 
@@ -2057,7 +2064,7 @@ dist_lymph
 dist_lymph <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 2, ncol = 1, labels = c("D"))+
   theme(plot.margin = margin(0, 1, 0, 0, "cm"))
 
-dist_lymph
+# dist_lymph
 
 ```
 
@@ -2158,7 +2165,7 @@ if (length(grid_plot_list) > 0) {
         plot.title = element_text(size = 12, face = "bold", hjust = 0.5))
     )
   
-  print(final_grid_dist_immune)
+  # print(final_grid_dist_immune)
 }
 ```
 
@@ -2249,7 +2256,7 @@ for (condition in c("CTRL", "D1", "D2", "D3")) {
     geom_text(aes(y = 80 , #lab_pos, 
                   label = lab_text, vjust = -0.5), angle = 30,
               data = Labs, size=3)
-  plot
+  # plot
   
   assigned_name <- gsub(" ", "", paste0(celltype_of_interest, "_", condition))
   assign(assigned_name, plot )
@@ -2263,7 +2270,7 @@ for (condition in c("CTRL", "D1", "D2", "D3")) {
 dist_bec <- ggarrange(plotlist = my_plot_list[c(1, 4)], nrow = 2, ncol = 1)+
   theme(plot.margin = margin(0, 0, 0, 0.5, "cm"))
 
-dist_bec
+# dist_bec
 
 ```
 
@@ -2364,7 +2371,7 @@ if (length(grid_plot_list) > 0) {
         plot.title = element_text(size = 12, face = "bold", hjust = 0.5))
     )
   
-  print(final_grid_dist_immune_nkilc1)
+  # print(final_grid_dist_immune_nkilc1)
 }
 ```
 
@@ -2372,7 +2379,7 @@ if (length(grid_plot_list) > 0) {
 supp_middle_plot <- ggarrange(dist_bec, final_grid_dist_immune_nkilc1, ncol = 2, nrow = 1, 
           widths = c(3, 7), labels = c("C", "D"))
 
-supp_middle_plot
+# supp_middle_plot
 ```
 
 # Visualization for figures
@@ -2383,22 +2390,22 @@ supp_middle_plot
 top_figure <- ggarrange(final_plot_ILC2s, img_plot_if_ilc2s, img_plot_if_ilc2s_roi, ncol = 1, nrow = 3, heights = c(3, 3.6, 3.6), labels = c("A", "B", "C"))+
   theme(plot.margin = margin(0, 0, 0.5, 0, "cm"))
 
-top_figure
+# top_figure
 ```
 
-```{r, fig.width=9, fig.height=5.5}
+```{r , fig.width=9, fig.height=5.5}
 bottom_figure <- ggarrange(dist_lymph, plot_cin, ncol = 2, widths = c(1, 2))
 
-bottom_figure
+# bottom_figure
 ```
 
-```{r, fig.width=9, fig.height=16}
+```{r Figure_7_Main, fig.width=9, fig.height=16}
 ggarrange(top_figure, bottom_figure, nrow = 2, ncol = 1, heights = c(10.2, 5.5))
 ```
 
 ## Supplementary figures
 
-```{r, fig.width=9, fig.height=15.2}
+```{r Suppl_Figure_13, fig.width=9, fig.height=15.2}
 ggarrange(coenrichment_fig_ann, "NONE", 
           img_plot_if_ilc2s_my,           
           img_plot_if_ilc2s_icos,
@@ -2407,7 +2414,7 @@ ggarrange(coenrichment_fig_ann, "NONE",
           labels = c("A","", "B", "C", "D"))
 ```
 
-```{r, fig.width=9.5, fig.height=15.5}
+```{r Suppl_Figure_14, fig.width=9.5, fig.height=15.5}
 ggarrange(final_plot_nkilc1, coenrichment_fig_supp_ann, "NONE",  supp_middle_plot, "NONE", plot_cin_nkilc1, nrow = 6, ncol = 1, heights = c(1.6, 1, 0.1, 2.6, 0.1, 2.7), labels = c("A", "B", "", "", "", "E"))
 ```
 

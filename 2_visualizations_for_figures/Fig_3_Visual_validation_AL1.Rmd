@@ -19,10 +19,19 @@ editor_options:
 
 ```{r setup, include=FALSE}
 # knitr::opts_knit$set(root.dir = "..")
-knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
-                      fig.align='center', dpi = 600, 
-                      set.seed(8),
-                      message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  out.width = "100%", 
+  fig.align = 'center', 
+  dpi = 600, 
+  set.seed = 8,
+  message = FALSE, 
+  warning = FALSE,
+  # New options added below for EJI publication export:
+  dev = c('png', 'cairo_pdf'),
+  colormodel = 'cmyk', # Automatically formats colors for journal printing
+  fig.path = "D:/Repositories/2025_Kroh_et_al/Manuscript/EJI_submissions_for_publication/Figures_pdfs/"
+)
 options(width = 1200)
 ```
 
@@ -74,7 +83,7 @@ img_plot_immune <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
 # Display the plot
-print(img_plot_immune)
+# print(img_plot_immune)
 ```
 
 ```{r fig.height=8.1, fig.width=9}
@@ -99,7 +108,7 @@ img_plot_vessels <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
 # Display the plot
-print(img_plot_vessels)
+# print(img_plot_vessels)
 ```
 
 ```{r fig.height=4.1, fig.width=9}
@@ -124,14 +133,14 @@ img_plot_epithelia <- ggplot() +
   theme(plot.margin = margin(0, 0, 0, 0.7, "cm"))
 
 # Display the plot
-print(img_plot_epithelia)
+# print(img_plot_epithelia)
 ```
 
 # Visualization for figures
 
-## Figure 1
+## Figure 3
 
-```{r, fig.width=9, fig.height=16.4}
+```{r Figure_3_Main, fig.width=9, fig.height=16.4}
 ggarrange(img_plot_immune, img_plot_vessels, img_plot_epithelia, 
           nrow = 3, ncol = 1, 
           heights = c(4.1, 8.1, 4.1), 
