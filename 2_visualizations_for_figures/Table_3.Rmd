@@ -1,0 +1,116 @@
+---
+title: "MELC markers overview"
+author: "Sandy Kroh"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+    fig_caption: yes
+    keep_md: yes
+  pdf_document:
+    toc: yes
+params:
+  Sample: Default
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+# knitr::opts_knit$set(root.dir = "..")
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", 
+                      fig.align='center', fig.width = 9, fig.height = 6,
+                      dpi = 600, 
+                      message = FALSE, warning = FALSE)
+options(width = 1200)
+```
+
+## Libraries
+
+```{r}
+library(dplyr)
+# library(ggplot2)
+# library(stringr)
+# library(glue)
+# library(here)
+library(readr)
+# library(lubridate)
+# library(data.table)
+library(ggpubr)
+# library(ggrepel)
+# library(readxl)
+library(readxl)
+library(tidyr)
+library(here)
+```
+
+## Parameters
+
+```{r}
+set.seed(123)
+output_dir <- here::here("2_visualizations_for_figures", "Table_3_files")
+dir.create(output_dir)
+```
+
+# Loading data tables
+
+```{r}
+df <- read_excel(paste0(here::here(), "/data/Antibody_panel_MELC.xlsx"))
+```
+
+# Tidying
+
+Delete last column and order alphabetically:
+
+```{r}
+df <- df %>%
+  select(-c(`...5`, `...6`, `...7`)) %>%
+  arrange(Antibody) %>%
+  mutate(Clone = ifelse(is.na(Clone), "", Clone))
+```
+
+# Plot data table
+
+```{r, fig.height=18, fig.width=9}
+
+df %>%
+  ggtexttable(rows = NULL) 
+```
+
+```{r}
+
+# 1. Find the row number where the Antibody is "LYVE1-PE"
+# The [1] ensures that if there are multiple matches, it takes the first one
+split_index <- which(df$Antibody == "PDGFRa-PE")[1]
+
+
+colnames(df) <- c("       Antibody       ", "             Company             ",  "       Clone       ",    "   Dilution   ")
+
+
+# 2. Split the data frame into upper and lower based on that index
+df_upper <- df[1:split_index, ]
+df_lower <- df[(split_index + 1):nrow(df), ]
+
+
+
+```
+
+```{r, fig.height=13.5, fig.width=9}
+
+df_upper %>%
+  ggtexttable(rows = NULL)
+```
+
+```{r, fig.height=4, fig.width=9}
+
+df_lower %>%
+  ggtexttable(rows = NULL)
+```
+
+# Session Information
+
+```{r}
+sessionInfo()
+version
+```
