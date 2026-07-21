@@ -1,10 +1,10 @@
 # Spatial analysis of the ILC2 Niche in Murine Lung
 
-![](images/Graphical abstract_image.png)
+![](images/Graphical_abstract_image.png)
 
 ## Overview
 
-This repository contains the data analysis workflows and R Markdown scripts for the publication ***Spatial and phenotypic heterogeneity of ILC Subsets in Mouse Lung Under Type 2 Inflammatory Conditions*** (Kroh et al., 2026).
+This r![](images/Graphical_abstract_image-01.png)epository contains the data analysis workflows and R Markdown scripts for the publication ***Spatial and phenotypic heterogeneity of ILC Subsets in Mouse Lung Under Type 2 Inflammatory Conditions*** (Kroh et al., 2026).
 
 The project focuses on characterizing the spatial architecture of innate lymphoid cells (ILCs) in the mouse lung. By combining a systemic IL-33-driven type 2 inflammation model with high-dimensional cyclic multiplex microscopy, we optimized a workflow to map rare GATA3eGFP+ ILC2 subsets. Our spatial analysis reveals a conserved peri-lymphatic microenvironment where ILC2s were coenriched with myeloid cells and lymphatics across early time points of IL-33-mediated inflammation.
 
