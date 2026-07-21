@@ -1,5 +1,7 @@
 # Spatial analysis of the ILC2 Niche in Murine Lung
 
+![](images/Graphical_abstract_image.png)
+
 ## Overview
 
 This repository contains the data analysis workflows and R Markdown scripts for the publication ***Spatial and phenotypic heterogeneity of ILC Subsets in Mouse Lung Under Type 2 Inflammatory Conditions*** (Kroh et al., 2026).
